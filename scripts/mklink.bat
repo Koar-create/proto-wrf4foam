@@ -2,6 +2,8 @@
 setlocal
 
 :: Define base paths (Converted from Linux /e/ to Windows E:\)
+:: set "BASE_PATH_0=D:\Documents\WRF-OpenFOAM-Coupling"
+:: set "BASE_PATH=D:\Documents\WRF-OpenFOAM-Coupling\steady_experiments_finer_ABL"
 set "BASE_PATH_0=E:\WRF-OpenFOAM-Coupling"
 set "BASE_PATH=E:\WRF-OpenFOAM-Coupling\steady_experiments_finer_ABL"
 set "SRC_EXP=20250901_0000_two_boundaries_as_outlet"

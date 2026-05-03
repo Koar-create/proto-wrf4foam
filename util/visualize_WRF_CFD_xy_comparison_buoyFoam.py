@@ -397,7 +397,7 @@ def main():
     if args.output:
         output_path = args.output
     else:
-        output_path = os.path.join(os.path.dirname(cfd_ctrl_dir), f"comparison_xy_{args.height}m_{case_label}.png")
+        output_path = os.path.join(os.path.dirname(cfd_ctrl_dir), f"comparison_xy_z{args.height}m_{case_label}.png")
 
     print(f"CFD Control : {cfd_ctrl_csv}")
     print(f"CFD Sens    : {cfd_sens_csv}")

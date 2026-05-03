@@ -519,7 +519,7 @@ def main():
         ctrl_dir_parent = os.path.dirname(cfd_ctrl_dir)
         output_path = os.path.join(
             ctrl_dir_parent,
-            f"comparison_xz_{case_label}.png"
+            f"comparison_xz_y800m_{case_label}.png"
         )
 
     # --- echo resolved paths ---------------------------------------------

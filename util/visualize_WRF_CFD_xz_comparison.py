@@ -55,7 +55,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 # CONSTANTS / DEFAULTS
 # ---------------------------------------------------------------------------
-WRF_ROOT          = "W_myExp03\\auxhist2\\tmp"
+WRF_ROOT          = os.path.join("W_myExp03", "auxhist2", "tmp")
 WRF_NC_TEMPLATE   = "auxhist2_d03_{wrf_time}_tmp.nc"   # e.g. 2025-09-03_12:00:00
 SENSITIVITY_SUFFIX = "-fvOpt_sensitivity_run"
 CSV_RELPATH        = os.path.join("postProcessing", "y800m.csv")
@@ -64,10 +64,10 @@ TARGET_LAT   = 23.1211944444
 TARGET_LON   = 113.321102778
 LAT_TOL      = 0.004
 LON_TOL      = 0.0225000225
-MAX_HEIGHT   = 3000          # m  – WRF extraction ceiling
+MAX_HEIGHT   = 2000 # 3000   # m  – WRF extraction ceiling
 CFD_TOP      = 2000          # m  – shown in WRF panel as reference line
 QUIVER_GRID  = 20            # quiver arrow density (NxN)
-QUIVER_SCALE = 80
+QUIVER_SCALE = 40#80
 HEXBIN_GRID  = 120
 
 # ---------------------------------------------------------------------------
@@ -95,7 +95,10 @@ def parse_timestamp_from_cfd_dir(cfd_dir: str):
 def infer_paths(cfd_control_dir: str):
     """Return (wrf_nc_path, cfd_control_csv, cfd_sens_csv) inferred from the control dir."""
     wrf_time        = parse_timestamp_from_cfd_dir(cfd_control_dir)
+    # Windows
     nc_filename     = WRF_NC_TEMPLATE.format(wrf_time=wrf_time.replace(':', '%3A'))
+    # Linux
+    nc_filename     = WRF_NC_TEMPLATE.format(wrf_time=wrf_time)
     wrf_nc_path     = os.path.join(WRF_ROOT, nc_filename)
     cfd_ctrl_csv    = os.path.join(cfd_control_dir, CSV_RELPATH)
     sens_dir        = cfd_control_dir.rstrip("/") + SENSITIVITY_SUFFIX
@@ -150,22 +153,29 @@ def extract_wrf_xz(nc_path: str,
 
     print(f"  Opening: {nc_path}")
     ds = xr.open_dataset(nc_path)
+    
+    def get_val(name):
+        v = ds[name]
+        return v.values[0] if 'Time' in v.dims else v.values
 
     # ------------------------------------------------------------------
     # 1. Find nearest south_north index
     # ------------------------------------------------------------------
     # XLAT has dims (south_north, west_east); average over west_east for a
     # representative zonal-mean lat per row.
-    lat_1d = ds.XLAT.mean('west_east').values          # shape (south_north,)
+    lats = get_val('XLAT')
+    if lats.ndim == 3: lats = lats[0] # handle Time dim if present but not detected by get_val
+    lat_1d = np.mean(lats, axis=1)
     sn_idx = int(np.argmin(np.abs(lat_1d - target_lat)))
     actual_lat = float(lat_1d[sn_idx])
-    print(f"  Nearest south_north row: index={sn_idx}, lat={actual_lat:.6f} deg N "
-          f"(target={target_lat:.6f} deg N, Delta={abs(actual_lat-target_lat)*1e5:.1f}x10^-5 deg)")
+    print(f"  Nearest south_north row: index={sn_idx}, lat={actual_lat:.6f} deg N")
 
     # ------------------------------------------------------------------
     # 2. Find west_east columns within lon tolerance
     # ------------------------------------------------------------------
-    lon_1d = ds.XLONG[sn_idx, :].values               # shape (west_east,)
+    lons = get_val('XLONG')
+    if lons.ndim == 3: lons = lons[0]
+    lon_1d = lons[sn_idx, :]
     we_mask = (target_lon - lon_tol <= lon_1d) & (lon_1d <= target_lon + lon_tol)
     we_idx = np.where(we_mask)[0]
 
@@ -181,15 +191,22 @@ def extract_wrf_xz(nc_path: str,
     # 3. Load staggered arrays (load once, slice immediately to save RAM)
     # ------------------------------------------------------------------
     # PH / PHB : (bottom_top_stag, south_north, west_east)
-    PH_sn  = ds['PH'][:,  sn_idx, :].values    # (bt_stag, we)
-    PHB_sn = ds['PHB'][:, sn_idx, :].values
+    PH_all  = get_val('PH')
+    PHB_all = get_val('PHB')
+    PH_sn   = PH_all[:, sn_idx, :]
+    PHB_sn  = PHB_all[:, sn_idx, :]
 
     # U : (bottom_top, south_north, west_east_stag)
-    U_sn   = ds['U'][:,   sn_idx, :].values    # (bt, we_stag)
+    U_all   = get_val('U')
+    U_sn    = U_all[:, sn_idx, :]
 
     # V : (bottom_top, south_north_stag, west_east)  – pick sn and sn+1 for destagger
-    V_sn   = ds['V'][:,   sn_idx,     :].values   # (bt, we)
-    V_sn1  = ds['V'][:,   sn_idx + 1, :].values   # (bt, we)  – upper stagger neighbour
+    V_all   = get_val('V')
+    V_sn    = V_all[:, sn_idx, :]
+    V_sn1   = V_all[:, sn_idx + 1, :]
+
+    W_all   = get_val('W')
+    W_sn    = W_all[:, sn_idx, :]
 
     ds.close()
 
@@ -197,14 +214,15 @@ def extract_wrf_xz(nc_path: str,
     # 4. Destagger
     # ------------------------------------------------------------------
     # Height: destagger along axis=0 (bottom_top_stag → bottom_top)
-    H_sn  = _destagger_np((PH_sn + PHB_sn) / 9.81, axis=0)  # (bt, we)
+    H_sn  = _destagger_np((PH_sn + PHB_sn) / 9.81, axis=0) # (bt, we)
 
     # U: destagger along axis=1 (west_east_stag → west_east)
-    U_dest = _destagger_np(U_sn, axis=1)                      # (bt, we)
+    U_dest = _destagger_np(U_sn, axis=1)                   # (bt, we)
 
     # V: destagger along axis=0 in the south_north_stag dimension
     #    we already have the two neighbouring rows, so just average them
-    V_dest = 0.5 * (V_sn + V_sn1)                             # (bt, we)
+    V_dest = 0.5 * (V_sn + V_sn1)                          # (bt, we)
+    W_dest = _destagger_np(W_sn, axis=0)                   # (bt, we)
 
     WS = np.sqrt(U_dest**2 + V_dest**2)
 
@@ -214,13 +232,15 @@ def extract_wrf_xz(nc_path: str,
     H_xz  = H_sn[:, we_slice]
     WS_xz = WS[:,  we_slice]
     U_xz  = U_dest[:, we_slice]
-    lon_xz = lon_1d[we_slice]                                  # 1-D (n_we,)
+    W_xz  = W_dest[:, we_slice]
+    lon_xz = lon_1d[we_slice]
 
     # Mask levels above max_height with NaN (pcolormesh handles NaN gracefully)
     nan_mask = H_xz > max_height
     # H_xz[nan_mask]  = np.nan  <-- BUG: pcolormesh coordinates cannot be NaN
     WS_xz[nan_mask] = np.nan
     U_xz[nan_mask]  = np.nan
+    W_xz[nan_mask]  = np.nan
 
     # Build 2-D lon array matching (bt, we) shape
     lon_2d = np.broadcast_to(lon_xz[np.newaxis, :], H_xz.shape).copy()
@@ -230,7 +250,7 @@ def extract_wrf_xz(nc_path: str,
           f"H=[{np.nanmin(H_xz):.0f}, {np.nanmax(H_xz):.0f}] m, "
           f"WS=[{np.nanmin(WS_xz):.2f}, {np.nanmax(WS_xz):.2f}] m/s")
 
-    return dict(lon=lon_2d, height=H_xz, wind_speed=WS_xz, U=U_xz)
+    return dict(lon=lon_2d, height=H_xz, wind_speed=WS_xz, U=U_xz, W=W_xz)
 
 
 # ---------------------------------------------------------------------------
@@ -299,6 +319,8 @@ def draw_wrf_panel(ax, data: dict, cfd_top=CFD_TOP, target_lon=TARGET_LON,
     lon    = data['lon']
     height = data['height']
     ws     = data['wind_speed']
+    u      = data['U']
+    w      = data['W']
 
     if vmax is None:
         vmax = np.nanpercentile(ws, 98)
@@ -306,6 +328,21 @@ def draw_wrf_panel(ax, data: dict, cfd_top=CFD_TOP, target_lon=TARGET_LON,
     qm = ax.pcolormesh(lon, height, ws,
                        vmin=0, vmax=vmax, cmap='viridis',
                        shading='auto', alpha=0.92, rasterized=True)
+
+    # --- quiver logic for WRF ---
+    ny, nx = lon.shape
+    skip_y = max(1, ny // 15)
+    skip_x = max(1, nx // 15)
+    
+    qv = ax.quiver(lon[::skip_y, ::skip_x], height[::skip_y, ::skip_x], 
+                   u[::skip_y, ::skip_x], w[::skip_y, ::skip_x],
+                   color='black', alpha=0.82,
+                   scale=QUIVER_SCALE, width=0.003,
+                   headwidth=3.5, headlength=5)
+
+    ax.quiverkey(qv, X=0.87, Y=1.02, U=1, label='1 m/s',
+                 labelpos='E', coordinates='axes',
+                 fontproperties={'family': 'serif', 'size': 10, 'weight': 'bold'})
 
     ax.set_ylim(0, max_height)
 
@@ -359,13 +396,13 @@ def draw_cfd_panel(ax, data: dict, title_suffix='',
                    headwidth=3.5, headlength=5,
                    headaxislength=4, minshaft=2)
 
-    ax.quiverkey(qv, X=0.925, Y=0.975, U=2.5, label='2.5 m/s',
+    ax.quiverkey(qv, X=0.87, Y=0.975, U=2.5, label='2.5 m/s',
                  labelpos='E', coordinates='axes',
                  fontproperties={'family': 'serif', 'size': 10, 'weight': 'bold'})
 
     ax.set_xlabel('X Coordinate (m)', fontweight='bold')
     ax.set_ylabel('Height (m)',       fontweight='bold')
-    ax.set_aspect('equal')
+    ax.set_aspect('auto')  # 必须改为 auto，否则 CFD 面板会根据坐标范围被强制锁死比例
     ax.grid(True, alpha=0.25, ls='--', lw=0.5)
     ax.xaxis.set_minor_locator(AutoMinorLocator())
     ax.yaxis.set_minor_locator(AutoMinorLocator())
@@ -399,19 +436,10 @@ def compose_figure(wrf_data, cfd_ctrl_data, cfd_sens_data,
     # ---- Layout ----------------------------------------------------------
     fig = plt.figure(figsize=(18, 11))
 
-    # GridSpec: 2 rows × 2 cols; bottom row spans both columns
-    gs = gridspec.GridSpec(
-        2, 2,
-        figure=fig,
-        height_ratios=[1, 1.05],
-        width_ratios=[1, 1],
-        hspace=0.42,
-        wspace=0.30,
-    )
-
-    ax_wrf  = fig.add_subplot(gs[0, 0])   # top-left
-    ax_ctrl = fig.add_subplot(gs[0, 1])   # top-right
-    ax_sens = fig.add_subplot(gs[1, :])   # bottom – full width
+    # 使用绝对坐标 [left, bottom, width, height] 强制三个子图物理尺寸完全一致且绝对不重叠
+    ax_wrf  = fig.add_axes([0.10, 0.55, 0.35, 0.35])  # 顶部左侧
+    ax_ctrl = fig.add_axes([0.55, 0.55, 0.35, 0.35])  # 顶部右侧
+    ax_sens = fig.add_axes([0.55, 0.10, 0.35, 0.35]) # 底部居中 (0.1+0.55)/2 = 0.325
 
     # ---- (a) WRF ---------------------------------------------------------
     if wrf_data is not None:
@@ -419,7 +447,7 @@ def compose_figure(wrf_data, cfd_ctrl_data, cfd_sens_data,
                                 max_height=max_height,
                                 label='(a) WRF (mesoscale boundary)')
         cb_wrf = fig.colorbar(qm_wrf, ax=ax_wrf, label='Wind Speed (m/s)',
-                              pad=0.03, fraction=0.046)
+                              pad=0.02, fraction=0.04) # 统一 Colorbar 占用空间
         cb_wrf.ax.tick_params(labelsize=10)
     else:
         ax_wrf.text(0.5, 0.5, 'WRF data unavailable\n(file not found)',
@@ -432,14 +460,14 @@ def compose_figure(wrf_data, cfd_ctrl_data, cfd_sens_data,
     hb_ctrl = draw_cfd_panel(ax_ctrl, cfd_ctrl_data, vmax=cfd_vmax,
                              label='(b) CFD – control run')
     cb_ctrl = fig.colorbar(hb_ctrl, ax=ax_ctrl, label='Wind Speed (m/s)',
-                           pad=0.03, fraction=0.046)
+                           pad=0.02, fraction=0.04) # 统一 Colorbar 占用空间
     cb_ctrl.ax.tick_params(labelsize=10)
 
     # ---- (c) CFD sensitivity ---------------------------------------------
     hb_sens = draw_cfd_panel(ax_sens, cfd_sens_data, vmax=cfd_vmax,
-                             label='(c) CFD – fvOpt sensitivity run')
+                             label='(c) CFD Sensitivity (Sp=-0.01)')
     cb_sens = fig.colorbar(hb_sens, ax=ax_sens, label='Wind Speed (m/s)',
-                           pad=0.02, fraction=0.023)
+                           pad=0.02, fraction=0.04) # 统一 Colorbar 占用空间
     cb_sens.ax.tick_params(labelsize=10)
 
     # ---- Super-title -----------------------------------------------------
@@ -514,7 +542,7 @@ def main():
         ctrl_dir_parent = os.path.dirname(cfd_ctrl_dir)
         output_path = os.path.join(
             ctrl_dir_parent,
-            f"comparison_xz_{case_label}.png"
+            f"comparison_xz_y800m_{case_label}.png"
         )
 
     # --- echo resolved paths ---------------------------------------------
