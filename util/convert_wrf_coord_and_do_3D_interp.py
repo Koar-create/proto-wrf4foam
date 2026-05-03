@@ -67,8 +67,6 @@ if __name__ == '__main__':
 
     fname = f"auxhist2_d03_2025-{input_date}:00_tmp.nc"  # f"wrfout_d03_2025-{input_date}:00"
     ds = xr.open_dataset(f"{project_path}/auxhist2/tmp/{fname}", engine='netcdf4').squeeze()  # f"{project_path}/WRF/run/{fname}"
-    ds_wrfinputd03 = xr.open_dataset(f"{project_path}/WRF/run/wrfinput_d03", engine='netcdf4').squeeze()
-    ds = ds.assign_coords(XLAT=ds_wrfinputd03['XLAT'], XLONG=ds_wrfinputd03['XLONG'])
 
     # --- Part 2: Destaggering and Basic Math ---
     PH = ds['PH']
@@ -88,10 +86,18 @@ if __name__ == '__main__':
     # make sure the k value wont be zero or negative, assign a very small number, in order to avoid division by zero error.
     TKE_PBL = np.maximum(TKE_PBL, 1e-6)
     ds['TKE_PBL'] = xr.DataArray(TKE_PBL, coords=ds.T.coords, dims=ds.T.dims)
-    # --- 新增：提取并计算绝对位温 (Potential Temperature) ---
-    # WRF中的 'T' 变量是扰动位温 (Theta - 300K)，需要加300还原
-    Theta = ds['T'] + 300.0
+    
+    # --- 修改：提取并计算精确干位温 (Theta) 与 绝对温度 (TK) ---
+    # 提取总气压
+    P_total = ds['P'] + ds['PB']
+    
+    # 还原干空气位温：(扰动湿位温 + 300) / (1 + 1.61 * QVAPOR)
+    Theta = (ds['T'] + 300.0) / (1.0 + 1.61 * ds['QVAPOR'])
     ds['Theta'] = xr.DataArray(Theta, coords=ds.T.coords, dims=ds.T.dims)
+    
+    # 利用泊松方程计算绝对温度 (TK)，单位: K
+    TK = Theta * (P_total / 100000.0) ** 0.2854
+    ds['TK'] = xr.DataArray(TK, coords=ds.T.coords, dims=ds.T.dims)
     # -----------------------------------------------------
         
     # 调用函数
@@ -123,7 +129,9 @@ if __name__ == '__main__':
     ds_ = ds_.assign_coords(x_rel=ds_['x_rel'], y_rel=ds_['y_rel']).drop_vars(
         ['Times', 'XLAT', 'XLONG', 'XLAT_U', 'XLONG_U', 'XLAT_V', 'XLONG_V', 'XTIME'], errors='ignore'
     )
-    ds_ = ds_[['U', 'V', 'W', 'WS', 'H', 'TKE_PBL', 'Theta']]
+    
+    # 将新增的 TK 放入最终处理列表中
+    ds_ = ds_[['U', 'V', 'W', 'WS', 'H', 'TKE_PBL', 'Theta', 'TK']]
 
     # --- Part 3: Horizontal Interpolation ---
     x_tgt = np.arange(-5000, 5000 + 1, 100)
@@ -193,7 +201,8 @@ if __name__ == '__main__':
     H_min_horiz = H_horiz[0, :, :] 
     
     final_vars = {}
-    var_list = ['U', 'V', 'W', 'WS', 'TKE_PBL', 'Theta']
+    # 将 TK 包含进插值循环
+    var_list = ['U', 'V', 'W', 'WS', 'TKE_PBL', 'Theta', 'TK']
     z0 = 1.478 # 地表粗糙度，可根据实际地形更改
     
     for var in var_list:
@@ -232,7 +241,7 @@ if __name__ == '__main__':
             # 如果最顶层还有 NaN（超出 WRF 顶层），直接常数向上延伸
             var_vert = xr.DataArray(var_vert, dims=['z','y','x']).ffill(dim='z').values
         else:
-            # 对于标量场 (W, TKE)，不适用 Log Law，直接沿用最底层数值 (bfill)
+            # 对于标量场 (W, TKE, Theta, TK)，不适用 Log Law，直接沿用最底层数值 (bfill)
             var_vert = da_bfilled.ffill(dim='z').values
             
         final_vars[var] = (['z', 'y_rel', 'x_rel'], var_vert)
@@ -255,3 +264,4 @@ if __name__ == '__main__':
     print('U range:', round(ds_final['U'].min().item(), 2), 'to', round(ds_final['U'].max().item(), 2))
     print('V range:', round(ds_final['V'].min().item(), 2), 'to', round(ds_final['V'].max().item(), 2))
     print('WS range:', round(ds_final['WS'].min().item(), 2), 'to', round(ds_final['WS'].max().item(), 2))
+    print('TK range:', round(ds_final['TK'].min().item(), 2), 'to', round(ds_final['TK'].max().item(), 2))

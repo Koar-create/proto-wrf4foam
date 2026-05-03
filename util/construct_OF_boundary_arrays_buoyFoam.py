@@ -51,7 +51,7 @@ def compute_domain_mean_fields(ds):
     U_mean_vec = (Ux_mean, Uy_mean, Uz_mean)
 
     # --- T mean ---
-    T_mean = float(np.nanmean(ds["TK"].values))
+    T_mean = float(np.nanmean(ds["TK"].values))  # ds["Theta"].values
 
     # --- k mean ---
     k_3d = np.maximum(ds["TKE_PBL"].values, 1e-6)
@@ -79,15 +79,15 @@ alphat_mean_domain = nut_mean_domain / Prt_const
 
 print("\n=== Domain-mean initial fields for OpenFOAM 0/ ===")
 print()
-print(f"T_mean_domain       = {T_mean_domain:.4f}")
-print()
-print(f"epsilon_mean_domain = {eps_mean_domain:.6e}")
-print()
-print(f"U_mean_domain       = ({U_mean_vec[0]:.6g} {U_mean_vec[1]:.6g} {U_mean_vec[2]:.6g})")
+print(f"epsilon_mean_domain = {eps_mean_domain:.6g}")
 print()
 print(f"k_mean_domain       = {k_mean_domain:.6g}")
 print()
 print(f"nut_mean_domain     = {nut_mean_domain:.6g}")
+print()
+print(f"U_mean_domain       = ({U_mean_vec[0]:.6g} {U_mean_vec[1]:.6g} {U_mean_vec[2]:.6g})")
+print()
+print(f"T_mean_domain       = {T_mean_domain:.4f}")
 print()
 print(f"alphat_mean_domain  = {alphat_mean_domain:.6g}")
 print()
@@ -107,6 +107,7 @@ def update_of_dictionary(filepath, pattern, replacement):
         content = f.read()
     
     # re.subn 返回替换后的新字符串和发生替换的次数
+    # [^;]+ 表示匹配到分号前的内容，这样能完好保留后面的注释部分 (如 // 1.5;)
     new_content, count = re.subn(pattern, replacement, content, flags=re.MULTILINE)
     
     if count > 0:
@@ -126,17 +127,17 @@ update_of_dictionary(eps_file, r"^epsilonInlet\s+[^;]+;", f"epsilonInlet  {eps_m
 k_file = os.path.join(of_zero_dir, "k")
 update_of_dictionary(k_file, r"^kInlet\s+[^;]+;", f"kInlet  {k_mean_domain:.6g};")
 
-# 3. 替换 U 文件中的 internalField uniform (...)
+# 3. 替换 nut 文件中的 internalField
+nut_file = os.path.join(of_zero_dir, "nut")
+update_of_dictionary(nut_file, r"^internalField\s+uniform\s+[^;]+;", f"internalField   uniform {nut_mean_domain:.6g};")
+
+# 4. 替换 U 文件中的 internalField uniform (...)
 u_file = os.path.join(of_zero_dir, "U")
 update_of_dictionary(u_file, r"^internalField\s+uniform\s+\([^)]+\);", f"internalField   uniform ({U_mean_vec[0]:.6g} {U_mean_vec[1]:.6g} {U_mean_vec[2]:.6g});")
 
-# 4. 替换 T 文件中的 TInlet (配合 buoyantBoussinesqSimpleFoam)
+# 5. 替换 T 文件中的 TInlet (配合 buoyantBoussinesqSimpleFoam)
 t_file = os.path.join(of_zero_dir, "T")
 update_of_dictionary(t_file, r"^TInlet\s+[^;]+;", f"TInlet          {T_mean_domain:.4f};")
-
-# 5. 替换 nut 文件中的 internalField
-nut_file = os.path.join(of_zero_dir, "nut")
-update_of_dictionary(nut_file, r"^internalField\s+uniform\s+[^;]+;", f"internalField   uniform {nut_mean_domain:.6g};")
 
 # 6. 替换 alphat 文件中的 internalField
 alphat_file = os.path.join(of_zero_dir, "alphat")
@@ -179,25 +180,36 @@ for patch_name, cfg in boundaries.items():
     print(f"Processing {patch_name} boundary (H <= {MAX_HEIGHT}m)...")
     
     # 提取切片 (Slicing)
+    # 切片提取边界数据 (z, target_dim)
+    # 例如 west 边界，我们会得到 (z, y_rel) 的二维面
+    # isel(x_rel=0) 取的是 x_rel 维度上的第 0 个数据
     if cfg["slice_dim"] == "x_rel":
         ds_slice = ds.isel(x_rel=cfg["index"])
+        # 此时 ds_slice 的维度应该是 (z, y_rel)
         dim_horizontal = "y_rel"
     else:
         ds_slice = ds.isel(y_rel=cfg["index"])
+        # 此时 ds_slice 的维度应该是 (z, x_rel)
         dim_horizontal = "x_rel"
         
     # 提取坐标
     z_coords = ds_slice.z.values
     other_coords = ds_slice[dim_horizontal].values
 
+    # 生成 OpenFOAM 格式的点阵坐标
+    # OpenFOAM 坐标顺序通常是 (x, y, z)
     pts = []
     u_vals = []
     k_vals = []
     eps_vals = []
     t_vals = []  # 新增：用于存储位温数据
 
+    # 遍历面上的每一个网格点
+    # 注意：这里的顺序必须在 points 和 data 文件中完全同步
     for i_z, z in enumerate(z_coords):
         for i_o, other in enumerate(other_coords):
+            # 根据边界类型分配 X 和 Y
+            # 确定坐标 (x, y, z)
             if cfg["slice_dim"] == "x_rel":
                 x_val = ds.x_rel.values[cfg["index"]]
                 y_val = other
@@ -220,16 +232,24 @@ for patch_name, cfg in boundaries.items():
             # --- 湍流换算 ---
             k = max(tke, 1e-6)
             k_vals.append(k)
-            
+            # epsilon 的简单估计公式: eps = Cmu^0.75 * k^1.5 / L
             Cmu = 0.09
             kappa = 0.41
-            L_CFD_min = 10.0  
+            # L_ABL = kappa * z (von Karman 混合长度), 上限 100m 防止自由大气过大
+            # L_CFD_min: CFD 近地面网格的代表性单元高度下限（约 10m）
+            # 当 z 很小时（如 z=5m），kappa*z=2.05m 远小于 CFD 分辨率，
+            # 会导致边界注入极高的 epsilon（~2.6e-2），CFD 内部场无法解析该梯度，
+            # 引发 k-epsilon 生成-耗散失衡，k 单调积累直至发散。
+            # 解决：L 取 kappa*z 与 CFD 代表性高度（10m）中的较大值。
+            L_CFD_min = 10.0  # m，对应 CFD 近地面单元的代表性高度
             mixing_length = np.clip(kappa * z, L_CFD_min, 100.0)
             eps = (Cmu**0.75) * (k**1.5) / mixing_length
             eps_vals.append(max(eps, 1e-8))
 
+
     # --- 4. 写入文件 ---
     patch_dir = os.path.join(output_dir, patch_name)
+    # 时间文件夹，这里假设是 0 时刻，后续你可以根据循环处理多个时刻
     time_dir = os.path.join(patch_dir, "0")
     os.makedirs(time_dir, exist_ok=True)
     
@@ -241,42 +261,49 @@ for patch_name, cfg in boundaries.items():
         f.write(get_header("vectorField", f"constant/boundaryData/{patch_name}", "points"))
         f.write(f"\n{num_points}\n(\n")
         for p in pts:
+            # 保留4位小数，清爽且够用
             f.write(f"({p[0]:.4f} {p[1]:.4f} {p[2]:.4f})\n")
         f.write(")\n")
 
     # B. 写入 0/U 文件
+    # 注意：这里我们直接生成在 boundaryData 里的 0 文件夹下
     u_path = os.path.join(time_dir, "U")
     with open(u_path, "w") as f:
+        # 注意 class 是 vectorAverageField 或者 vectorField，这里用 data 格式
         f.write(get_header("vectorAverageField", f"constant/boundaryData/{patch_name}/0", "U"))
         f.write(f"\n{num_points}\n(\n")
         for u in u_vals:
             f.write(f"({u[0]:.4f} {u[1]:.4f} {u[2]:.4f})\n")
         f.write(")\n")
     
-    # C. 写入 0/k
+    # C. --- 写入 0/k ---
     k_path = os.path.join(time_dir, "k")
     with open(k_path, "w") as f:
+        # k 是标量场 (scalarAverageField 或 scalarField)
         f.write(get_header("scalarAverageField", f"constant/boundaryData/{patch_name}/0", "k"))
         f.write(f"\n{num_points}\n(\n")
         for k in k_vals:
             f.write(f"{k:.6f}\n")
         f.write(")\n")
     
-    # D. 写入 0/epsilon
+    # D. --- 写入 0/epsilon ---
     eps_path = os.path.join(time_dir, "epsilon")
     with open(eps_path, "w") as f:
         f.write(get_header("scalarAverageField", f"constant/boundaryData/{patch_name}/0", "epsilon"))
         f.write(f"\n{num_points}\n(\n")
         for e in eps_vals:
+            # !!! 修改点 2: 改用科学计数法 .6e !!!
             f.write(f"{e:.6e}\n")
         f.write(")\n")
 
-    # E. 写入 0/T
+    # E. --- 新增：写入 0/T ---
     t_path = os.path.join(time_dir, "T")
     with open(t_path, "w") as f:
+        # T 是标量场 (scalarAverageField)
         f.write(get_header("scalarAverageField", f"constant/boundaryData/{patch_name}/0", "T"))
         f.write(f"\n{num_points}\n(\n")
         for t_val in t_vals:
+            # 保留4位小数即可
             f.write(f"{t_val:.4f}\n")
         f.write(")\n")
 

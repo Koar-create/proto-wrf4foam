@@ -80,11 +80,66 @@ def compute_domain_mean_fields(ds):
 # 计算全域均值
 U_mean_vec, T_mean_domain, k_mean_domain, eps_mean_domain = compute_domain_mean_fields(ds)
 
+# --- 新增：计算自洽的初始湍流粘度 (nut) 和湍流热扩散率 (alphat) ---
+Cmu_const = 0.09
+nut_mean_domain = Cmu_const * (k_mean_domain**2) / eps_mean_domain
+
 print("\n=== Domain-mean initial fields for OpenFOAM 0/ ===")
-print(f"U_mean_domain       = ({U_mean_vec[0]:.6g}, {U_mean_vec[1]:.6g}, {U_mean_vec[2]:.6g})")
-print(f"T_mean_domain       = {T_mean_domain:.6g}")
-print(f"k_mean_domain       = {k_mean_domain:.6g}")
+print()
 print(f"epsilon_mean_domain = {eps_mean_domain:.6g}")
+print()
+print(f"k_mean_domain       = {k_mean_domain:.6g}")
+print()
+print(f"nut_mean_domain     = {nut_mean_domain:.6g}")
+print()
+print(f"U_mean_domain       = ({U_mean_vec[0]:.6g} {U_mean_vec[1]:.6g} {U_mean_vec[2]:.6g})")
+print()
+print(f"T_mean_domain       = {T_mean_domain:.6g}")
+print()
+
+# ========================================================================= #
+# --- 新增：自动替换 steady_experiments/0/ 下文件的初始场 -------------------- #
+# ========================================================================= #
+steady_case_dir = os.getcwd()
+of_zero_dir = os.path.join(steady_case_dir, "0")
+
+def update_of_dictionary(filepath, pattern, replacement):
+    """读取 OpenFOAM 字典文件，使用正则替换指定内容，并写回"""
+    if not os.path.exists(filepath):
+        print(f"  [Warning] File not found: {filepath}, skipping update.")
+        return
+    with open(filepath, 'r') as f:
+        content = f.read()
+    
+    # re.subn 返回替换后的新字符串和发生替换的次数
+    # [^;]+ 表示匹配到分号前的内容，这样能完好保留后面的注释部分 (如 // 1.5;)
+    new_content, count = re.subn(pattern, replacement, content, flags=re.MULTILINE)
+    
+    if count > 0:
+        with open(filepath, 'w') as f:
+            f.write(new_content)
+        print(f"  [Success] Updated {os.path.basename(filepath)} in {of_zero_dir}")
+    else:
+        print(f"  [Warning] Pattern not found in {os.path.basename(filepath)}")
+
+print(f"\n=== Updating OpenFOAM 0/ dictionaries in {steady_case_dir} ===")
+
+# 1. 替换 epsilon 文件中的 epsilonInlet 
+eps_file = os.path.join(of_zero_dir, "epsilon")
+update_of_dictionary(eps_file, r"^epsilonInlet\s+[^;]+;", f"epsilonInlet  {eps_mean_domain:.6e};")
+
+# 2. 替换 k 文件中的 kInlet
+k_file = os.path.join(of_zero_dir, "k")
+update_of_dictionary(k_file, r"^kInlet\s+[^;]+;", f"kInlet  {k_mean_domain:.6g};")
+
+# 3. 替换 nut 文件中的 internalField
+nut_file = os.path.join(of_zero_dir, "nut")
+update_of_dictionary(nut_file, r"^internalField\s+uniform\s+[^;]+;", f"internalField   uniform {nut_mean_domain:.6g};")
+
+# 4. 替换 U 文件中的 internalField uniform (...)
+u_file = os.path.join(of_zero_dir, "U")
+update_of_dictionary(u_file, r"^internalField\s+uniform\s+\([^)]+\);", f"internalField   uniform ({U_mean_vec[0]:.6g} {U_mean_vec[1]:.6g} {U_mean_vec[2]:.6g});")
+# ========================================================================= #
 
 # --- 2. 配置部分 ---
 MAX_HEIGHT = 2100.0  # 截断高度 (米)，建议比计算域高度(2000)稍高一点作为缓冲
