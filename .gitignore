@@ -1,0 +1,37 @@
+# experiment-related directories
+experiments/
+steady_experiments/
+steady_experiments_finer_ABL/
+boundaryData/
+W_myExp*/
+
+# archived or hidden directories
+__pycache__/
+Archived/
+archive/
+.vscode/
+.cursor/
+constant/
+notebook-scripts/
+WRF-UCM/
+old_scripts/
+geometry_data/
+reference-candidate/
+docs/
+scripts/
+
+# large amount of data
+*.png
+*.jpg
+*.csv
+*.h5
+*.ipynb
+*.npy
+*.zip
+surrogate_dataset/inflow/*.json
+
+# specific files
+lidar_station_info.json
+_task2_report.json
+platform_classification.json
+archive_last_run.sh
