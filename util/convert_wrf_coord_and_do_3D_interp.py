@@ -8,7 +8,6 @@ from pyproj import Proj
 from scipy.interpolate import griddata
 from wrf import getvar, destagger, interplevel
 
-HOME = os.environ.get('HOME')
 
 def calculate_relative_xy(ds, lon0, lat0):
     """
@@ -51,22 +50,37 @@ def generate_stretched_z(z_max, dz_bottom, stretch_factor, dz_max_limit):
         z.append(z[-1] + dz)
     return np.array(z)
 
-project_path = f"{HOME}/WRF-OpenFOAM-Coupling/W_myExp03"
+
+def _cartesian_output_dir(nc_path):
+    """WRF 产物若在 auxhist2/tmp/ 下，则输出到上一层 auxhist2/；否则与输入文件同目录。"""
+    abs_path = os.path.abspath(nc_path)
+    parent = os.path.dirname(abs_path)
+    if os.path.basename(parent) == 'tmp':
+        return os.path.dirname(parent)
+    return parent
+
+
 lon0, lat0 = 113.32, 23.115
 
 
 if __name__ == '__main__':
     # --- Part 1: Input Arguments Parsing ---
     if len(sys.argv) != 2:
-        print(f"Error: Missing input date argument.")
-        print(f"Usage: python {sys.argv[0]} <mm-dd_HH%3AMM>")
-        print(f"Example: python {sys.argv[0]} \"09-01_00:00\"")
+        print("Error: Missing path to tmp NetCDF file.")
+        print(f"Usage: python {sys.argv[0]} <path_to_tmp_ncfile>")
+        print(
+            f"Example: python {sys.argv[0]} "
+            "W_myExp03/auxhist2/tmp/auxhist2_d03_2025-09-01_00%3A00%3A00_tmp.nc"
+        )
         sys.exit(1)
-    
-    input_date = sys.argv[1]
 
-    fname = f"auxhist2_d03_2025-{input_date}:00_tmp.nc"  # f"wrfout_d03_2025-{input_date}:00"
-    ds = xr.open_dataset(f"{project_path}/auxhist2/tmp/{fname}", engine='netcdf4').squeeze()  # f"{project_path}/WRF/run/{fname}"
+    nc_path = os.path.abspath(os.path.normpath(sys.argv[1]))
+    if not os.path.isfile(nc_path):
+        print(f"Error: file not found: {nc_path}")
+        sys.exit(1)
+
+    fname = os.path.basename(nc_path)
+    ds = xr.open_dataset(nc_path, engine='netcdf4').squeeze()
 
     # --- Part 2: Destaggering and Basic Math ---
     PH = ds['PH']
@@ -256,7 +270,9 @@ if __name__ == '__main__':
         }
     )
     
-    save_path = f"{project_path}/auxhist2/{fname.replace('tmp', '1h-rolling_cartesian')}"
+    out_dir = _cartesian_output_dir(nc_path)
+    out_name = fname.replace('tmp', '1h-rolling_cartesian')
+    save_path = os.path.join(out_dir, out_name)
     ds_final.to_netcdf(save_path)
     
     print(f"Successfully saved to {save_path} !")
