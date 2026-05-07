@@ -39,3 +39,6 @@ archive_last_run.sh
 *.vti
 *.npz
 build/
+util/
+analysis/26041*/
+README*.md
