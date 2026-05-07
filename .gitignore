@@ -35,3 +35,7 @@ lidar_station_info.json
 _task2_report.json
 platform_classification.json
 archive_last_run.sh
+
+# related to rbm project. See branch rbm-mid-term-demo if you want to see the code.
+data/wind_lut/
+gazebo_wind_plugin/
