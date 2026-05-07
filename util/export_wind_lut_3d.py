@@ -81,6 +81,11 @@ def _parse_args() -> argparse.Namespace:
         help="Output directory for QC plots. Default: results/wind_lut/<case-stamp>/",
     )
     p.add_argument(
+        "--fail-if-exists",
+        action="store_true",
+        help="Fail if out-dir or qc-dir already exists and is non-empty (prevents overwrites).",
+    )
+    p.add_argument(
         "--xrange",
         type=str,
         default="-2500,2500",
@@ -132,8 +137,8 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument(
         "--qc-slice-z",
         type=float,
-        default=100.0,
-        help="z (m) for the QC horizontal slice (matches postProcessing/100m.csv when 100).",
+        default=10.0,
+        help="z (m) for the QC horizontal slice (default: 10 m for street-canyon-scale QC).",
     )
     p.add_argument(
         "--building-mask-method",
@@ -288,10 +293,18 @@ def _building_mask(grid, buildings_stl: Path, method: str) -> np.ndarray:
     npts = grid.n_points
 
     def _via_enclosed():
+        # NOTE: pyvista signature differs across versions; avoid passing optional
+        # keyword args that may not exist (critical for large hires grids).
         if hasattr(grid, "select_interior_points"):
-            sel = grid.select_interior_points(bld, tolerance=0.0, check_surface=False)
+            try:
+                sel = grid.select_interior_points(bld, check_surface=False)
+            except TypeError:
+                sel = grid.select_interior_points(bld)
         else:
-            sel = grid.select_enclosed_points(bld, tolerance=0.0, check_surface=False)
+            try:
+                sel = grid.select_enclosed_points(bld, check_surface=False)
+            except TypeError:
+                sel = grid.select_enclosed_points(bld)
         flag_array = sel["SelectedPoints"] if "SelectedPoints" in sel.array_names \
             else sel["InteriorPoints"]
         flag = np.asarray(flag_array, dtype=np.uint8)
@@ -344,6 +357,25 @@ def main() -> None:
         out_dir = root / out_dir
     if not qc_dir.is_absolute():
         qc_dir = root / qc_dir
+    def _is_nonempty_dir(p: Path) -> bool:
+        return p.is_dir() and any(p.iterdir())
+
+    if args.fail_if_exists and (_is_nonempty_dir(out_dir) or _is_nonempty_dir(qc_dir)):
+        def _fmt_dir(p: Path) -> str:
+            if not p.exists():
+                return f"{p} (missing)"
+            if not p.is_dir():
+                return f"{p} (exists but not a dir)"
+            items = sorted([c.name for c in p.iterdir()])
+            preview = ", ".join(items[:20]) + (" ..." if len(items) > 20 else "")
+            return f"{p} (non-empty: {preview})"
+
+        print("ERROR: Refusing to write into existing non-empty directories.", file=sys.stderr)
+        print(f"  out-dir: {_fmt_dir(out_dir)}", file=sys.stderr)
+        print(f"  qc-dir : {_fmt_dir(qc_dir)}", file=sys.stderr)
+        print("Hint: choose a new --out-dir/--qc-dir, or remove/rename the existing directories manually.", file=sys.stderr)
+        sys.exit(2)
+
     out_dir.mkdir(parents=True, exist_ok=True)
     qc_dir.mkdir(parents=True, exist_ok=True)
 
@@ -533,11 +565,7 @@ def _make_qc(
     y0: float,
     time_lst: str,
 ) -> None:
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    import pandas as pd
+    import pyvista as pv
 
     Nx, Ny, Nz = U.shape[0], U.shape[1], U.shape[2]
     Uh_lut = np.sqrt(U[..., 0] ** 2 + U[..., 1] ** 2)  # (Nx, Ny, Nz)
@@ -548,105 +576,64 @@ def _make_qc(
     z_used = float(z_coords[k])
     slice_uh = Uh_lut[:, :, k]  # (Nx, Ny)
     slice_inside = inside[:, :, k]
+    # ---- (a) horizontal slice rendering (pyvista only; no matplotlib fallback) ----
+    pv.global_theme.multi_samples = 0
+    pv.global_theme.window_size = [1400, 800]
+    pv.global_theme.transparent_background = False
 
-    # Build CFD reference scatter from postProcessing/100m.csv (only when QC level is 100m).
-    csv_100 = case_dir / "postProcessing" / "100m.csv"
-    cfd_x = cfd_y = cfd_w = None
-    if csv_100.is_file() and abs(z_used - 100.0) < 1e-3:
-        xs, ys, ws = [], [], []
-        for ch in pd.read_csv(csv_100, chunksize=200_000):
-            x = ch["Coords:0"].astype(np.float64).to_numpy()
-            y = ch["Coords:1"].astype(np.float64).to_numpy()
-            u0 = ch["U:0"].astype(np.float64).to_numpy()
-            u1 = ch["U:1"].astype(np.float64).to_numpy()
-            mask = (x >= x_coords[0]) & (x <= x_coords[-1]) & (y >= y_coords[0]) & (y <= y_coords[-1])
-            xs.append(x[mask])
-            ys.append(y[mask])
-            ws.append(np.sqrt(u0[mask] ** 2 + u1[mask] ** 2))
-        cfd_x = np.concatenate(xs) if xs else np.empty(0)
-        cfd_y = np.concatenate(ys) if ys else np.empty(0)
-        cfd_w = np.concatenate(ws) if ws else np.empty(0)
-
-    fig, axes = plt.subplots(1, 2, figsize=(14.0, 6.0), constrained_layout=True)
-
-    vmax = float(
-        np.nanpercentile(
-            np.concatenate(
-                [
-                    slice_uh.ravel(),
-                    cfd_w if cfd_w is not None and cfd_w.size > 0 else slice_uh.ravel(),
-                ]
-            ),
-            98.0,
-        )
+    slice_img = pv.ImageData(
+        dimensions=(Nx, Ny, 1),
+        spacing=(float(x_coords[1] - x_coords[0]) if Nx > 1 else 1.0,
+                 float(y_coords[1] - y_coords[0]) if Ny > 1 else 1.0,
+                 1.0),
+        origin=(float(x_coords[0]), float(y_coords[0]), float(z_used)),
     )
-    vmax = max(vmax, 0.5)
-
-    pcm = axes[0].pcolormesh(
-        x_coords,
-        y_coords,
-        slice_uh.T,
-        cmap="turbo",
-        vmin=0.0,
-        vmax=vmax,
-        shading="nearest",
-    )
-    axes[0].set_aspect("equal")
-    axes[0].set_xlabel("x (m)")
-    axes[0].set_ylabel("y (m)")
-    axes[0].set_title(f"(a) LUT |U_h| at z={z_used:.0f} m")
-    cb0 = fig.colorbar(pcm, ax=axes[0], fraction=0.046, pad=0.02)
-    cb0.set_label("|U_h| (m/s)")
-
-    # Overlay inside-building footprint at this height.
+    slice_img["Uh"] = slice_uh.reshape(-1, order="F").astype(np.float32)
     if slice_inside.any():
-        axes[0].contour(
-            x_coords,
-            y_coords,
-            slice_inside.T,
-            levels=[0.5],
-            colors="black",
-            linewidths=0.4,
-            alpha=0.65,
-        )
+        slice_img["inside_building"] = slice_inside.reshape(-1, order="F").astype(np.uint8)
 
-    if cfd_w is not None and cfd_w.size > 0:
-        sc = axes[1].scatter(
-            cfd_x,
-            cfd_y,
-            c=cfd_w,
-            cmap="turbo",
-            vmin=0.0,
-            vmax=vmax,
-            s=2.0,
-            linewidths=0.0,
-        )
-        axes[1].set_aspect("equal")
-        axes[1].set_xlabel("x (m)")
-        axes[1].set_ylabel("y (m)")
-        axes[1].set_title("(b) CFD reference |U_h| from postProcessing/100m.csv")
-        cb1 = fig.colorbar(sc, ax=axes[1], fraction=0.046, pad=0.02)
-        cb1.set_label("|U_h| (m/s)")
-    else:
-        axes[1].text(
-            0.5,
-            0.5,
-            "postProcessing/100m.csv\nnot used at this height",
-            transform=axes[1].transAxes,
-            ha="center",
-            va="center",
-        )
-        axes[1].set_axis_off()
+    vmax = float(np.nanpercentile(slice_uh, 98.0))
+    vmax = max(vmax, 0.5)
+    clim = (0.0, vmax)
 
-    fig.suptitle(
-        f"Wind LUT QC slice  ({case_dir.name}, LST {time_lst or 'n/a'})",
-        fontsize=12,
-        fontweight="bold",
+    out_png = qc_dir / f"qc_slice_z{int(round(z_used))}m.png"
+    p = pv.Plotter(off_screen=True)
+    p.add_text(
+        f"LUT |U_h| slice  z={z_used:.0f} m\n{case_dir.name} (LST {time_lst or 'n/a'})",
+        font_size=12,
     )
-    out_png = qc_dir / "qc_slice_z100m.png"
-    fig.savefig(out_png, dpi=200)
-    plt.close(fig)
+    p.add_mesh(
+        slice_img,
+        scalars="Uh",
+        cmap="turbo",
+        clim=clim,
+        show_scalar_bar=True,
+        scalar_bar_args={"title": "|U_h| (m/s)"},
+    )
+    if slice_inside.any():
+        try:
+            contour = slice_img.contour([0.5], scalars="inside_building")
+            p.add_mesh(contour, color="black", line_width=2)
+        except Exception:
+            pass
+    p.view_xy()
+    p.enable_parallel_projection()
+    p.camera.zoom(1.15)
+    p.show(auto_close=False)
+    p.screenshot(str(out_png))
+    p.close()
     _print_step(f"  wrote {out_png}")
+
+    # Back-compat: some existing docs/scripts expect this filename
+    legacy_png = qc_dir / "qc_slice_z100m.png"
+    if legacy_png != out_png:
+        try:
+            import shutil
+
+            shutil.copyfile(out_png, legacy_png)
+            _print_step(f"  wrote {legacy_png}")
+        except Exception:
+            pass
 
     # ---- (b) vertical profile at hotspot ----------------------------------
     i = int(np.clip(np.argmin(np.abs(x_coords - x0)), 0, Nx - 1))
@@ -656,23 +643,26 @@ def _make_qc(
     w_prof = U[i, j, :, 2]
     mag_prof = Umag_lut[i, j, :]
 
-    fig2, ax2 = plt.subplots(1, 1, figsize=(6.0, 7.0), constrained_layout=True)
-    ax2.plot(u_prof, z_coords, label="u (east)", color="#1f77b4")
-    ax2.plot(v_prof, z_coords, label="v (north)", color="#2ca02c")
-    ax2.plot(w_prof, z_coords, label="w (up)", color="#9467bd")
-    ax2.plot(mag_prof, z_coords, label="|U|", color="#d62728", linewidth=2.0)
-    ax2.axvline(0.0, color="0.6", linewidth=0.6)
-    ax2.set_xlabel("velocity component (m/s)")
-    ax2.set_ylabel("z (m)")
-    ax2.set_title(
-        f"LUT profile at (x,y) = ({x_coords[i]:.0f}, {y_coords[j]:.0f}) m\n"
+    out_png2 = qc_dir / "qc_profile_hotspot.png"
+    pl2 = pv.Plotter(off_screen=True, window_size=(900, 900))
+    ch = pv.Chart2D()
+    ch.background_color = "white"
+    ch.x_label = "velocity component (m/s)"
+    ch.y_label = "z (m)"
+    ch.title = (
+        f"LUT profile at (x,y)=({x_coords[i]:.0f},{y_coords[j]:.0f}) m\n"
         f"{case_dir.name} (LST {time_lst or 'n/a'})"
     )
-    ax2.legend(loc="best")
-    ax2.grid(alpha=0.3)
-    out_png2 = qc_dir / "qc_profile_hotspot.png"
-    fig2.savefig(out_png2, dpi=200)
-    plt.close(fig2)
+    ch.line(u_prof.astype(float), z_coords.astype(float), color="tab:blue", label="u (east)")
+    ch.line(v_prof.astype(float), z_coords.astype(float), color="tab:green", label="v (north)")
+    ch.line(w_prof.astype(float), z_coords.astype(float), color="tab:purple", label="w (up)")
+    ch.line(mag_prof.astype(float), z_coords.astype(float), color="tab:red", label="|U|", width=3)
+    ch.legend_visible = True
+    ch.show_grid = True
+    pl2.add_chart(ch)
+    pl2.show(auto_close=False)
+    pl2.screenshot(str(out_png2))
+    pl2.close()
     _print_step(f"  wrote {out_png2}")
 
     # ---- (c) summary json -------------------------------------------------

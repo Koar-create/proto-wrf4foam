@@ -328,3 +328,14 @@ gzclient
   - 湍流“发展距离/时间”显著：该案例中高波数能量约需 **1.5 km** 才“填充”，并出现 **overshoot→衰减** 的演化。
   - 近地层失配警示：报告指出 OpenFOAM 域内近地层水平风速随下游距离快速下降，与 WRF-LES 不一致，原因不明——提示耦合链条中“近地层/地表参数化/入口湍流结构”可能是主要误差源。
   - 未来工作方向与可迁移问题：内嵌分辨率、稳定度差异、入流扰动方法、动态 SGS 是否缓解谱 overshoot。
+
+## 2026-05-08
+
+### Windows 侧导出高精度小范围风场 LUT（hires）
+- **目标**：在 Windows 侧从同一 OpenFOAM steady frame 重新采样更细网格 LUT（dx=dy=dz=2m），覆盖热点周边 1km×1km 区域，z 上限 200m，并导出三件套 `wind_lut.{json,vti}`，同时生成 **pyvista** 的 z=10m QC 切片图。
+- **约束**：
+  - 不修改 Gazebo demo / 插件源码 / world / 模型文件。
+  - 不覆盖现有 LUT 目录；输出到新目录 `data/wind_lut/20250903_1400_hires/`，QC 输出到 `results/wind_lut/20250903_1400_hires/`。
+  - 若输出目录已存在且非空，脚本可用 `--fail-if-exists` 拒绝写入，避免误覆盖。
+- **可复现命令**：
+  - `python util/export_wind_lut_3d.py --xrange 950,1950 --yrange 850,1850 --dx 2 --dy 2 --dz 2 --zrange 0,200 --out-dir data/wind_lut/20250903_1400_hires/ --qc-dir results/wind_lut/20250903_1400_hires/ --fail-if-exists`
