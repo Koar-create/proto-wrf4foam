@@ -2,19 +2,6 @@
 
 > 本文件由Cursor智能体自动维护，用于记录本仓库内任务执行过程、关键决策与可复现命令。
 
-## 2026-05-06
-
-### 批量：100m 切片水平风速空间 95% 分位数（排除敏感性算例）
-- **脚本**：[`util/compute_100m_spatial_p95_windspeed.py`](util/compute_100m_spatial_p95_windspeed.py)
-- **输入**：`steady_experiments_finer_ABL/<case_id>/postProcessing/100m.csv`；**排除**目录名含 `fvOpt_sensitivity_run` 的算例（与 `docs/project/Global_Constraints.md` 中 39 个敏感性实验一致）。
-- **计算**：水平风速 `sqrt(U:0^2 + U:1^2)`，对切片上全部点取 **第 95 百分位**；时间从 `<case_id>` 前缀 `YYYYMMDD_HHMM` 解析为 UTC。
-- **默认输出**：`results/wrf_openfoam/steady_ABL_100m_spatial_p95_windspeed.csv`（列 `time_utc`, `wind_speed_p95_m_s`）。
-- **运行示例**：
-  - `python util/compute_100m_spatial_p95_windspeed.py`
-  - `python util/compute_100m_spatial_p95_windspeed.py --root steady_experiments_finer_ABL --out results/wrf_openfoam/my_p95.csv`
-  - 若需遇错即失败：`python util/compute_100m_spatial_p95_windspeed.py --strict`
-- **说明**：`steady_experiments_finer_ABL/` 常被 `.gitignore` 忽略，需在本地存在算例树后再运行。
-
 ## 2026-05-03
 
 ### 英文 `README.md`（仓库说明）
