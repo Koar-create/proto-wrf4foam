@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="guangzhou_wind">
+    <physics type="ode">
+      <max_step_size>0.004</max_step_size>
+      <real_time_update_rate>250</real_time_update_rate>
+    </physics>
+
+    <!-- Minimal probe body with wind plugin attached -->
+    <include>
+      <uri>model://iris_wind_demo</uri>
+      <!-- Start near the LUT hotspot in LUT/world coordinates -->
+      <pose>1416 -881 50 0 0 0</pose>
+    </include>
+  </world>
+</sdf>
+

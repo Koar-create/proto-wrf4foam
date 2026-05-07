@@ -1,0 +1,276 @@
+{
+  "generated_utc": "2026-05-05T19:49:23.196582+00:00",
+  "repo_relative": true,
+  "axes": {
+    "half_width_m": [
+      200.0,
+      400.0,
+      600.0
+    ],
+    "camera_distance_factor": [
+      1.0,
+      1.5,
+      2.0
+    ],
+    "analysis_z_max_m": [
+      200.0,
+      280.0,
+      360.0
+    ],
+    "zmax_m_fixed": 400.0
+  },
+  "hotspot": {
+    "x0_m": 1415.7948131109831,
+    "y0_m": -881.189788959172,
+    "p_threshold_m_s": 4.120181718372098,
+    "n_candidates": 3600
+  },
+  "count": 27,
+  "ok": 27,
+  "errors": 0,
+  "images": [
+    {
+      "half_width_m": 200.0,
+      "camera_distance_factor": 1.0,
+      "analysis_z_max_m": 200.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 200.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0200_cdf1p0_az0200.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 200.0,
+      "camera_distance_factor": 1.0,
+      "analysis_z_max_m": 280.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 280.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0200_cdf1p0_az0280.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 200.0,
+      "camera_distance_factor": 1.0,
+      "analysis_z_max_m": 360.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 360.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0200_cdf1p0_az0360.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 200.0,
+      "camera_distance_factor": 1.5,
+      "analysis_z_max_m": 200.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 200.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0200_cdf1p5_az0200.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 200.0,
+      "camera_distance_factor": 1.5,
+      "analysis_z_max_m": 280.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 280.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0200_cdf1p5_az0280.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 200.0,
+      "camera_distance_factor": 1.5,
+      "analysis_z_max_m": 360.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 360.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0200_cdf1p5_az0360.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 200.0,
+      "camera_distance_factor": 2.0,
+      "analysis_z_max_m": 200.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 200.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0200_cdf2p0_az0200.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 200.0,
+      "camera_distance_factor": 2.0,
+      "analysis_z_max_m": 280.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 280.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0200_cdf2p0_az0280.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 200.0,
+      "camera_distance_factor": 2.0,
+      "analysis_z_max_m": 360.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 360.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0200_cdf2p0_az0360.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 400.0,
+      "camera_distance_factor": 1.0,
+      "analysis_z_max_m": 200.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 200.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0400_cdf1p0_az0200.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 400.0,
+      "camera_distance_factor": 1.0,
+      "analysis_z_max_m": 280.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 280.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0400_cdf1p0_az0280.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 400.0,
+      "camera_distance_factor": 1.0,
+      "analysis_z_max_m": 360.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 360.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0400_cdf1p0_az0360.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 400.0,
+      "camera_distance_factor": 1.5,
+      "analysis_z_max_m": 200.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 200.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0400_cdf1p5_az0200.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 400.0,
+      "camera_distance_factor": 1.5,
+      "analysis_z_max_m": 280.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 280.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0400_cdf1p5_az0280.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 400.0,
+      "camera_distance_factor": 1.5,
+      "analysis_z_max_m": 360.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 360.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0400_cdf1p5_az0360.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 400.0,
+      "camera_distance_factor": 2.0,
+      "analysis_z_max_m": 200.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 200.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0400_cdf2p0_az0200.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 400.0,
+      "camera_distance_factor": 2.0,
+      "analysis_z_max_m": 280.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 280.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0400_cdf2p0_az0280.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 400.0,
+      "camera_distance_factor": 2.0,
+      "analysis_z_max_m": 360.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 360.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0400_cdf2p0_az0360.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 600.0,
+      "camera_distance_factor": 1.0,
+      "analysis_z_max_m": 200.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 200.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0600_cdf1p0_az0200.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 600.0,
+      "camera_distance_factor": 1.0,
+      "analysis_z_max_m": 280.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 280.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0600_cdf1p0_az0280.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 600.0,
+      "camera_distance_factor": 1.0,
+      "analysis_z_max_m": 360.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 360.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0600_cdf1p0_az0360.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 600.0,
+      "camera_distance_factor": 1.5,
+      "analysis_z_max_m": 200.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 200.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0600_cdf1p5_az0200.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 600.0,
+      "camera_distance_factor": 1.5,
+      "analysis_z_max_m": 280.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 280.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0600_cdf1p5_az0280.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 600.0,
+      "camera_distance_factor": 1.5,
+      "analysis_z_max_m": 360.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 360.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0600_cdf1p5_az0360.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 600.0,
+      "camera_distance_factor": 2.0,
+      "analysis_z_max_m": 200.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 200.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0600_cdf2p0_az0200.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 600.0,
+      "camera_distance_factor": 2.0,
+      "analysis_z_max_m": 280.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 280.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0600_cdf2p0_az0280.png",
+      "status": "ok"
+    },
+    {
+      "half_width_m": 600.0,
+      "camera_distance_factor": 2.0,
+      "analysis_z_max_m": 360.0,
+      "zmax_m": 400.0,
+      "effective_z_top_m": 360.0,
+      "file": "results/microhazard/20250903_1400/figure1_grid_hw0600_cdf2p0_az0360.png",
+      "status": "ok"
+    }
+  ]
+}

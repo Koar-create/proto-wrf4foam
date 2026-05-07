@@ -1,0 +1,41 @@
+{
+  "case_id": "20250903_1400_two_boundaries_as_outlet",
+  "lut_dimensions": [
+    501,
+    501,
+    101
+  ],
+  "x_range": [
+    -2500.0,
+    2500.0
+  ],
+  "y_range": [
+    -2500.0,
+    2500.0
+  ],
+  "z_range": [
+    0.0,
+    500.0
+  ],
+  "n_inside_building": 281398,
+  "n_invalid": 293534,
+  "U_mag_stats": {
+    "mean": 3.167506694793701,
+    "p50": 3.3265089988708496,
+    "p95": 5.340655326843262,
+    "p99": 5.7968854904174805,
+    "max": 9.11614990234375
+  },
+  "qc_slice_z_used": 100.0,
+  "qc_slice_z_requested": 100.0,
+  "hotspot_xy_used": [
+    1420.0,
+    -880.0
+  ],
+  "hotspot_xy_requested": [
+    1416.0,
+    -881.0
+  ],
+  "hotspot_profile_max_speed": 4.813867568969727,
+  "hotspot_profile_z_at_max": 145.0
+}

@@ -1,0 +1,55 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="iris_wind_demo">
+    <static>false</static>
+
+    <link name="base_link">
+      <pose>0 0 10 0 0 0</pose>
+      <inertial>
+        <mass>1.5</mass>
+        <inertia>
+          <ixx>0.0347</ixx>
+          <iyy>0.0347</iyy>
+          <izz>0.0617</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <box><size>0.28 0.28 0.08</size></box>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <box><size>0.28 0.28 0.08</size></box>
+        </geometry>
+      </visual>
+    </link>
+
+    <plugin name="wind_field" filename="libWindFieldPlugin.so">
+      <lut_json>/home/jeezen/wrf_openfoam_coupling_cache/wind_lut/20250903_1400/wind_lut.json</lut_json>
+      <lut_vti>/home/jeezen/wrf_openfoam_coupling_cache/wind_lut/20250903_1400/wind_lut.vti</lut_vti>
+      <link_name>base_link</link_name>
+      <rho>1.225</rho>
+      <C_D>1.0</C_D>
+      <area>0.04</area>
+      <world_to_lut_offset_x>0</world_to_lut_offset_x>
+      <world_to_lut_offset_y>0</world_to_lut_offset_y>
+      <world_to_lut_offset_z>0</world_to_lut_offset_z>
+      <log_every_n>250</log_every_n>
+    </plugin>
+
+    <plugin name="hover_pid" filename="libHoverPidPlugin.so">
+      <link_name>base_link</link_name>
+      <target_x>1420</target_x>
+      <target_y>-880</target_y>
+      <target_z>50</target_z>
+      <kp>8</kp>
+      <ki>0.1</ki>
+      <kd>4</kd>
+      <log_every_n>250</log_every_n>
+    </plugin>
+  </model>
+</sdf>
