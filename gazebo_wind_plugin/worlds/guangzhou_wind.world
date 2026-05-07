@@ -6,6 +6,22 @@
       <real_time_update_rate>250</real_time_update_rate>
     </physics>
 
+    <!-- Spawn is far from origin (~km). Set initial camera near the model. -->
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <!-- pose: x y z roll pitch yaw -->
+        <pose>1420 -880 160 0 0.9 0</pose>
+      </camera>
+    </gui>
+
+    <!-- Local models (no online DB needed) -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
     <!-- Minimal probe body with wind plugin attached -->
     <include>
       <uri>model://iris_wind_demo</uri>

@@ -23,6 +23,7 @@
   - [`WindFieldPlugin.cc`](gazebo_wind_plugin/WindFieldPlugin.cc)：LUT 加载后打印 `hotspot_check LUT(1420,-880,145)` 的 `wind=` 与 `|U|`（三线性插值；该网格点与 QC 文档热点 `(1416,-881)` 不同，`|U|` 数值不必等于 4.81 m/s）。
   - [`models/iris_wind_demo/model.sdf`](gazebo_wind_plugin/models/iris_wind_demo/model.sdf)：`base_link` 质量 1.5 kg，惯量 `ixx=iyy=0.0347`、`izz=0.0617`；碰撞/可视用 `0.28×0.28×0.08` box；同时挂载风场与 Hover PID 插件。
   - 运行后插件消息写入 `~/.gazebo/server-11345/default.log`（终端可能只见 OpenAL 告警）；需同时看到 `wind=` 与 `hover_error=`。`gzserver --iters 500` 在本机仍可能不自动退出，可用 `timeout` 结束；未见仿真崩溃。
+  - **GUI 微扰可见性（2026-05-07）**：`guangzhou_wind.world` 增加 `model://sun` 与 `model://ground_plane`（需 `GAZEBO_MODEL_PATH` 含 `/usr/share/gazebo-11/models` 且 `GAZEBO_MODEL_DATABASE_URI=""`）；`iris_wind_demo` 在 `base_link` 上增加**仅视觉**的放大蓝 box + 白色高杆 `visual_mast`（碰撞仍为小 box，物理不变），便于在 Follow/远景下看到小幅位姿/位置变化。
 
 - **验证（headless）**：
   - 关键环境：
