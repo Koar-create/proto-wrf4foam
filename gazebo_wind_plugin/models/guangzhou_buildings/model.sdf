@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="guangzhou_buildings">
+    <static>true</static>
+
+    <link name="buildings_link">
+      <pose>0 0 0 0 0 0</pose>
+      <gravity>false</gravity>
+
+      <visual name="buildings_visual">
+        <geometry>
+          <mesh>
+            <uri>model://guangzhou_buildings/meshes/buildings.stl</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.7 0.7 0.7 0.55</ambient>
+          <diffuse>0.7 0.7 0.7 0.55</diffuse>
+          <specular>0.1 0.1 0.1 0.2</specular>
+          <emissive>0 0 0 0</emissive>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+  </model>
+</sdf>
+

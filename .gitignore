@@ -42,3 +42,6 @@ build/
 util/
 analysis/26041*/
 README*.md
+*.txt
+*.log
+*.stl

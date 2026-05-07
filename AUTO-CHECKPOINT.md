@@ -34,6 +34,46 @@
   - 观察到日志：`[WindFieldPlugin] LUT loaded: dims=(501,501,101) ...`（证明 VTI + JSON 读取成功，插件成功 Load）
   - 备注：`gzserver --iters N` 在本机环境下未按预期自动退出（可用 `timeout` / 手动 kill 做“有限步”验证）。
 
+## 2026-05-07
+
+### Gazebo GUI「静止平面 + 细圆柱」深度诊断与文档闭环
+
+- **触发问题**：Gazebo GUI 中只能看到一个静止 `ground_plane` 与一根细圆柱，疑似“仿真没动 / 插件没加载”。
+- **关键结论**：
+  - 这符合当前 demo 资产设计：`iris_wind_demo` 不是完整无人机，而是极简风场探针；细圆柱是 `model.sdf` 中的 `visual_mast`（仅视觉）。
+  - `WindFieldPlugin` 与 `HoverPidPlugin` 在日志中持续输出，证明链路在跑；稳态时 PID 的水平力几乎抵消风力，肉眼难以观察漂移。
+  - 当前两插件均通过 `link->AddForce(...)` 施力，无偏心施力点/力矩 → 杆不会明显倾斜，进一步增强“看似静止”。
+- **证据抓手（可复现）**：
+  - 运行日志：`~/.gazebo/server-*/default.log` 中同时出现 `LUT loaded`、周期 `wind=`、周期 `hover_error=`。
+  - 位姿采样：`gz model -m iris_wind_demo -p` 连续采样位姿，确认模型处于稳态锁定。
+- **文档产出**：
+  - 将原“对话式记录”重构为诊断闭环文档：[`docs/ops/搭建RBM仿真环境Gazebo-2.md`](docs/ops/搭建RBM仿真环境Gazebo-2.md)
+  - 文档新增：现象复盘、证据链、根因分层、最小排障分支（症状→判断→动作）、三层演示模式与工程化改进清单。
+
+### Gazebo 视觉 Demo（四旋翼 + 建筑 + 风箭头 + 尾迹 + 可见漂移）
+
+- **目标**：从“日志正常但视觉为 0”升级到可录视频：四旋翼外观、建筑街谷参照、静态风矢量箭头、轨迹尾迹，同时保留 `WindFieldPlugin`/`HoverPidPlugin` 证据链。
+- **新增/引入模型资源**：
+  - `gazebo_wind_plugin/models/px4_iris_assets/`：稀疏克隆 `PX4/PX4-SITL_gazebo-classic` 的 Iris 资源（仅用于 mesh 复用）。
+  - `gazebo_wind_plugin/models/iris_wind_quad/`：本地四旋翼外观模型（机身 `iris.stl` + 桨叶 DAE），并挂载风场、悬停 PID 与尾迹插件。
+  - `gazebo_wind_plugin/models/guangzhou_buildings/`：将 `constant/triSurface/buildings.stl` 封装为静态 visual-only 模型。
+  - `gazebo_wind_plugin/models/wind_arrows_hotspot/`：从 `wind_lut.npz` 采样生成的静态风箭头模型。
+- **新增脚本**：
+  - `scripts/generate_gazebo_wind_arrows.py`：读取 `data/wind_lut/.../wind_lut.npz`，采样热点附近并生成 `wind_arrows_hotspot` 的 `model.sdf`。
+- **新增插件**：
+  - `gazebo_wind_plugin/TrailMarkerPlugin.{hh,cc}`：每隔一段时间在轨迹上生成小球，并删除旧点；已加入 `CMakeLists.txt` 并成功编译生成 `libTrailMarkerPlugin.so`。
+- **控制模式（可见漂移）**：
+  - `HoverPidPlugin` 新增 SDF 参数 `enable_xy`（默认 true）；当 `enable_xy=false` 时仅控制 Z，XY 由风推动形成可见位移。
+  - `iris_wind_quad/model.sdf` 已设置 `<enable_xy>false</enable_xy>` 用于 demo。
+- **world 更新**：
+  - `gazebo_wind_plugin/worlds/guangzhou_wind.world`：替换为 include `iris_wind_quad` 并新增 `guangzhou_buildings` 与 `wind_arrows_hotspot`。
+- **headless 验证（证据）**：
+  - `gzserver` 输出中出现：
+    - `[WindFieldPlugin] LUT loaded ...`、`hotspot_check ...`
+    - `[HoverPidPlugin] ... enable_xy=0`
+    - `[TrailMarkerPlugin] ...`
+    - 且 `pos=(...)` 随时间在 XY 方向明显变化，证明可见漂移模式生效。
+
 ### `render_3d_streamlines_v2`：流线密度 + 标注字号（对齐 `docs/image2.png` 审美，相对旧版 `figure1_streamlines_v2`）
 - **问题**：默认盒状种子 `10×10×10`、标题字号 34 且随 `_cb_scale` 线性放大 → **流线极密、左上角标题过大易裁切**；色标刻度曾偏小。后又一度 **`4×4×4` + 大步长** → 画面偏稀、折线显直。
 - **代码**：[`util/render_3d_streamlines_v2.py`](util/render_3d_streamlines_v2.py)
@@ -101,6 +141,46 @@
     - 高分辨率默认提示见 `--window-size` 帮助文案。
   - **Plan B（仍为 3D，不经本脚本 2D）**：若 `POpenFOAMReader` 无法读 polyhedral/时间目录，在算例根执行 OpenFOAM **`foamToVTK -latestTime`**（或 ParaView 直接打开 case），用 **ParaView / `pvpython`**：`Clip` + `Stream Tracer` + STL + `Save Screenshot`。
 - **备注**：流线调用已按新版 PyVista 使用 **`max_length`** 替代已弃用的 `max_time`。
+
+### WSL2 转发 Gazebo GUI 帧率低（澄清 + 推荐运行方式）
+
+#### 关键澄清
+
+- 你目前的命令是：
+  - `gazebo <world> --verbose`
+- **这不是“只跑服务器”**：`gazebo` 会在 WSL2 里同时启动 **`gzserver`（物理/仿真）** + **`gzclient`（GUI）**，因此 Windows 桌面弹出的窗口实际上是 **WSLg 转发的 Linux GUI**。
+
+#### 正确的“WSL2 只跑服务器”
+
+在 WSL2 里用 `gzserver`（或 `gazebo -s`）启动 world，确保不再弹 GUI：
+
+```bash
+export GAZEBO_PLUGIN_PATH="$HOME/WRF-OpenFOAM-Coupling/gazebo_wind_plugin/build:${GAZEBO_PLUGIN_PATH:-}"
+export GAZEBO_MODEL_PATH="$HOME/WRF-OpenFOAM-Coupling/gazebo_wind_plugin/models:/usr/share/gazebo-11/models:${GAZEBO_MODEL_PATH:-}"
+export GAZEBO_MODEL_DATABASE_URI=""
+
+gzserver "$HOME/WRF-OpenFOAM-Coupling/gazebo_wind_plugin/worlds/guangzhou_wind.world" --verbose
+```
+
+可选：若要显式指定 master：
+
+```bash
+export GAZEBO_MASTER_URI="http://0.0.0.0:11345"
+export GAZEBO_IP="$(hostname -I | awk '{print $1}')"
+```
+
+#### “Windows 原生跑 GUI”（推荐提帧）
+
+- 在 Windows 上安装 Gazebo Classic 11（原生 Windows 版本），然后在 Windows 侧启动 `gzclient` / `gazebo`（仅 GUI），通过 `GAZEBO_MASTER_URI` 连接到 WSL2 的 `gzserver`。
+- WSL2 当前 IP 可用 `hostname -I` 获取（例：`172.19.233.80`）。
+- Windows 侧环境变量示例（PowerShell）：
+
+```powershell
+$env:GAZEBO_MASTER_URI="http://172.19.233.80:11345"
+gzclient
+```
+
+> 注：若 Windows 侧无法直连该 IP/端口，需要检查 Windows 防火墙，或用 `netsh interface portproxy` 将 `127.0.0.1:11345` 转发到 WSL2 IP。
 - **`render_3d_streamlines_v2`（色标 + 对齐 image2 迭代）**：[`util/render_3d_streamlines_v2.py`](util/render_3d_streamlines_v2.py)
   - **TypeError**：`scalar_bar_args` 已去掉不兼容的 `title_font_family` / `label_font_family`。
   - **视觉迭代（相对 docs/image2）**：默认 **暗色背景** `#1e1e22`、建筑 `#5c5c62`、地面 `#3a3a40`；**热点盒状种子** **`7×7×6`**（`--seed-style box`，可调）；**双向积分** `both`、**细管** `tube-radius-m` 默认 **0.38**、`tube-sides` 32、`tube-opacity` 0.88；**`--initial-step` 默认 0.06**（顺滑折线）；**plane** 种子改为热点 **上游** `x` 而非 `xmin+5`；相机距离系数 **2.35×half_w**；标题/色标字号 **次线性**随分辨率缩放，色标单独提高可读性。

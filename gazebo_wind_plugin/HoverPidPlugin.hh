@@ -27,6 +27,7 @@ private:
   double kp_{8.0};
   double ki_{0.1};
   double kd_{4.0};
+  bool enable_xy_{true};
 
   ignition::math::Vector3d integral_{0, 0, 0};
   ignition::math::Vector3d prev_err_{0, 0, 0};

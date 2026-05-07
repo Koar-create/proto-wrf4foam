@@ -22,9 +22,21 @@
       <uri>model://ground_plane</uri>
     </include>
 
-    <!-- Minimal probe body with wind plugin attached -->
+    <!-- Street-canyon reference (visual-only STL) -->
     <include>
-      <uri>model://iris_wind_demo</uri>
+      <uri>model://guangzhou_buildings</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Static wind arrows sampled from LUT -->
+    <include>
+      <uri>model://wind_arrows_hotspot</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Iris quadrotor visual with wind + hover PID + trail -->
+    <include>
+      <uri>model://iris_wind_quad</uri>
       <!-- Start near the LUT hotspot in LUT/world coordinates -->
       <pose>1416 -881 50 0 0 0</pose>
     </include>

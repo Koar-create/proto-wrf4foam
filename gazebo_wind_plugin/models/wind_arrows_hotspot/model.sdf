@@ -1,0 +1,2554 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="wind_arrows_hotspot">
+    <static>true</static>
+    <link name="arrow_0">
+      <pose>1296.000 -1001.000 50.000 0.000000 0.008558 2.718564</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_0_shaft">
+        <pose>5.708 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>11.417 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_0_head">
+        <pose>12.670 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>2.506 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_1">
+      <pose>1336.000 -1001.000 50.000 0.000000 0.042205 2.573659</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_1_shaft">
+        <pose>6.036 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>12.073 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.056 0.178 0.944 0.850</ambient>
+          <diffuse>0.056 0.178 0.944 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_1_head">
+        <pose>13.398 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>2.650 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.056 0.178 0.944 0.850</ambient>
+          <diffuse>0.056 0.178 0.944 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_2">
+      <pose>1376.000 -1001.000 50.000 0.000000 0.045244 2.473671</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_2_shaft">
+        <pose>6.744 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>13.488 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.215 0.257 0.785 0.850</ambient>
+          <diffuse>0.215 0.257 0.785 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_2_head">
+        <pose>14.968 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>2.961 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.215 0.257 0.785 0.850</ambient>
+          <diffuse>0.215 0.257 0.785 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_3">
+      <pose>1416.000 -1001.000 50.000 0.000000 0.034776 2.428161</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_3_shaft">
+        <pose>7.565 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>15.131 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.399 0.349 0.601 0.850</ambient>
+          <diffuse>0.399 0.349 0.601 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_3_head">
+        <pose>16.791 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.321 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.399 0.349 0.601 0.850</ambient>
+          <diffuse>0.399 0.349 0.601 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_4">
+      <pose>1456.000 -1001.000 50.000 0.000000 0.023710 2.414238</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_4_shaft">
+        <pose>8.309 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>16.618 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.565 0.367 0.435 0.850</ambient>
+          <diffuse>0.565 0.367 0.435 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_4_head">
+        <pose>18.442 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.648 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.565 0.367 0.435 0.850</ambient>
+          <diffuse>0.565 0.367 0.435 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_5">
+      <pose>1496.000 -1001.000 50.000 0.000000 0.016627 2.417553</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_5_shaft">
+        <pose>8.905 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.809 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.699 0.301 0.301 0.850</ambient>
+          <diffuse>0.699 0.301 0.301 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_5_head">
+        <pose>19.764 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.909 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.699 0.301 0.301 0.850</ambient>
+          <diffuse>0.699 0.301 0.301 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_6">
+      <pose>1536.000 -1001.000 50.000 0.000000 0.015891 2.429594</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_6_shaft">
+        <pose>9.257 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>18.514 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.778 0.261 0.222 0.850</ambient>
+          <diffuse>0.778 0.261 0.222 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_6_head">
+        <pose>20.546 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.064 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.778 0.261 0.222 0.850</ambient>
+          <diffuse>0.778 0.261 0.222 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_7">
+      <pose>1296.000 -961.000 50.000 0.000000 -0.086358 2.890958</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_7_shaft">
+        <pose>5.880 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>11.760 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.021 0.160 0.979 0.850</ambient>
+          <diffuse>0.021 0.160 0.979 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_7_head">
+        <pose>13.050 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>2.581 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.021 0.160 0.979 0.850</ambient>
+          <diffuse>0.021 0.160 0.979 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_8">
+      <pose>1336.000 -961.000 50.000 0.000000 0.029009 2.595737</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_8_shaft">
+        <pose>6.120 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>12.240 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.075 0.187 0.925 0.850</ambient>
+          <diffuse>0.075 0.187 0.925 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_8_head">
+        <pose>13.584 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>2.687 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.075 0.187 0.925 0.850</ambient>
+          <diffuse>0.075 0.187 0.925 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_9">
+      <pose>1376.000 -961.000 50.000 0.000000 0.044592 2.456400</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_9_shaft">
+        <pose>7.046 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>14.092 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.282 0.291 0.718 0.850</ambient>
+          <diffuse>0.282 0.291 0.718 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_9_head">
+        <pose>15.639 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.093 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.282 0.291 0.718 0.850</ambient>
+          <diffuse>0.282 0.291 0.718 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_10">
+      <pose>1416.000 -961.000 50.000 0.000000 0.030636 2.412989</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_10_shaft">
+        <pose>7.985 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>15.971 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.493 0.396 0.507 0.850</ambient>
+          <diffuse>0.493 0.396 0.507 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_10_head">
+        <pose>17.723 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.506 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.493 0.396 0.507 0.850</ambient>
+          <diffuse>0.493 0.396 0.507 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_11">
+      <pose>1456.000 -961.000 50.000 0.000000 0.017509 2.411563</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_11_shaft">
+        <pose>8.766 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.532 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.668 0.316 0.332 0.850</ambient>
+          <diffuse>0.668 0.316 0.332 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_11_head">
+        <pose>19.456 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.849 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.668 0.316 0.332 0.850</ambient>
+          <diffuse>0.668 0.316 0.332 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_12">
+      <pose>1496.000 -961.000 50.000 0.000000 0.010742 2.432680</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_12_shaft">
+        <pose>9.366 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>18.731 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.802 0.249 0.198 0.850</ambient>
+          <diffuse>0.802 0.249 0.198 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_12_head">
+        <pose>20.787 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.112 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.802 0.249 0.198 0.850</ambient>
+          <diffuse>0.802 0.249 0.198 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_13">
+      <pose>1536.000 -961.000 50.000 0.000000 0.019364 2.469391</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_13_shaft">
+        <pose>9.623 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.246 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.860 0.220 0.140 0.850</ambient>
+          <diffuse>0.860 0.220 0.140 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_13_head">
+        <pose>21.359 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.225 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.860 0.220 0.140 0.850</ambient>
+          <diffuse>0.860 0.220 0.140 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_14">
+      <pose>1296.000 -921.000 50.000 0.000000 -0.825862 2.552552</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_14_shaft">
+        <pose>3.502 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>7.003 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_14_head">
+        <pose>7.772 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>1.537 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_15">
+      <pose>1336.000 -921.000 50.000 0.000000 -0.001954 2.426350</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_15_shaft">
+        <pose>5.819 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>11.639 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.007 0.154 0.993 0.850</ambient>
+          <diffuse>0.007 0.154 0.993 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_15_head">
+        <pose>12.916 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>2.555 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.007 0.154 0.993 0.850</ambient>
+          <diffuse>0.007 0.154 0.993 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_16">
+      <pose>1376.000 -921.000 50.000 0.000000 0.040408 2.379281</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_16_shaft">
+        <pose>7.292 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>14.585 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.337 0.319 0.663 0.850</ambient>
+          <diffuse>0.337 0.319 0.663 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_16_head">
+        <pose>16.186 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.202 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.337 0.319 0.663 0.850</ambient>
+          <diffuse>0.337 0.319 0.663 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_17">
+      <pose>1416.000 -921.000 50.000 0.000000 0.020901 2.372529</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_17_shaft">
+        <pose>8.383 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>16.765 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.582 0.359 0.418 0.850</ambient>
+          <diffuse>0.582 0.359 0.418 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_17_head">
+        <pose>18.605 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.680 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.582 0.359 0.418 0.850</ambient>
+          <diffuse>0.582 0.359 0.418 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_18">
+      <pose>1456.000 -921.000 50.000 0.000000 -0.001279 2.394631</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_18_shaft">
+        <pose>9.204 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>18.408 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.766 0.267 0.234 0.850</ambient>
+          <diffuse>0.766 0.267 0.234 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_18_head">
+        <pose>20.428 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.041 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.766 0.267 0.234 0.850</ambient>
+          <diffuse>0.766 0.267 0.234 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_19">
+      <pose>1496.000 -921.000 50.000 0.000000 -0.019665 2.441774</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_19_shaft">
+        <pose>9.841 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.681 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.908 0.196 0.092 0.850</ambient>
+          <diffuse>0.908 0.196 0.092 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_19_head">
+        <pose>21.842 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.320 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.908 0.196 0.092 0.850</ambient>
+          <diffuse>0.908 0.196 0.092 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_20">
+      <pose>1536.000 -921.000 50.000 0.000000 -0.003130 2.512515</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_20_shaft">
+        <pose>10.098 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>20.195 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.966 0.167 0.034 0.850</ambient>
+          <diffuse>0.966 0.167 0.034 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_20_head">
+        <pose>22.412 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.433 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.966 0.167 0.034 0.850</ambient>
+          <diffuse>0.966 0.167 0.034 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_21">
+      <pose>1296.000 -881.000 50.000 0.000000 -0.414625 1.670942</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_21_shaft">
+        <pose>4.596 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>9.192 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_21_head">
+        <pose>10.200 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>2.018 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_22">
+      <pose>1336.000 -881.000 50.000 0.000000 -0.010518 2.144174</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_22_shaft">
+        <pose>6.392 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>12.784 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.136 0.218 0.864 0.850</ambient>
+          <diffuse>0.136 0.218 0.864 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_22_head">
+        <pose>14.187 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>2.806 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.136 0.218 0.864 0.850</ambient>
+          <diffuse>0.136 0.218 0.864 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_23">
+      <pose>1376.000 -881.000 50.000 0.000000 0.030796 2.271402</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_23_shaft">
+        <pose>7.761 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>15.522 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.442 0.371 0.558 0.850</ambient>
+          <diffuse>0.442 0.371 0.558 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_23_head">
+        <pose>17.226 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.407 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.442 0.371 0.558 0.850</ambient>
+          <diffuse>0.442 0.371 0.558 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_24">
+      <pose>1416.000 -881.000 50.000 0.000000 0.004506 2.320226</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_24_shaft">
+        <pose>8.774 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.549 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.669 0.315 0.331 0.850</ambient>
+          <diffuse>0.669 0.315 0.331 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_24_head">
+        <pose>19.475 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.852 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.669 0.315 0.331 0.850</ambient>
+          <diffuse>0.669 0.315 0.331 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_25">
+      <pose>1456.000 -881.000 50.000 0.000000 -0.027007 2.367071</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_25_shaft">
+        <pose>9.484 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>18.967 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.828 0.236 0.172 0.850</ambient>
+          <diffuse>0.828 0.236 0.172 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_25_head">
+        <pose>21.049 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.164 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.828 0.236 0.172 0.850</ambient>
+          <diffuse>0.828 0.236 0.172 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_26">
+      <pose>1496.000 -881.000 50.000 0.000000 -0.051733 2.427669</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_26_shaft">
+        <pose>9.933 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.867 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.929 0.185 0.071 0.850</ambient>
+          <diffuse>0.929 0.185 0.071 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_26_head">
+        <pose>22.047 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.361 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.929 0.185 0.071 0.850</ambient>
+          <diffuse>0.929 0.185 0.071 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_27">
+      <pose>1536.000 -881.000 50.000 0.000000 -0.049941 2.479913</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_27_shaft">
+        <pose>9.986 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.973 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.941 0.180 0.059 0.850</ambient>
+          <diffuse>0.941 0.180 0.059 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_27_head">
+        <pose>22.165 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.384 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.941 0.180 0.059 0.850</ambient>
+          <diffuse>0.941 0.180 0.059 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_28">
+      <pose>1296.000 -841.000 50.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_28_shaft">
+        <pose>2.050 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.100 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_28_head">
+        <pose>4.550 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>0.900 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_29">
+      <pose>1336.000 -841.000 50.000 0.000000 0.002376 2.045433</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_29_shaft">
+        <pose>7.479 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>14.957 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.379 0.340 0.621 0.850</ambient>
+          <diffuse>0.379 0.340 0.621 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_29_head">
+        <pose>16.599 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.283 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.379 0.340 0.621 0.850</ambient>
+          <diffuse>0.379 0.340 0.621 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_30">
+      <pose>1376.000 -841.000 50.000 0.000000 0.023709 2.192153</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_30_shaft">
+        <pose>8.299 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>16.598 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.563 0.369 0.437 0.850</ambient>
+          <diffuse>0.563 0.369 0.437 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_30_head">
+        <pose>18.420 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.644 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.563 0.369 0.437 0.850</ambient>
+          <diffuse>0.563 0.369 0.437 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_31">
+      <pose>1416.000 -841.000 50.000 0.000000 -0.001353 2.258335</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_31_shaft">
+        <pose>8.850 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.701 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.686 0.307 0.314 0.850</ambient>
+          <diffuse>0.686 0.307 0.314 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_31_head">
+        <pose>19.644 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.886 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.686 0.307 0.314 0.850</ambient>
+          <diffuse>0.686 0.307 0.314 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_32">
+      <pose>1456.000 -841.000 50.000 0.000000 -0.027978 2.305326</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_32_shaft">
+        <pose>8.904 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.808 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.698 0.301 0.302 0.850</ambient>
+          <diffuse>0.698 0.301 0.302 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_32_head">
+        <pose>19.762 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.909 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.698 0.301 0.302 0.850</ambient>
+          <diffuse>0.698 0.301 0.302 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_33">
+      <pose>1496.000 -841.000 50.000 0.000000 -0.031955 2.356613</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_33_shaft">
+        <pose>8.239 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>16.478 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.550 0.375 0.450 0.850</ambient>
+          <diffuse>0.550 0.375 0.450 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_33_head">
+        <pose>18.287 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.617 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.550 0.375 0.450 0.850</ambient>
+          <diffuse>0.550 0.375 0.450 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_34">
+      <pose>1536.000 -841.000 50.000 0.000000 0.106176 2.462821</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_34_shaft">
+        <pose>5.705 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>11.411 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_34_head">
+        <pose>12.663 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>2.505 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_35">
+      <pose>1296.000 -801.000 50.000 0.000000 -0.047854 1.870368</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_35_shaft">
+        <pose>8.274 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>16.547 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.557 0.371 0.443 0.850</ambient>
+          <diffuse>0.557 0.371 0.443 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_35_head">
+        <pose>18.363 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.632 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.557 0.371 0.443 0.850</ambient>
+          <diffuse>0.557 0.371 0.443 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_36">
+      <pose>1336.000 -801.000 50.000 0.000000 0.010721 2.034955</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_36_shaft">
+        <pose>8.352 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>16.703 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.575 0.363 0.425 0.850</ambient>
+          <diffuse>0.575 0.363 0.425 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_36_head">
+        <pose>18.537 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.667 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.575 0.363 0.425 0.850</ambient>
+          <diffuse>0.575 0.363 0.425 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_37">
+      <pose>1376.000 -801.000 50.000 0.000000 0.018189 2.143544</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_37_shaft">
+        <pose>8.561 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.122 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.622 0.339 0.378 0.850</ambient>
+          <diffuse>0.622 0.339 0.378 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_37_head">
+        <pose>19.001 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.758 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.622 0.339 0.378 0.850</ambient>
+          <diffuse>0.622 0.339 0.378 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_38">
+      <pose>1416.000 -801.000 50.000 0.000000 0.000741 2.197672</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_38_shaft">
+        <pose>8.418 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>16.836 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.590 0.355 0.410 0.850</ambient>
+          <diffuse>0.590 0.355 0.410 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_38_head">
+        <pose>18.684 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.696 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.590 0.355 0.410 0.850</ambient>
+          <diffuse>0.590 0.355 0.410 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_39">
+      <pose>1456.000 -801.000 50.000 0.000000 -0.011208 2.234510</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_39_shaft">
+        <pose>7.518 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>15.036 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.388 0.344 0.612 0.850</ambient>
+          <diffuse>0.388 0.344 0.612 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_39_head">
+        <pose>16.686 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.301 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.388 0.344 0.612 0.850</ambient>
+          <diffuse>0.388 0.344 0.612 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_40">
+      <pose>1496.000 -801.000 50.000 0.000000 0.036852 2.304850</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_40_shaft">
+        <pose>5.570 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>11.141 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_40_head">
+        <pose>12.364 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>2.446 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_41">
+      <pose>1536.000 -801.000 50.000 0.000000 0.799727 -1.471747</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_41_shaft">
+        <pose>3.023 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>6.046 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_41_head">
+        <pose>6.710 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>1.327 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_42">
+      <pose>1296.000 -761.000 50.000 0.000000 0.012608 2.029682</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_42_shaft">
+        <pose>8.062 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>16.125 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.510 0.395 0.490 0.850</ambient>
+          <diffuse>0.510 0.395 0.490 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_42_head">
+        <pose>17.895 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.540 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.510 0.395 0.490 0.850</ambient>
+          <diffuse>0.510 0.395 0.490 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_43">
+      <pose>1336.000 -761.000 50.000 0.000000 0.017803 2.070096</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_43_shaft">
+        <pose>8.611 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.223 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.633 0.334 0.367 0.850</ambient>
+          <diffuse>0.633 0.334 0.367 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_43_head">
+        <pose>19.113 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.781 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.633 0.334 0.367 0.850</ambient>
+          <diffuse>0.633 0.334 0.367 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_44">
+      <pose>1376.000 -761.000 50.000 0.000000 0.018007 2.126314</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_44_shaft">
+        <pose>8.300 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>16.599 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.563 0.368 0.437 0.850</ambient>
+          <diffuse>0.563 0.368 0.437 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_44_head">
+        <pose>18.421 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.644 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.563 0.368 0.437 0.850</ambient>
+          <diffuse>0.563 0.368 0.437 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_45">
+      <pose>1416.000 -761.000 50.000 0.000000 0.004077 2.157870</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_45_shaft">
+        <pose>7.441 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>14.883 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.371 0.335 0.629 0.850</ambient>
+          <diffuse>0.371 0.335 0.629 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_45_head">
+        <pose>16.516 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.267 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.371 0.335 0.629 0.850</ambient>
+          <diffuse>0.371 0.335 0.629 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_46">
+      <pose>1456.000 -761.000 50.000 0.000000 -0.005275 2.188288</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_46_shaft">
+        <pose>5.655 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>11.310 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_46_head">
+        <pose>12.552 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>2.483 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_47">
+      <pose>1496.000 -761.000 50.000 0.000000 0.066827 2.619191</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_47_shaft">
+        <pose>2.580 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>5.159 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_47_head">
+        <pose>5.725 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>1.132 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_48">
+      <pose>1536.000 -761.000 50.000 0.000000 0.217374 -1.111441</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_48_shaft">
+        <pose>3.829 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>7.658 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_48_head">
+        <pose>8.498 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>1.681 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.000 0.150 1.000 0.850</ambient>
+          <diffuse>0.000 0.150 1.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_49">
+      <pose>1296.000 -1001.000 145.000 0.000000 0.170865 2.350954</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_49_shaft">
+        <pose>7.191 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>14.382 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.315 0.307 0.685 0.850</ambient>
+          <diffuse>0.315 0.307 0.685 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_49_head">
+        <pose>15.960 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.157 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.315 0.307 0.685 0.850</ambient>
+          <diffuse>0.315 0.307 0.685 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_50">
+      <pose>1336.000 -1001.000 145.000 0.000000 0.137202 2.305171</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_50_shaft">
+        <pose>7.566 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>15.133 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.399 0.349 0.601 0.850</ambient>
+          <diffuse>0.399 0.349 0.601 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_50_head">
+        <pose>16.794 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.322 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.399 0.349 0.601 0.850</ambient>
+          <diffuse>0.399 0.349 0.601 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_51">
+      <pose>1376.000 -1001.000 145.000 0.000000 0.105971 2.280889</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_51_shaft">
+        <pose>8.170 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>16.341 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.534 0.383 0.466 0.850</ambient>
+          <diffuse>0.534 0.383 0.466 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_51_head">
+        <pose>18.134 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.587 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.534 0.383 0.466 0.850</ambient>
+          <diffuse>0.534 0.383 0.466 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_52">
+      <pose>1416.000 -1001.000 145.000 0.000000 0.086704 2.271704</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_52_shaft">
+        <pose>8.842 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.685 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.685 0.308 0.315 0.850</ambient>
+          <diffuse>0.685 0.308 0.315 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_52_head">
+        <pose>19.626 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.882 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.685 0.308 0.315 0.850</ambient>
+          <diffuse>0.685 0.308 0.315 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_53">
+      <pose>1456.000 -1001.000 145.000 0.000000 0.078761 2.271862</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_53_shaft">
+        <pose>9.436 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>18.872 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.818 0.241 0.182 0.850</ambient>
+          <diffuse>0.818 0.241 0.182 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_53_head">
+        <pose>20.943 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.143 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.818 0.241 0.182 0.850</ambient>
+          <diffuse>0.818 0.241 0.182 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_54">
+      <pose>1496.000 -1001.000 145.000 0.000000 0.078122 2.277676</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_54_shaft">
+        <pose>9.879 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.759 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.917 0.192 0.083 0.850</ambient>
+          <diffuse>0.917 0.192 0.083 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_54_head">
+        <pose>21.928 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.337 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.917 0.192 0.083 0.850</ambient>
+          <diffuse>0.917 0.192 0.083 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_55">
+      <pose>1536.000 -1001.000 145.000 0.000000 0.081986 2.286699</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_55_shaft">
+        <pose>10.120 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>20.240 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.971 0.165 0.029 0.850</ambient>
+          <diffuse>0.971 0.165 0.029 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_55_head">
+        <pose>22.462 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.443 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.971 0.165 0.029 0.850</ambient>
+          <diffuse>0.971 0.165 0.029 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_56">
+      <pose>1296.000 -961.000 145.000 0.000000 0.313702 2.417252</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_56_shaft">
+        <pose>7.267 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>14.535 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.332 0.316 0.668 0.850</ambient>
+          <diffuse>0.332 0.316 0.668 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_56_head">
+        <pose>16.130 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.191 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.332 0.316 0.668 0.850</ambient>
+          <diffuse>0.332 0.316 0.668 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_57">
+      <pose>1336.000 -961.000 145.000 0.000000 0.189827 2.300148</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_57_shaft">
+        <pose>7.801 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>15.602 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.451 0.376 0.549 0.850</ambient>
+          <diffuse>0.451 0.376 0.549 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_57_head">
+        <pose>17.314 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.425 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.451 0.376 0.549 0.850</ambient>
+          <diffuse>0.451 0.376 0.549 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_58">
+      <pose>1376.000 -961.000 145.000 0.000000 0.125736 2.269210</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_58_shaft">
+        <pose>8.533 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.065 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.615 0.342 0.385 0.850</ambient>
+          <diffuse>0.615 0.342 0.385 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_58_head">
+        <pose>18.938 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.746 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.615 0.342 0.385 0.850</ambient>
+          <diffuse>0.615 0.342 0.385 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_59">
+      <pose>1416.000 -961.000 145.000 0.000000 0.096602 2.264742</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_59_shaft">
+        <pose>9.209 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>18.418 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.767 0.267 0.233 0.850</ambient>
+          <diffuse>0.767 0.267 0.233 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_59_head">
+        <pose>20.440 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.043 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.767 0.267 0.233 0.850</ambient>
+          <diffuse>0.767 0.267 0.233 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_60">
+      <pose>1456.000 -961.000 145.000 0.000000 0.087127 2.272476</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_60_shaft">
+        <pose>9.744 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.487 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.887 0.207 0.113 0.850</ambient>
+          <diffuse>0.887 0.207 0.113 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_60_head">
+        <pose>21.626 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.278 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.887 0.207 0.113 0.850</ambient>
+          <diffuse>0.887 0.207 0.113 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_61">
+      <pose>1496.000 -961.000 145.000 0.000000 0.088942 2.287235</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_61_shaft">
+        <pose>10.114 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>20.227 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.969 0.165 0.031 0.850</ambient>
+          <diffuse>0.969 0.165 0.031 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_61_head">
+        <pose>22.447 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.440 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.969 0.165 0.031 0.850</ambient>
+          <diffuse>0.969 0.165 0.031 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_62">
+      <pose>1536.000 -961.000 145.000 0.000000 0.099522 2.305927</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_62_shaft">
+        <pose>10.250 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>20.500 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>1.000 0.150 0.000 0.850</ambient>
+          <diffuse>1.000 0.150 0.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_62_head">
+        <pose>22.750 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.500 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>1.000 0.150 0.000 0.850</ambient>
+          <diffuse>1.000 0.150 0.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_63">
+      <pose>1296.000 -921.000 145.000 0.000000 0.563079 2.307670</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_63_shaft">
+        <pose>7.967 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>15.935 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.489 0.394 0.511 0.850</ambient>
+          <diffuse>0.489 0.394 0.511 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_63_head">
+        <pose>17.684 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.498 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.489 0.394 0.511 0.850</ambient>
+          <diffuse>0.489 0.394 0.511 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_64">
+      <pose>1336.000 -921.000 145.000 0.000000 0.282541 2.243711</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_64_shaft">
+        <pose>8.086 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>16.173 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.515 0.392 0.485 0.850</ambient>
+          <diffuse>0.515 0.392 0.485 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_64_head">
+        <pose>17.948 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.550 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.515 0.392 0.485 0.850</ambient>
+          <diffuse>0.515 0.392 0.485 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_65">
+      <pose>1376.000 -921.000 145.000 0.000000 0.151997 2.241398</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_65_shaft">
+        <pose>8.864 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.728 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.690 0.305 0.310 0.850</ambient>
+          <diffuse>0.690 0.305 0.310 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_65_head">
+        <pose>19.674 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.892 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.690 0.305 0.310 0.850</ambient>
+          <diffuse>0.690 0.305 0.310 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_66">
+      <pose>1416.000 -921.000 145.000 0.000000 0.108240 2.251296</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_66_shaft">
+        <pose>9.530 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.060 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.839 0.231 0.161 0.850</ambient>
+          <diffuse>0.839 0.231 0.161 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_66_head">
+        <pose>21.152 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.184 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.839 0.231 0.161 0.850</ambient>
+          <diffuse>0.839 0.231 0.161 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_67">
+      <pose>1456.000 -921.000 145.000 0.000000 0.096673 2.269744</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_67_shaft">
+        <pose>10.024 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>20.049 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.949 0.175 0.051 0.850</ambient>
+          <diffuse>0.949 0.175 0.051 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_67_head">
+        <pose>22.249 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.401 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.949 0.175 0.051 0.850</ambient>
+          <diffuse>0.949 0.175 0.051 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_68">
+      <pose>1496.000 -921.000 145.000 0.000000 0.102921 2.295263</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_68_shaft">
+        <pose>10.250 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>20.500 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>1.000 0.150 0.000 0.850</ambient>
+          <diffuse>1.000 0.150 0.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_68_head">
+        <pose>22.750 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.500 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>1.000 0.150 0.000 0.850</ambient>
+          <diffuse>1.000 0.150 0.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_69">
+      <pose>1536.000 -921.000 145.000 0.000000 0.128952 2.328214</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_69_shaft">
+        <pose>10.250 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>20.500 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>1.000 0.150 0.000 0.850</ambient>
+          <diffuse>1.000 0.150 0.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_69_head">
+        <pose>22.750 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.500 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>1.000 0.150 0.000 0.850</ambient>
+          <diffuse>1.000 0.150 0.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_70">
+      <pose>1296.000 -881.000 145.000 0.000000 0.611345 2.143590</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_70_shaft">
+        <pose>8.100 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>16.201 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.518 0.391 0.482 0.850</ambient>
+          <diffuse>0.518 0.391 0.482 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_70_head">
+        <pose>17.979 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.556 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.518 0.391 0.482 0.850</ambient>
+          <diffuse>0.518 0.391 0.482 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_71">
+      <pose>1336.000 -881.000 145.000 0.000000 0.329672 2.162164</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_71_shaft">
+        <pose>8.619 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.238 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.635 0.333 0.365 0.850</ambient>
+          <diffuse>0.635 0.333 0.365 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_71_head">
+        <pose>19.130 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.784 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.635 0.333 0.365 0.850</ambient>
+          <diffuse>0.635 0.333 0.365 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_72">
+      <pose>1376.000 -881.000 145.000 0.000000 0.166720 2.203816</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_72_shaft">
+        <pose>9.249 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>18.499 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.776 0.262 0.224 0.850</ambient>
+          <diffuse>0.776 0.262 0.224 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_72_head">
+        <pose>20.529 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.061 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.776 0.262 0.224 0.850</ambient>
+          <diffuse>0.776 0.262 0.224 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_73">
+      <pose>1416.000 -881.000 145.000 0.000000 0.115080 2.230046</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_73_shaft">
+        <pose>9.822 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.644 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.904 0.198 0.096 0.850</ambient>
+          <diffuse>0.904 0.198 0.096 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_73_head">
+        <pose>21.800 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.312 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.904 0.198 0.096 0.850</ambient>
+          <diffuse>0.904 0.198 0.096 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_74">
+      <pose>1456.000 -881.000 145.000 0.000000 0.101919 2.254046</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_74_shaft">
+        <pose>10.244 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>20.487 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.999 0.151 0.001 0.850</ambient>
+          <diffuse>0.999 0.151 0.001 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_74_head">
+        <pose>22.736 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.497 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.999 0.151 0.001 0.850</ambient>
+          <diffuse>0.999 0.151 0.001 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_75">
+      <pose>1496.000 -881.000 145.000 0.000000 0.110184 2.277578</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_75_shaft">
+        <pose>10.250 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>20.500 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>1.000 0.150 0.000 0.850</ambient>
+          <diffuse>1.000 0.150 0.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_75_head">
+        <pose>22.750 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.500 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>1.000 0.150 0.000 0.850</ambient>
+          <diffuse>1.000 0.150 0.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_76">
+      <pose>1536.000 -881.000 145.000 0.000000 0.148541 2.301657</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_76_shaft">
+        <pose>10.250 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>20.500 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>1.000 0.150 0.000 0.850</ambient>
+          <diffuse>1.000 0.150 0.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_76_head">
+        <pose>22.750 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.500 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>1.000 0.150 0.000 0.850</ambient>
+          <diffuse>1.000 0.150 0.000 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_77">
+      <pose>1296.000 -841.000 145.000 0.000000 0.436933 2.163473</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_77_shaft">
+        <pose>8.676 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.352 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.647 0.326 0.353 0.850</ambient>
+          <diffuse>0.647 0.326 0.353 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_77_head">
+        <pose>19.256 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.809 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.647 0.326 0.353 0.850</ambient>
+          <diffuse>0.647 0.326 0.353 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_78">
+      <pose>1336.000 -841.000 145.000 0.000000 0.287970 2.119887</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_78_shaft">
+        <pose>9.183 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>18.366 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.761 0.270 0.239 0.850</ambient>
+          <diffuse>0.761 0.270 0.239 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_78_head">
+        <pose>20.382 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.032 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.761 0.270 0.239 0.850</ambient>
+          <diffuse>0.761 0.270 0.239 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_79">
+      <pose>1376.000 -841.000 145.000 0.000000 0.160547 2.172622</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_79_shaft">
+        <pose>9.585 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.170 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.851 0.224 0.149 0.850</ambient>
+          <diffuse>0.851 0.224 0.149 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_79_head">
+        <pose>21.275 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.208 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.851 0.224 0.149 0.850</ambient>
+          <diffuse>0.851 0.224 0.149 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_80">
+      <pose>1416.000 -841.000 145.000 0.000000 0.109676 2.200433</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_80_shaft">
+        <pose>9.931 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.863 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.929 0.186 0.071 0.850</ambient>
+          <diffuse>0.929 0.186 0.071 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_80_head">
+        <pose>22.043 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.360 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.929 0.186 0.071 0.850</ambient>
+          <diffuse>0.929 0.186 0.071 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_81">
+      <pose>1456.000 -841.000 145.000 0.000000 0.088637 2.214457</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_81_shaft">
+        <pose>10.072 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>20.143 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.960 0.170 0.040 0.850</ambient>
+          <diffuse>0.960 0.170 0.040 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_81_head">
+        <pose>22.354 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.422 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.960 0.170 0.040 0.850</ambient>
+          <diffuse>0.960 0.170 0.040 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_82">
+      <pose>1496.000 -841.000 145.000 0.000000 0.076004 2.213755</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_82_shaft">
+        <pose>9.947 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.893 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.932 0.184 0.068 0.850</ambient>
+          <diffuse>0.932 0.184 0.068 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_82_head">
+        <pose>22.077 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.367 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.932 0.184 0.068 0.850</ambient>
+          <diffuse>0.932 0.184 0.068 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_83">
+      <pose>1536.000 -841.000 145.000 0.000000 0.048981 2.196771</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_83_shaft">
+        <pose>9.514 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.029 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.835 0.232 0.165 0.850</ambient>
+          <diffuse>0.835 0.232 0.165 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_83_head">
+        <pose>21.117 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.177 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.835 0.232 0.165 0.850</ambient>
+          <diffuse>0.835 0.232 0.165 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_84">
+      <pose>1296.000 -801.000 145.000 0.000000 0.353657 2.072146</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_84_shaft">
+        <pose>9.055 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>18.111 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.732 0.284 0.268 0.850</ambient>
+          <diffuse>0.732 0.284 0.268 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_84_head">
+        <pose>20.099 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.976 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.732 0.284 0.268 0.850</ambient>
+          <diffuse>0.732 0.284 0.268 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_85">
+      <pose>1336.000 -801.000 145.000 0.000000 0.238286 2.108959</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_85_shaft">
+        <pose>9.583 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.167 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.851 0.225 0.149 0.850</ambient>
+          <diffuse>0.851 0.225 0.149 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_85_head">
+        <pose>21.271 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.207 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.851 0.225 0.149 0.850</ambient>
+          <diffuse>0.851 0.225 0.149 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_86">
+      <pose>1376.000 -801.000 145.000 0.000000 0.140716 2.150479</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_86_shaft">
+        <pose>9.739 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.478 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.885 0.207 0.115 0.850</ambient>
+          <diffuse>0.885 0.207 0.115 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_86_head">
+        <pose>21.615 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.276 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.885 0.207 0.115 0.850</ambient>
+          <diffuse>0.885 0.207 0.115 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_87">
+      <pose>1416.000 -801.000 145.000 0.000000 0.092756 2.171004</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_87_shaft">
+        <pose>9.772 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.543 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.893 0.204 0.107 0.850</ambient>
+          <diffuse>0.893 0.204 0.107 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_87_head">
+        <pose>21.688 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.290 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.893 0.204 0.107 0.850</ambient>
+          <diffuse>0.893 0.204 0.107 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_88">
+      <pose>1456.000 -801.000 145.000 0.000000 0.057582 2.173622</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_88_shaft">
+        <pose>9.557 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.115 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.845 0.228 0.155 0.850</ambient>
+          <diffuse>0.845 0.228 0.155 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_88_head">
+        <pose>21.212 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.196 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.845 0.228 0.155 0.850</ambient>
+          <diffuse>0.845 0.228 0.155 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_89">
+      <pose>1496.000 -801.000 145.000 0.000000 0.012501 2.161667</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_89_shaft">
+        <pose>9.115 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>18.229 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.746 0.277 0.254 0.850</ambient>
+          <diffuse>0.746 0.277 0.254 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_89_head">
+        <pose>20.230 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.002 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.746 0.277 0.254 0.850</ambient>
+          <diffuse>0.746 0.277 0.254 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_90">
+      <pose>1536.000 -801.000 145.000 0.000000 -0.053589 2.168562</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_90_shaft">
+        <pose>8.591 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.182 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.628 0.336 0.372 0.850</ambient>
+          <diffuse>0.628 0.336 0.372 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_90_head">
+        <pose>19.067 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.772 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.628 0.336 0.372 0.850</ambient>
+          <diffuse>0.628 0.336 0.372 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_91">
+      <pose>1296.000 -761.000 145.000 0.000000 0.250352 2.090617</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_91_shaft">
+        <pose>9.040 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>18.080 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.729 0.286 0.271 0.850</ambient>
+          <diffuse>0.729 0.286 0.271 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_91_head">
+        <pose>20.065 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.969 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.729 0.286 0.271 0.850</ambient>
+          <diffuse>0.729 0.286 0.271 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_92">
+      <pose>1336.000 -761.000 145.000 0.000000 0.179720 2.114534</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_92_shaft">
+        <pose>9.684 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.368 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.873 0.213 0.127 0.850</ambient>
+          <diffuse>0.873 0.213 0.127 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_92_head">
+        <pose>21.494 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.252 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.873 0.213 0.127 0.850</ambient>
+          <diffuse>0.873 0.213 0.127 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_93">
+      <pose>1376.000 -761.000 145.000 0.000000 0.114381 2.141548</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_93_shaft">
+        <pose>9.631 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>19.262 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.861 0.219 0.139 0.850</ambient>
+          <diffuse>0.861 0.219 0.139 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_93_head">
+        <pose>21.376 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.228 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.861 0.219 0.139 0.850</ambient>
+          <diffuse>0.861 0.219 0.139 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_94">
+      <pose>1416.000 -761.000 145.000 0.000000 0.067959 2.154484</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_94_shaft">
+        <pose>9.388 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>18.775 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.807 0.247 0.193 0.850</ambient>
+          <diffuse>0.807 0.247 0.193 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_94_head">
+        <pose>20.836 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>4.121 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.807 0.247 0.193 0.850</ambient>
+          <diffuse>0.807 0.247 0.193 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_95">
+      <pose>1456.000 -761.000 145.000 0.000000 0.020385 2.157989</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_95_shaft">
+        <pose>8.957 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>17.913 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.710 0.295 0.290 0.850</ambient>
+          <diffuse>0.710 0.295 0.290 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_95_head">
+        <pose>19.879 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.932 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.710 0.295 0.290 0.850</ambient>
+          <diffuse>0.710 0.295 0.290 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_96">
+      <pose>1496.000 -761.000 145.000 0.000000 -0.039602 2.164036</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_96_shaft">
+        <pose>8.397 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>16.794 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.585 0.358 0.415 0.850</ambient>
+          <diffuse>0.585 0.358 0.415 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_96_head">
+        <pose>18.637 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.687 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.585 0.358 0.415 0.850</ambient>
+          <diffuse>0.585 0.358 0.415 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_97">
+      <pose>1536.000 -761.000 145.000 0.000000 -0.077404 2.206722</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_97_shaft">
+        <pose>7.705 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>15.409 1.200 1.200</size></box>
+        </geometry>
+        <material>
+          <ambient>0.430 0.365 0.570 0.850</ambient>
+          <diffuse>0.430 0.365 0.570 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_97_head">
+        <pose>17.101 0 0 0 0 0</pose>
+        <geometry>
+          <box><size>3.383 2.280 2.280</size></box>
+        </geometry>
+        <material>
+          <ambient>0.430 0.365 0.570 0.850</ambient>
+          <diffuse>0.430 0.365 0.570 0.850</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+  </model>
+</sdf>

@@ -21,12 +21,14 @@ void HoverPidPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
   ki_ = sdf->Get<double>("ki", 0.1).first;
   kd_ = sdf->Get<double>("kd", 4.0).first;
 
+  enable_xy_ = sdf->Get<bool>("enable_xy", true).first;
+
   log_every_n_ = sdf->Get<int>("log_every_n", 250).first;
 
   last_time_ = model_->GetWorld() ? model_->GetWorld()->SimTime() : common::Time::Zero;
 
   gzmsg << "[HoverPidPlugin] target=(" << target_.X() << "," << target_.Y() << "," << target_.Z() << ") Kp=" << kp_
-        << " Ki=" << ki_ << " Kd=" << kd_ << " link=" << link_name_ << "\n";
+        << " Ki=" << ki_ << " Kd=" << kd_ << " link=" << link_name_ << " enable_xy=" << (enable_xy_ ? 1 : 0) << "\n";
 
   update_conn_ = event::Events::ConnectWorldUpdateBegin(std::bind(&HoverPidPlugin::OnUpdate, this));
 }
@@ -67,9 +69,18 @@ void HoverPidPlugin::OnUpdate() {
   integral_.Y(std::max(-i_max, std::min(i_max, integral_.Y())));
   integral_.Z(std::max(-i_max, std::min(i_max, integral_.Z())));
 
-  const ignition::math::Vector3d force(kp_ * err.X() + ki_ * integral_.X() + kd_ * derr.X(),
-                                         kp_ * err.Y() + ki_ * integral_.Y() + kd_ * derr.Y(),
-                                         kp_ * err.Z() + ki_ * integral_.Z() + kd_ * derr.Z());
+  double fx = kp_ * err.X() + ki_ * integral_.X() + kd_ * derr.X();
+  double fy = kp_ * err.Y() + ki_ * integral_.Y() + kd_ * derr.Y();
+  const double fz = kp_ * err.Z() + ki_ * integral_.Z() + kd_ * derr.Z();
+
+  if (!enable_xy_) {
+    fx = 0.0;
+    fy = 0.0;
+    integral_.X(0.0);
+    integral_.Y(0.0);
+  }
+
+  const ignition::math::Vector3d force(fx, fy, fz);
 
   link->AddForce(force);
 
