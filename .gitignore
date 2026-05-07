@@ -28,6 +28,9 @@ scripts/
 *.ipynb
 *.npy
 *.zip
+*.log
+*.txt
+*.json
 surrogate_dataset/inflow/*.json
 
 # specific files
@@ -45,3 +48,6 @@ README*.md
 *.txt
 *.log
 *.stl
+
+# ?
+node_modules/
