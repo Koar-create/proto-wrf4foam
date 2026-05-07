@@ -20,6 +20,11 @@ reference-candidate/
 docs/
 scripts/
 
+# keep project-level Cursor skills tracked
+!.cursor/
+!.cursor/skills/
+!.cursor/skills/**
+
 # large amount of data
 *.png
 *.jpg
@@ -28,6 +33,9 @@ scripts/
 *.ipynb
 *.npy
 *.zip
+*.log
+*.json
+*.txt
 surrogate_dataset/inflow/*.json
 
 # specific files
@@ -39,3 +47,6 @@ archive_last_run.sh
 # related to rbm project. See branch rbm-mid-term-demo if you want to see the code.
 data/wind_lut/
 gazebo_wind_plugin/
+
+# pptx-related?
+node_modules/

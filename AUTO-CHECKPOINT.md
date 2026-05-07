@@ -15,6 +15,18 @@
   - 若需遇错即失败：`python util/compute_100m_spatial_p95_windspeed.py --strict`
 - **说明**：`steady_experiments_finer_ABL/` 常被 `.gitignore` 忽略，需在本地存在算例树后再运行。
 
+## 2026-05-07
+
+### 新增项目级 Skill：生成 PPTX（pptxgenjs）
+- **输入**：参考 `docs/ops/how-to-generate-pptx-skill.md`，将“内容 → 生成 pptxgenjs 脚本 → 本地生成 output.pptx”的工作流固化为项目级 skill。
+- **产出**：
+  - `.cursor/skills/generate-pptx-pptxgenjs/SKILL.md`
+- **关键约束**：
+  - CommonJS：`require("pptxgenjs")`
+  - 输出固定 `output.pptx`，包含封面/章节页/总结页
+  - 深色封面 + 白色内容页，禁止纯文字页（每页至少一个视觉元素）
+- **仓库配置**：更新 `.gitignore`，对 `.cursor/skills/**` 做反忽略，确保 skill 可被 git 跟踪。
+
 ## 2026-05-03
 
 ### 英文 `README.md`（仓库说明）
