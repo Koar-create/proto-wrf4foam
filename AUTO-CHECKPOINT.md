@@ -2,7 +2,7 @@
 
 > 本文件由Cursor智能体自动维护，用于记录本仓库内任务执行过程、关键决策与可复现命令。
 
-## 2026-05-06
+## 2026-05-07
 
 ### Gazebo Wind Field Plugin（WSL2 / Gazebo Classic）执行记录
 - **目标**：在 Gazebo Classic 11 中实现 `ModelPlugin`，每个 physics step 按 LUT 三线性插值获得 `(u,v,w)` 并施加拖曳型风力：\(F = 0.5\\rho C_D A |U_{rel}| U_{rel}\\)，用于演示无人机进入文丘里加速区后的可观察偏移。
@@ -33,8 +33,6 @@
   - 运行：`gzserver gazebo_wind_plugin/worlds/guangzhou_wind.world --verbose`
   - 观察到日志：`[WindFieldPlugin] LUT loaded: dims=(501,501,101) ...`（证明 VTI + JSON 读取成功，插件成功 Load）
   - 备注：`gzserver --iters N` 在本机环境下未按预期自动退出（可用 `timeout` / 手动 kill 做“有限步”验证）。
-
-## 2026-05-07
 
 ### Gazebo GUI「静止平面 + 细圆柱」深度诊断与文档闭环
 
@@ -73,6 +71,8 @@
     - `[HoverPidPlugin] ... enable_xy=0`
     - `[TrailMarkerPlugin] ...`
     - 且 `pos=(...)` 随时间在 XY 方向明显变化，证明可见漂移模式生效。
+
+## 2026-05-06
 
 ### `render_3d_streamlines_v2`：流线密度 + 标注字号（对齐 `docs/image2.png` 审美，相对旧版 `figure1_streamlines_v2`）
 - **问题**：默认盒状种子 `10×10×10`、标题字号 34 且随 `_cb_scale` 线性放大 → **流线极密、左上角标题过大易裁切**；色标刻度曾偏小。后又一度 **`4×4×4` + 大步长** → 画面偏稀、折线显直。
