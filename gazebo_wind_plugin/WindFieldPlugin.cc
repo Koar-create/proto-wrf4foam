@@ -2,6 +2,8 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
+#include <ignition/math/Vector3.hh>
+
 #include <cmath>
 #include <string>
 
@@ -34,6 +36,13 @@ public:
 
     log_every_n_ = sdf->Get<int>("log_every_n", 0).first;
 
+    hotspot_x_ = sdf->Get<double>("hotspot_x", 1420.0).first;
+    hotspot_y_ = sdf->Get<double>("hotspot_y", -880.0).first;
+    hotspot_z_ = sdf->Get<double>("hotspot_z", 145.0).first;
+
+    enable_wind_torque_ = sdf->Get<bool>("enable_wind_torque", false).first;
+    wind_torque_arm_z_ = sdf->Get<double>("wind_torque_arm_z", 0.15).first;
+
     if (json_path.empty() || vti_path.empty()) {
       gzerr << "[WindFieldPlugin] Missing <lut_json> or <lut_vti> in SDF\n";
       return;
@@ -50,14 +59,11 @@ public:
           << lut_.spacing[0] << "," << lut_.spacing[1] << "," << lut_.spacing[2] << ")\n";
 
     {
-      const double hx = 1420.0;
-      const double hy = -880.0;
-      const double hz = 145.0;
-      const auto hv = lut_.query(hx, hy, hz);
+      const auto hv = lut_.query(hotspot_x_, hotspot_y_, hotspot_z_);
       const double u_mag = std::sqrt(static_cast<double>(hv[0]) * hv[0] + static_cast<double>(hv[1]) * hv[1] +
                                      static_cast<double>(hv[2]) * hv[2]);
-      gzmsg << "[WindFieldPlugin] hotspot_check LUT(" << hx << "," << hy << "," << hz << ") wind=(" << hv[0] << ","
-            << hv[1] << "," << hv[2] << ") |U|=" << u_mag << " m/s (expected ~4.81 m/s)\n";
+      gzmsg << "[WindFieldPlugin] hotspot_check LUT(" << hotspot_x_ << "," << hotspot_y_ << "," << hotspot_z_
+            << ") wind=(" << hv[0] << "," << hv[1] << "," << hv[2] << ") |U|=" << u_mag << " m/s\n";
     }
 
     update_conn_ = event::Events::ConnectWorldUpdateBegin(std::bind(&WindFieldPlugin::OnUpdate, this));
@@ -91,6 +97,12 @@ public:
     ignition::math::Vector3d force(F_scale * u_rel, F_scale * v_rel, F_scale * w_rel);
     link->AddForce(force);
 
+    if (enable_wind_torque_) {
+      ignition::math::Vector3d moment_arm(0.0, 0.0, wind_torque_arm_z_);
+      ignition::math::Vector3d torque = moment_arm.Cross(force);
+      link->AddTorque(torque);
+    }
+
     if (log_every_n_ > 0) {
       ++step_i_;
       if (step_i_ % static_cast<std::uint64_t>(log_every_n_) == 0) {
@@ -118,6 +130,13 @@ private:
 
   int log_every_n_{0};
   std::uint64_t step_i_{0};
+
+  double hotspot_x_{1420.0};
+  double hotspot_y_{-880.0};
+  double hotspot_z_{145.0};
+
+  bool enable_wind_torque_{false};
+  double wind_torque_arm_z_{0.15};
 };
 
 GZ_REGISTER_MODEL_PLUGIN(WindFieldPlugin)

@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#include <ignition/math/Vector3.hh>
+
 namespace gazebo {
 
 void HoverPidPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
@@ -23,12 +25,19 @@ void HoverPidPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
 
   enable_xy_ = sdf->Get<bool>("enable_xy", true).first;
 
+  enable_attitude_recovery_ = sdf->Get<bool>("enable_attitude_recovery", false).first;
+  attitude_kp_ = sdf->Get<double>("attitude_kp", 15.0).first;
+
+  drift_after_seconds_ = sdf->Get<double>("drift_after_seconds", -1.0).first;
+
   log_every_n_ = sdf->Get<int>("log_every_n", 250).first;
 
   last_time_ = model_->GetWorld() ? model_->GetWorld()->SimTime() : common::Time::Zero;
 
   gzmsg << "[HoverPidPlugin] target=(" << target_.X() << "," << target_.Y() << "," << target_.Z() << ") Kp=" << kp_
-        << " Ki=" << ki_ << " Kd=" << kd_ << " link=" << link_name_ << " enable_xy=" << (enable_xy_ ? 1 : 0) << "\n";
+        << " Ki=" << ki_ << " Kd=" << kd_ << " link=" << link_name_ << " enable_xy=" << (enable_xy_ ? 1 : 0)
+        << " drift_after_seconds=" << drift_after_seconds_ << " enable_attitude_recovery=" << (enable_attitude_recovery_ ? 1 : 0)
+        << "\n";
 
   update_conn_ = event::Events::ConnectWorldUpdateBegin(std::bind(&HoverPidPlugin::OnUpdate, this));
 }
@@ -73,7 +82,13 @@ void HoverPidPlugin::OnUpdate() {
   double fy = kp_ * err.Y() + ki_ * integral_.Y() + kd_ * derr.Y();
   const double fz = kp_ * err.Z() + ki_ * integral_.Z() + kd_ * derr.Z();
 
-  if (!enable_xy_) {
+  bool xy_on = enable_xy_;
+  if (drift_after_seconds_ >= 0.0) {
+    const double sim_t = world->SimTime().Double();
+    xy_on = sim_t < drift_after_seconds_;
+  }
+
+  if (!xy_on) {
     fx = 0.0;
     fy = 0.0;
     integral_.X(0.0);
@@ -83,6 +98,13 @@ void HoverPidPlugin::OnUpdate() {
   const ignition::math::Vector3d force(fx, fy, fz);
 
   link->AddForce(force);
+
+  if (enable_attitude_recovery_) {
+    const auto euler = pose.Rot().Euler();
+    const double roll = euler.X();
+    const double pitch = euler.Y();
+    link->AddTorque(ignition::math::Vector3d(-attitude_kp_ * roll, -attitude_kp_ * pitch, 0.0));
+  }
 
   if (log_every_n_ > 0) {
     ++step_i_;

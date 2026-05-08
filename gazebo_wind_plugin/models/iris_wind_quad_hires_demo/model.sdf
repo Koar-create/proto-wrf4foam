@@ -1,0 +1,129 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="iris_wind_quad_hires_demo">
+    <static>false</static>
+
+    <link name="base_link">
+      <pose>0 0 0 0 0 0</pose>
+
+      <inertial>
+        <mass>1.5</mass>
+        <inertia>
+          <ixx>0.029125</ixx>
+          <iyy>0.029125</iyy>
+          <izz>0.055225</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+
+      <!-- Simple collision box (visual is a mesh) -->
+      <collision name="collision">
+        <geometry>
+          <box><size>0.47 0.47 0.11</size></box>
+        </geometry>
+      </collision>
+
+      <!-- Body visual -->
+      <visual name="body_visual">
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://iris_wind_quad_hires_demo/meshes/iris.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/DarkGrey</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
+      </visual>
+
+      <!-- Propeller visuals (visual-only; no joints) -->
+      <!-- Positions copied from PX4 iris model (Gazebo Classic) -->
+      <visual name="prop_0_ccw">
+        <pose>0.13 -0.22 0.023 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://iris_wind_quad_hires_demo/meshes/iris_prop_ccw.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="prop_1_ccw">
+        <pose>-0.13 0.20 0.023 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://iris_wind_quad_hires_demo/meshes/iris_prop_ccw.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="prop_2_cw">
+        <pose>0.13 0.22 0.023 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://iris_wind_quad_hires_demo/meshes/iris_prop_cw.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="prop_3_cw">
+        <pose>-0.13 -0.20 0.023 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://iris_wind_quad_hires_demo/meshes/iris_prop_cw.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+
+    <plugin name="wind_field" filename="libWindFieldPlugin.so">
+      <lut_json>/home/jeezen/wrf_openfoam_coupling_cache/wind_lut/20250903_1400_hires/wind_lut.json</lut_json>
+      <lut_vti>/home/jeezen/wrf_openfoam_coupling_cache/wind_lut/20250903_1400_hires/wind_lut.vti</lut_vti>
+      <link_name>base_link</link_name>
+      <rho>1.225</rho>
+      <C_D>1.0</C_D>
+      <area>0.04</area>
+      <world_to_lut_offset_x>0</world_to_lut_offset_x>
+      <world_to_lut_offset_y>0</world_to_lut_offset_y>
+      <world_to_lut_offset_z>0</world_to_lut_offset_z>
+      <log_every_n>250</log_every_n>
+      <!-- At z=10 m the LUT column (1450,1350) is fully masked; z≈8.5 m matches open-air trilinear sample (see runtime wind=). -->
+      <hotspot_x>1450</hotspot_x>
+      <hotspot_y>1350</hotspot_y>
+      <hotspot_z>8.5</hotspot_z>
+      <enable_wind_torque>true</enable_wind_torque>
+      <wind_torque_arm_z>0.15</wind_torque_arm_z>
+    </plugin>
+
+    <plugin name="hover_pid" filename="libHoverPidPlugin.so">
+      <link_name>base_link</link_name>
+      <target_x>1450</target_x>
+      <target_y>1350</target_y>
+      <target_z>10</target_z>
+      <enable_xy>true</enable_xy>
+      <kp>8</kp>
+      <ki>0.1</ki>
+      <kd>4</kd>
+      <log_every_n>250</log_every_n>
+      <enable_attitude_recovery>true</enable_attitude_recovery>
+      <attitude_kp>15</attitude_kp>
+      <drift_after_seconds>8</drift_after_seconds>
+    </plugin>
+
+    <plugin name="trail_marker" filename="libTrailMarkerPlugin.so">
+      <link_name>base_link</link_name>
+      <sample_period>0.75</sample_period>
+      <marker_radius>0.9</marker_radius>
+      <max_points>60</max_points>
+      <color_r>1.0</color_r>
+      <color_g>0.3</color_g>
+      <color_b>0.1</color_b>
+      <color_a>0.55</color_a>
+    </plugin>
+  </model>
+</sdf>

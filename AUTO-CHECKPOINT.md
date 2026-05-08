@@ -339,3 +339,30 @@ gzclient
   - 若输出目录已存在且非空，脚本可用 `--fail-if-exists` 拒绝写入，避免误覆盖。
 - **可复现命令**：
   - `python util/export_wind_lut_3d.py --xrange 950,1950 --yrange 850,1850 --dx 2 --dy 2 --dz 2 --zrange 0,200 --out-dir data/wind_lut/20250903_1400_hires/ --qc-dir results/wind_lut/20250903_1400_hires/ --fail-if-exists`
+
+### 更新 WSL2 侧 hires Gazebo demo 元指令
+- **目标**：根据已生成的 `20250903_1400_hires` LUT 与 WSL 缓存，把 `docs/ops/RBM-进一步改进-元指令.md` 改成可直接发送给 WSL2 Agent 的后续执行指令。
+- **前置状态**：
+  - 项目数据目录已有 `data/wind_lut/20250903_1400_hires/wind_lut.{json,vti}`。
+  - WSL 缓存目录已有 `~/wrf_openfoam_coupling_cache/wind_lut/20250903_1400_hires/wind_lut.{json,vti}`。
+  - LUT 元数据：origin `(950,850,0)`，spacing `(2,2,2)`，dimensions `(501,501,101)`，domain `x=[950,1950], y=[850,1850], z=[0,200]`。
+  - `results/wind_lut/20250903_1400_hires/` 当前未发现文件，因此元指令要求 WSL2 任务不要因 QC 目录为空而阻塞，只在最终说明中记录。
+- **文档更新**：
+  - 移除“Windows侧导出LUT”作为待执行任务的语义，明确不要重跑 `util/export_wind_lut_3d.py`。
+  - 保留“新建独立 demo”逻辑：新增 `guangzhou_wind_hires_demo.world`、`iris_wind_quad_hires_demo`、`wind_arrows_hotspot_hires`，不覆盖旧 demo。
+  - 共享 C++ 插件修改必须通过默认关闭的可选参数保持旧 demo 行为不变。
+
+### Gazebo 高精度视觉 Demo（WSL2 落地完成）
+- **脚本**：[`scripts/generate_gazebo_wind_arrows.py`](scripts/generate_gazebo_wind_arrows.py) 增加 `--model-name`、`--arrow-style {box,rod_cone}`、`--color-mode {legacy,hsv}`、`--bbox-mode` 与 `--x-min/--x-max/--y-min/--y-max/--step`。**说明**：Gazebo Classic 11 不支持 SDF `<cone>`（会报 `Unknown geometry type`），`rod_cone` 的“箭头头部”用 **半径 1.2 m、长 2.5 m 的圆柱**代替圆锥，几何语义仍为杆 + 钝头。
+- **静态箭头模型**：`gazebo_wind_plugin/models/wind_arrows_hotspot_hires/`（121 支，`z=10 m`，80 m 间距覆盖 `[1050,1850]×[950,1750]`），生成命令：
+  - `python3 scripts/generate_gazebo_wind_arrows.py --npz ~/wrf_openfoam_coupling_cache/wind_lut/20250903_1400_hires/wind_lut.npz --model-name wind_arrows_hotspot_hires --out-model-dir gazebo_wind_plugin/models/wind_arrows_hotspot_hires --arrow-style rod_cone --color-mode hsv --bbox-mode --x-min 1050 --x-max 1850 --y-min 950 --y-max 1750 --step 80 --z-levels 10`
+- **插件（向后兼容默认值）**：
+  - [`WindFieldPlugin.cc`](gazebo_wind_plugin/WindFieldPlugin.cc)：`hotspot_x/y/z` 默认 `1420/-880/145`；`enable_wind_torque` 默认 `false`；`wind_torque_arm_z` 默认 `0.15`。
+  - [`HoverPidPlugin.cc`](gazebo_wind_plugin/HoverPidPlugin.cc)：`enable_attitude_recovery` 默认 `false`；`attitude_kp` 默认 `15`；`drift_after_seconds` 默认 `-1`（不启用时完全沿用 SDF 的 `enable_xy`）。
+- **新资产**：`gazebo_wind_plugin/models/iris_wind_quad_hires_demo/`（从 `iris_wind_quad` 复制）；[`gazebo_wind_plugin/worlds/guangzhou_wind_hires_demo.world`](gazebo_wind_plugin/worlds/guangzhou_wind_hires_demo.world)。
+- **热点校验坐标**：LUT 在 `(1450,1350,10 m)` 邻域存在建筑掩膜，插值风速可为 0；`iris_wind_quad_hires_demo` 将 `hotspot_z` 设为 **8.5 m**（与运行时 `pos≈8.3 m` 的开放气流一致），使 `hotspot_check` 的 `|U|≠0`。**无人机目标高度仍为 10 m**。
+- **验证**：
+  - `cmake --build gazebo_wind_plugin/build -j`
+  - `export GAZEBO_PLUGIN_PATH="$PWD/gazebo_wind_plugin/build:${GAZEBO_PLUGIN_PATH:-}"`；`export GAZEBO_MODEL_PATH="$PWD/gazebo_wind_plugin/models:/usr/share/gazebo-11/models:${GAZEBO_MODEL_PATH:-}"`；`export GAZEBO_MODEL_DATABASE_URI=""`
+  - `timeout 20s gzserver gazebo_wind_plugin/worlds/guangzhou_wind.world --verbose`（旧 demo）
+  - `timeout 20s gzserver gazebo_wind_plugin/worlds/guangzhou_wind_hires_demo.world --verbose`（hires：日志含 `spacing=(2,2,2)`、`hotspot_check LUT(1450,1350,8.5)` 与周期 `wind=` / `hover_error=`）

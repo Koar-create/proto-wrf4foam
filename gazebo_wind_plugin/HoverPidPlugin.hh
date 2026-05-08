@@ -36,6 +36,12 @@ private:
   int log_every_n_{250};
   std::uint64_t step_i_{0};
   common::Time last_time_;
+
+  bool enable_attitude_recovery_{false};
+  double attitude_kp_{15.0};
+
+  /// If >= 0: for sim_time < value force XY PID on, then force XY off. If < 0: use enable_xy from SDF only.
+  double drift_after_seconds_{-1.0};
 };
 
 }  // namespace gazebo

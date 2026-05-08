@@ -1,0 +1,3152 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="wind_arrows_hotspot_hires">
+    <static>true</static>
+    <link name="arrow_0">
+      <pose>1050.000 950.000 10.000 0.000000 0.021736 0.937138</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_0_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.714 0.980 0.880</ambient>
+          <diffuse>0.078 0.714 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_0_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.714 0.980 0.880</ambient>
+          <diffuse>0.078 0.714 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_1">
+      <pose>1130.000 950.000 10.000 0.000000 -0.018931 0.049933</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_1_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.849 0.980 0.880</ambient>
+          <diffuse>0.078 0.849 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_1_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.849 0.980 0.880</ambient>
+          <diffuse>0.078 0.849 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_2">
+      <pose>1210.000 950.000 10.000 0.000000 0.015826 -0.198481</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_2_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.694 0.880</ambient>
+          <diffuse>0.078 0.980 0.694 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_2_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.694 0.880</ambient>
+          <diffuse>0.078 0.980 0.694 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_3">
+      <pose>1290.000 950.000 10.000 0.000000 0.033972 -0.304715</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_3_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.629 0.880</ambient>
+          <diffuse>0.078 0.980 0.629 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_3_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.629 0.880</ambient>
+          <diffuse>0.078 0.980 0.629 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_4">
+      <pose>1370.000 950.000 10.000 0.000000 0.038294 -0.272553</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_4_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.855 0.880</ambient>
+          <diffuse>0.078 0.980 0.855 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_4_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.855 0.880</ambient>
+          <diffuse>0.078 0.980 0.855 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_5">
+      <pose>1450.000 950.000 10.000 0.000000 0.002901 0.365738</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_5_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.794 0.980 0.880</ambient>
+          <diffuse>0.078 0.794 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_5_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.794 0.980 0.880</ambient>
+          <diffuse>0.078 0.794 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_6">
+      <pose>1530.000 950.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_6_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_6_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_7">
+      <pose>1610.000 950.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_7_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_7_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_8">
+      <pose>1690.000 950.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_8_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_8_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_9">
+      <pose>1770.000 950.000 10.000 0.000000 -0.016348 2.010911</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_9_shaft">
+        <pose>1.471401 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.942802</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.500 0.980 0.078 0.880</ambient>
+          <diffuse>0.500 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_9_head">
+        <pose>4.192802 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.500 0.980 0.078 0.880</ambient>
+          <diffuse>0.500 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_10">
+      <pose>1850.000 950.000 10.000 0.000000 0.004432 2.071032</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_10_shaft">
+        <pose>2.389224 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.778449</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_10_head">
+        <pose>6.028449 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_11">
+      <pose>1050.000 1030.000 10.000 0.000000 0.064261 -0.074044</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_11_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.859 0.980 0.880</ambient>
+          <diffuse>0.078 0.859 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_11_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.859 0.980 0.880</ambient>
+          <diffuse>0.078 0.859 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_12">
+      <pose>1130.000 1030.000 10.000 0.000000 0.019671 -0.382730</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_12_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.959 0.880</ambient>
+          <diffuse>0.078 0.980 0.959 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_12_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.959 0.880</ambient>
+          <diffuse>0.078 0.980 0.959 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_13">
+      <pose>1210.000 1030.000 10.000 0.000000 0.025381 -0.525550</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_13_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.972 0.980 0.880</ambient>
+          <diffuse>0.078 0.972 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_13_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.972 0.980 0.880</ambient>
+          <diffuse>0.078 0.972 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_14">
+      <pose>1290.000 1030.000 10.000 0.000000 0.022169 -0.681381</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_14_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.748 0.980 0.880</ambient>
+          <diffuse>0.078 0.748 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_14_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.748 0.980 0.880</ambient>
+          <diffuse>0.078 0.748 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_15">
+      <pose>1370.000 1030.000 10.000 0.000000 -0.020129 -0.565972</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_15_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.492 0.980 0.880</ambient>
+          <diffuse>0.078 0.492 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_15_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.492 0.980 0.880</ambient>
+          <diffuse>0.078 0.492 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_16">
+      <pose>1450.000 1030.000 10.000 0.000000 0.009597 0.104184</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_16_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.408 0.980 0.880</ambient>
+          <diffuse>0.078 0.408 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_16_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.408 0.980 0.880</ambient>
+          <diffuse>0.078 0.408 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_17">
+      <pose>1530.000 1030.000 10.000 0.000000 0.121819 0.434361</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_17_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.437 0.980 0.880</ambient>
+          <diffuse>0.078 0.437 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_17_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.437 0.980 0.880</ambient>
+          <diffuse>0.078 0.437 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_18">
+      <pose>1610.000 1030.000 10.000 0.000000 0.165874 2.445958</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_18_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.730 0.980 0.880</ambient>
+          <diffuse>0.078 0.730 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_18_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.730 0.980 0.880</ambient>
+          <diffuse>0.078 0.730 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_19">
+      <pose>1690.000 1030.000 10.000 0.000000 0.008994 2.338471</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_19_shaft">
+        <pose>1.918755 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.837510</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.784 0.078 0.880</ambient>
+          <diffuse>0.980 0.784 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_19_head">
+        <pose>5.087510 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.784 0.078 0.880</ambient>
+          <diffuse>0.980 0.784 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_20">
+      <pose>1770.000 1030.000 10.000 0.000000 0.054772 2.137969</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_20_shaft">
+        <pose>1.731098 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.462197</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.892 0.980 0.078 0.880</ambient>
+          <diffuse>0.892 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_20_head">
+        <pose>4.712197 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.892 0.980 0.078 0.880</ambient>
+          <diffuse>0.892 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_21">
+      <pose>1850.000 1030.000 10.000 0.000000 0.011777 2.114503</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_21_shaft">
+        <pose>2.159267 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.318534</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.420 0.078 0.880</ambient>
+          <diffuse>0.980 0.420 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_21_head">
+        <pose>5.568534 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.420 0.078 0.880</ambient>
+          <diffuse>0.980 0.420 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_22">
+      <pose>1050.000 1110.000 10.000 0.000000 0.147111 -0.869600</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_22_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.343 0.980 0.880</ambient>
+          <diffuse>0.078 0.343 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_22_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.343 0.980 0.880</ambient>
+          <diffuse>0.078 0.343 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_23">
+      <pose>1130.000 1110.000 10.000 0.000000 0.108819 -2.643031</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_23_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.578 0.980 0.880</ambient>
+          <diffuse>0.078 0.578 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_23_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.578 0.980 0.880</ambient>
+          <diffuse>0.078 0.578 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_24">
+      <pose>1210.000 1110.000 10.000 0.000000 0.045772 -2.788306</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_24_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.937 0.880</ambient>
+          <diffuse>0.078 0.980 0.937 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_24_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.937 0.880</ambient>
+          <diffuse>0.078 0.980 0.937 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_25">
+      <pose>1290.000 1110.000 10.000 0.000000 0.033602 -2.930554</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_25_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.578 0.880</ambient>
+          <diffuse>0.078 0.980 0.578 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_25_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.578 0.880</ambient>
+          <diffuse>0.078 0.980 0.578 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_26">
+      <pose>1370.000 1110.000 10.000 0.000000 0.033717 -3.089919</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_26_shaft">
+        <pose>1.078725 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.157450</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.251 0.880</ambient>
+          <diffuse>0.078 0.980 0.251 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_26_head">
+        <pose>3.407450 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.251 0.880</ambient>
+          <diffuse>0.078 0.980 0.251 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_27">
+      <pose>1450.000 1110.000 10.000 0.000000 0.035187 3.078710</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_27_shaft">
+        <pose>1.294949 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.589898</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.233 0.980 0.078 0.880</ambient>
+          <diffuse>0.233 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_27_head">
+        <pose>3.839898 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.233 0.980 0.078 0.880</ambient>
+          <diffuse>0.233 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_28">
+      <pose>1530.000 1110.000 10.000 0.000000 0.033014 2.986982</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_28_shaft">
+        <pose>1.535459 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.070917</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.597 0.980 0.078 0.880</ambient>
+          <diffuse>0.597 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_28_head">
+        <pose>4.320917 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.597 0.980 0.078 0.880</ambient>
+          <diffuse>0.597 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_29">
+      <pose>1610.000 1110.000 10.000 0.000000 0.026748 2.873948</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_29_shaft">
+        <pose>1.777062 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.554123</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.962 0.980 0.078 0.880</ambient>
+          <diffuse>0.962 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_29_head">
+        <pose>4.804123 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.962 0.980 0.078 0.880</ambient>
+          <diffuse>0.962 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_30">
+      <pose>1690.000 1110.000 10.000 0.000000 -0.095467 3.000601</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_30_shaft">
+        <pose>1.831704 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.663408</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.916 0.078 0.880</ambient>
+          <diffuse>0.980 0.916 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_30_head">
+        <pose>4.913408 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.916 0.078 0.880</ambient>
+          <diffuse>0.980 0.916 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_31">
+      <pose>1770.000 1110.000 10.000 0.000000 1.408786 1.673048</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_31_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.425 0.980 0.880</ambient>
+          <diffuse>0.078 0.425 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_31_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.425 0.980 0.880</ambient>
+          <diffuse>0.078 0.425 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_32">
+      <pose>1850.000 1110.000 10.000 0.000000 0.008754 1.989476</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_32_shaft">
+        <pose>2.385424 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.770849</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_32_head">
+        <pose>6.020849 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_33">
+      <pose>1050.000 1190.000 10.000 0.000000 0.051710 -3.126223</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_33_shaft">
+        <pose>1.071715 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.143431</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.261 0.880</ambient>
+          <diffuse>0.078 0.980 0.261 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_33_head">
+        <pose>3.393431 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.261 0.880</ambient>
+          <diffuse>0.078 0.980 0.261 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_34">
+      <pose>1130.000 1190.000 10.000 0.000000 0.020047 -3.060886</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_34_shaft">
+        <pose>1.379475 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.758951</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.361 0.980 0.078 0.880</ambient>
+          <diffuse>0.361 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_34_head">
+        <pose>4.008951 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.361 0.980 0.078 0.880</ambient>
+          <diffuse>0.361 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_35">
+      <pose>1210.000 1190.000 10.000 0.000000 0.016876 -3.029713</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_35_shaft">
+        <pose>1.607874 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.215748</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.706 0.980 0.078 0.880</ambient>
+          <diffuse>0.706 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_35_head">
+        <pose>4.465748 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.706 0.980 0.078 0.880</ambient>
+          <diffuse>0.706 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_36">
+      <pose>1290.000 1190.000 10.000 0.000000 0.021287 -3.041098</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_36_shaft">
+        <pose>1.786810 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.573620</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.977 0.980 0.078 0.880</ambient>
+          <diffuse>0.977 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_36_head">
+        <pose>4.823620 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.977 0.980 0.078 0.880</ambient>
+          <diffuse>0.977 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_37">
+      <pose>1370.000 1190.000 10.000 0.000000 0.016284 -3.113782</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_37_shaft">
+        <pose>1.925742 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.851483</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.773 0.078 0.880</ambient>
+          <diffuse>0.980 0.773 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_37_head">
+        <pose>5.101483 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.773 0.078 0.880</ambient>
+          <diffuse>0.980 0.773 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_38">
+      <pose>1450.000 1190.000 10.000 0.000000 0.000868 3.052489</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_38_shaft">
+        <pose>2.076392 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.152785</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.546 0.078 0.880</ambient>
+          <diffuse>0.980 0.546 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_38_head">
+        <pose>5.402785 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.546 0.078 0.880</ambient>
+          <diffuse>0.980 0.546 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_39">
+      <pose>1530.000 1190.000 10.000 0.000000 -0.011921 2.935182</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_39_shaft">
+        <pose>2.193583 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.387165</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.368 0.078 0.880</ambient>
+          <diffuse>0.980 0.368 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_39_head">
+        <pose>5.637165 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.368 0.078 0.880</ambient>
+          <diffuse>0.980 0.368 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_40">
+      <pose>1610.000 1190.000 10.000 0.000000 -0.037488 2.712031</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_40_shaft">
+        <pose>2.022041 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.044081</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.628 0.078 0.880</ambient>
+          <diffuse>0.980 0.628 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_40_head">
+        <pose>5.294081 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.628 0.078 0.880</ambient>
+          <diffuse>0.980 0.628 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_41">
+      <pose>1690.000 1190.000 10.000 0.000000 0.056928 2.305177</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_41_shaft">
+        <pose>1.157678 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.315357</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.131 0.880</ambient>
+          <diffuse>0.078 0.980 0.131 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_41_head">
+        <pose>3.565357 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.131 0.880</ambient>
+          <diffuse>0.078 0.980 0.131 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_42">
+      <pose>1770.000 1190.000 10.000 0.000000 -0.186150 1.490236</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_42_shaft">
+        <pose>2.254452 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.508903</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.276 0.078 0.880</ambient>
+          <diffuse>0.980 0.276 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_42_head">
+        <pose>5.758903 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.276 0.078 0.880</ambient>
+          <diffuse>0.980 0.276 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_43">
+      <pose>1850.000 1190.000 10.000 0.000000 0.043137 1.802765</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_43_shaft">
+        <pose>2.401829 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.803659</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_43_head">
+        <pose>6.053659 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_44">
+      <pose>1050.000 1270.000 10.000 0.000000 0.014905 3.046115</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_44_shaft">
+        <pose>1.815846 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.631693</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.940 0.078 0.880</ambient>
+          <diffuse>0.980 0.940 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_44_head">
+        <pose>4.881693 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.940 0.078 0.880</ambient>
+          <diffuse>0.980 0.940 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_45">
+      <pose>1130.000 1270.000 10.000 0.000000 -0.014272 3.130154</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_45_shaft">
+        <pose>1.954783 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.909566</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.729 0.078 0.880</ambient>
+          <diffuse>0.980 0.729 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_45_head">
+        <pose>5.159566 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.729 0.078 0.880</ambient>
+          <diffuse>0.980 0.729 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_46">
+      <pose>1210.000 1270.000 10.000 0.000000 -0.010900 -3.093483</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_46_shaft">
+        <pose>2.102971 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.205943</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.505 0.078 0.880</ambient>
+          <diffuse>0.980 0.505 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_46_head">
+        <pose>5.455943 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.505 0.078 0.880</ambient>
+          <diffuse>0.980 0.505 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_47">
+      <pose>1290.000 1270.000 10.000 0.000000 -0.016570 -3.021019</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_47_shaft">
+        <pose>2.161083 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.322167</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.418 0.078 0.880</ambient>
+          <diffuse>0.980 0.418 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_47_head">
+        <pose>5.572167 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.418 0.078 0.880</ambient>
+          <diffuse>0.980 0.418 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_48">
+      <pose>1370.000 1270.000 10.000 0.000000 -0.019769 -3.064689</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_48_shaft">
+        <pose>1.924577 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.849155</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.775 0.078 0.880</ambient>
+          <diffuse>0.980 0.775 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_48_head">
+        <pose>5.099155 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.775 0.078 0.880</ambient>
+          <diffuse>0.980 0.775 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_49">
+      <pose>1450.000 1270.000 10.000 0.000000 -0.020535 2.973138</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_49_shaft">
+        <pose>1.903286 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.806572</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.807 0.078 0.880</ambient>
+          <diffuse>0.980 0.807 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_49_head">
+        <pose>5.056572 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.807 0.078 0.880</ambient>
+          <diffuse>0.980 0.807 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_50">
+      <pose>1530.000 1270.000 10.000 0.000000 -0.036524 2.829619</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_50_shaft">
+        <pose>2.012302 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.024605</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.643 0.078 0.880</ambient>
+          <diffuse>0.980 0.643 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_50_head">
+        <pose>5.274605 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.643 0.078 0.880</ambient>
+          <diffuse>0.980 0.643 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_51">
+      <pose>1610.000 1270.000 10.000 0.000000 -0.059263 -2.991030</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_51_shaft">
+        <pose>1.342670 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.685339</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.305 0.980 0.078 0.880</ambient>
+          <diffuse>0.305 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_51_head">
+        <pose>3.935339 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.305 0.980 0.078 0.880</ambient>
+          <diffuse>0.305 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_52">
+      <pose>1690.000 1270.000 10.000 0.000000 -0.024072 2.869883</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_52_shaft">
+        <pose>2.319270 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.638541</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.178 0.078 0.880</ambient>
+          <diffuse>0.980 0.178 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_52_head">
+        <pose>5.888541 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.178 0.078 0.880</ambient>
+          <diffuse>0.980 0.178 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_53">
+      <pose>1770.000 1270.000 10.000 0.000000 -0.214739 1.733584</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_53_shaft">
+        <pose>1.722630 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.445261</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.880 0.980 0.078 0.880</ambient>
+          <diffuse>0.880 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_53_head">
+        <pose>4.695261 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.880 0.980 0.078 0.880</ambient>
+          <diffuse>0.880 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_54">
+      <pose>1850.000 1270.000 10.000 0.000000 0.100747 1.539636</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_54_shaft">
+        <pose>2.251466 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.502931</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.281 0.078 0.880</ambient>
+          <diffuse>0.980 0.281 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_54_head">
+        <pose>5.752931 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.281 0.078 0.880</ambient>
+          <diffuse>0.980 0.281 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_55">
+      <pose>1050.000 1350.000 10.000 0.000000 -0.000189 2.715571</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_55_shaft">
+        <pose>1.216486 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.432972</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.114 0.980 0.078 0.880</ambient>
+          <diffuse>0.114 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_55_head">
+        <pose>3.682972 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.114 0.980 0.078 0.880</ambient>
+          <diffuse>0.114 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_56">
+      <pose>1130.000 1350.000 10.000 0.000000 -0.027193 3.015209</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_56_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.684 0.880</ambient>
+          <diffuse>0.078 0.980 0.684 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_56_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.684 0.880</ambient>
+          <diffuse>0.078 0.980 0.684 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_57">
+      <pose>1210.000 1350.000 10.000 0.000000 0.876899 -1.043563</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_57_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.324 0.980 0.880</ambient>
+          <diffuse>0.078 0.324 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_57_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.324 0.980 0.880</ambient>
+          <diffuse>0.078 0.324 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_58">
+      <pose>1290.000 1350.000 10.000 0.000000 0.710637 -2.497541</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_58_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.320 0.980 0.880</ambient>
+          <diffuse>0.078 0.320 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_58_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.320 0.980 0.880</ambient>
+          <diffuse>0.078 0.320 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_59">
+      <pose>1370.000 1350.000 10.000 0.000000 0.523635 2.932812</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_59_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.562 0.980 0.880</ambient>
+          <diffuse>0.078 0.562 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_59_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.562 0.980 0.880</ambient>
+          <diffuse>0.078 0.562 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_60">
+      <pose>1450.000 1350.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_60_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_60_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_61">
+      <pose>1530.000 1350.000 10.000 0.000000 0.062952 0.968809</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_61_shaft">
+        <pose>1.409157 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.818315</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.406 0.980 0.078 0.880</ambient>
+          <diffuse>0.406 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_61_head">
+        <pose>4.068315 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.406 0.980 0.078 0.880</ambient>
+          <diffuse>0.406 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_62">
+      <pose>1610.000 1350.000 10.000 0.000000 -0.115256 1.489441</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_62_shaft">
+        <pose>1.578207 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.156413</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.661 0.980 0.078 0.880</ambient>
+          <diffuse>0.661 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_62_head">
+        <pose>4.406413 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.661 0.980 0.078 0.880</ambient>
+          <diffuse>0.661 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_63">
+      <pose>1690.000 1350.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_63_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_63_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_64">
+      <pose>1770.000 1350.000 10.000 0.000000 -0.194962 1.607485</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_64_shaft">
+        <pose>3.993411 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>7.986822</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_64_head">
+        <pose>9.236822 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_65">
+      <pose>1850.000 1350.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_65_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_65_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_66">
+      <pose>1050.000 1430.000 10.000 0.000000 0.058820 1.596968</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_66_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.715 0.880</ambient>
+          <diffuse>0.078 0.980 0.715 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_66_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.715 0.880</ambient>
+          <diffuse>0.078 0.980 0.715 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_67">
+      <pose>1130.000 1430.000 10.000 0.000000 0.046262 -2.290584</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_67_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.378 0.980 0.880</ambient>
+          <diffuse>0.078 0.378 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_67_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.378 0.980 0.880</ambient>
+          <diffuse>0.078 0.378 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_68">
+      <pose>1210.000 1430.000 10.000 0.000000 -0.108123 0.985164</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_68_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.977 0.880</ambient>
+          <diffuse>0.078 0.980 0.977 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_68_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.977 0.880</ambient>
+          <diffuse>0.078 0.980 0.977 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_69">
+      <pose>1290.000 1430.000 10.000 0.000000 0.495980 -1.786081</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_69_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.180 0.980 0.880</ambient>
+          <diffuse>0.078 0.180 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_69_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.180 0.980 0.880</ambient>
+          <diffuse>0.078 0.180 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_70">
+      <pose>1370.000 1430.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_70_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_70_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_71">
+      <pose>1450.000 1430.000 10.000 0.000000 0.288387 -2.901047</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_71_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.430 0.980 0.880</ambient>
+          <diffuse>0.078 0.430 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_71_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.430 0.980 0.880</ambient>
+          <diffuse>0.078 0.430 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_72">
+      <pose>1530.000 1430.000 10.000 0.000000 0.173462 0.548035</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_72_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.647 0.980 0.880</ambient>
+          <diffuse>0.078 0.647 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_72_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.647 0.980 0.880</ambient>
+          <diffuse>0.078 0.647 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_73">
+      <pose>1610.000 1430.000 10.000 0.000000 0.024882 1.641168</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_73_shaft">
+        <pose>1.412295 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.824590</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.410 0.980 0.078 0.880</ambient>
+          <diffuse>0.410 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_73_head">
+        <pose>4.074590 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.410 0.980 0.078 0.880</ambient>
+          <diffuse>0.410 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_74">
+      <pose>1690.000 1430.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_74_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_74_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_75">
+      <pose>1770.000 1430.000 10.000 0.000000 0.047050 2.159813</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_75_shaft">
+        <pose>2.246816 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.493633</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.288 0.078 0.880</ambient>
+          <diffuse>0.980 0.288 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_75_head">
+        <pose>5.743633 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.288 0.078 0.880</ambient>
+          <diffuse>0.980 0.288 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_76">
+      <pose>1850.000 1430.000 10.000 0.000000 0.036138 1.592613</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_76_shaft">
+        <pose>1.755034 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.510068</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.929 0.980 0.078 0.880</ambient>
+          <diffuse>0.929 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_76_head">
+        <pose>4.760068 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.929 0.980 0.078 0.880</ambient>
+          <diffuse>0.929 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_77">
+      <pose>1050.000 1510.000 10.000 0.000000 0.762582 1.603353</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_77_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.522 0.980 0.880</ambient>
+          <diffuse>0.078 0.522 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_77_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.522 0.980 0.880</ambient>
+          <diffuse>0.078 0.522 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_78">
+      <pose>1130.000 1510.000 10.000 0.000000 0.092504 -0.736586</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_78_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.494 0.980 0.880</ambient>
+          <diffuse>0.078 0.494 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_78_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.494 0.980 0.880</ambient>
+          <diffuse>0.078 0.494 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_79">
+      <pose>1210.000 1510.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_79_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_79_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_80">
+      <pose>1290.000 1510.000 10.000 0.000000 0.380527 -0.630375</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_80_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.502 0.980 0.880</ambient>
+          <diffuse>0.078 0.502 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_80_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.502 0.980 0.880</ambient>
+          <diffuse>0.078 0.502 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_81">
+      <pose>1370.000 1510.000 10.000 0.000000 0.191901 -0.231817</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_81_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.595 0.980 0.880</ambient>
+          <diffuse>0.078 0.595 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_81_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.595 0.980 0.880</ambient>
+          <diffuse>0.078 0.595 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_82">
+      <pose>1450.000 1510.000 10.000 0.000000 0.524756 -0.051322</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_82_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.395 0.980 0.880</ambient>
+          <diffuse>0.078 0.395 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_82_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.395 0.980 0.880</ambient>
+          <diffuse>0.078 0.395 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_83">
+      <pose>1530.000 1510.000 10.000 0.000000 -0.364363 0.433124</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_83_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.279 0.980 0.880</ambient>
+          <diffuse>0.078 0.279 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_83_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.279 0.980 0.880</ambient>
+          <diffuse>0.078 0.279 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_84">
+      <pose>1610.000 1510.000 10.000 0.000000 0.057797 2.193388</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_84_shaft">
+        <pose>1.674250 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.348500</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.806 0.980 0.078 0.880</ambient>
+          <diffuse>0.806 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_84_head">
+        <pose>4.598500 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.806 0.980 0.078 0.880</ambient>
+          <diffuse>0.806 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_85">
+      <pose>1690.000 1510.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_85_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_85_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_86">
+      <pose>1770.000 1510.000 10.000 0.000000 -0.017502 -2.784830</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_86_shaft">
+        <pose>1.317358 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.634715</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.267 0.980 0.078 0.880</ambient>
+          <diffuse>0.267 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_86_head">
+        <pose>3.884715 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.267 0.980 0.078 0.880</ambient>
+          <diffuse>0.267 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_87">
+      <pose>1850.000 1510.000 10.000 0.000000 0.047666 1.538198</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_87_shaft">
+        <pose>2.120206 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.240412</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.479 0.078 0.880</ambient>
+          <diffuse>0.980 0.479 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_87_head">
+        <pose>5.490412 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.479 0.078 0.880</ambient>
+          <diffuse>0.980 0.479 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_88">
+      <pose>1050.000 1590.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_88_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_88_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_89">
+      <pose>1130.000 1590.000 10.000 0.000000 0.027597 0.079683</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_89_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.698 0.980 0.880</ambient>
+          <diffuse>0.078 0.698 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_89_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.698 0.980 0.880</ambient>
+          <diffuse>0.078 0.698 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_90">
+      <pose>1210.000 1590.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_90_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_90_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_91">
+      <pose>1290.000 1590.000 10.000 0.000000 -0.152863 2.800325</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_91_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.260 0.980 0.880</ambient>
+          <diffuse>0.078 0.260 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_91_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.260 0.980 0.880</ambient>
+          <diffuse>0.078 0.260 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_92">
+      <pose>1370.000 1590.000 10.000 0.000000 0.234090 2.972031</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_92_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.495 0.980 0.880</ambient>
+          <diffuse>0.078 0.495 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_92_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.495 0.980 0.880</ambient>
+          <diffuse>0.078 0.495 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_93">
+      <pose>1450.000 1590.000 10.000 0.000000 0.022058 -3.050609</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_93_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.972 0.880</ambient>
+          <diffuse>0.078 0.980 0.972 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_93_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.972 0.880</ambient>
+          <diffuse>0.078 0.980 0.972 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_94">
+      <pose>1530.000 1590.000 10.000 0.000000 0.021691 2.417640</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_94_shaft">
+        <pose>1.447510 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.895019</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.464 0.980 0.078 0.880</ambient>
+          <diffuse>0.464 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_94_head">
+        <pose>4.145019 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.464 0.980 0.078 0.880</ambient>
+          <diffuse>0.464 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_95">
+      <pose>1610.000 1590.000 10.000 0.000000 -0.014705 2.311154</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_95_shaft">
+        <pose>2.070135 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>4.140271</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.555 0.078 0.880</ambient>
+          <diffuse>0.980 0.555 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_95_head">
+        <pose>5.390271 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.555 0.078 0.880</ambient>
+          <diffuse>0.980 0.555 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_96">
+      <pose>1690.000 1590.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_96_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_96_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_97">
+      <pose>1770.000 1590.000 10.000 0.000000 0.189634 0.797746</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_97_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.845 0.980 0.880</ambient>
+          <diffuse>0.078 0.845 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_97_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.845 0.980 0.880</ambient>
+          <diffuse>0.078 0.845 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_98">
+      <pose>1850.000 1590.000 10.000 0.000000 0.020948 1.557965</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_98_shaft">
+        <pose>3.199828 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>6.399657</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_98_head">
+        <pose>7.649657 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_99">
+      <pose>1050.000 1670.000 10.000 0.000000 0.425347 -2.158651</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_99_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.162 0.980 0.880</ambient>
+          <diffuse>0.078 0.162 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_99_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.162 0.980 0.880</ambient>
+          <diffuse>0.078 0.162 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_100">
+      <pose>1130.000 1670.000 10.000 0.000000 0.112358 0.810515</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_100_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.603 0.980 0.880</ambient>
+          <diffuse>0.078 0.603 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_100_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.603 0.980 0.880</ambient>
+          <diffuse>0.078 0.603 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_101">
+      <pose>1210.000 1670.000 10.000 0.000000 -0.022872 0.528589</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_101_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.659 0.980 0.880</ambient>
+          <diffuse>0.078 0.659 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_101_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.659 0.980 0.880</ambient>
+          <diffuse>0.078 0.659 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_102">
+      <pose>1290.000 1670.000 10.000 0.000000 0.139195 0.895080</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_102_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.420 0.980 0.880</ambient>
+          <diffuse>0.078 0.420 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_102_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.420 0.980 0.880</ambient>
+          <diffuse>0.078 0.420 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_103">
+      <pose>1370.000 1670.000 10.000 0.000000 0.000000 0.000000</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_103_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_103_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.078 0.980 0.880</ambient>
+          <diffuse>0.078 0.078 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_104">
+      <pose>1450.000 1670.000 10.000 0.000000 0.111366 -2.507782</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_104_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.384 0.980 0.880</ambient>
+          <diffuse>0.078 0.384 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_104_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.384 0.980 0.880</ambient>
+          <diffuse>0.078 0.384 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_105">
+      <pose>1530.000 1670.000 10.000 0.000000 0.008616 1.702970</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_105_shaft">
+        <pose>1.367437 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.734875</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.343 0.980 0.078 0.880</ambient>
+          <diffuse>0.343 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_105_head">
+        <pose>3.984875 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.343 0.980 0.078 0.880</ambient>
+          <diffuse>0.343 0.980 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_106">
+      <pose>1610.000 1670.000 10.000 0.000000 -0.037881 1.375025</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_106_shaft">
+        <pose>1.098769 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.197538</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.220 0.880</ambient>
+          <diffuse>0.078 0.980 0.220 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_106_head">
+        <pose>3.447538 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.220 0.880</ambient>
+          <diffuse>0.078 0.980 0.220 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_107">
+      <pose>1690.000 1670.000 10.000 0.000000 0.088051 -1.019682</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_107_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.779 0.880</ambient>
+          <diffuse>0.078 0.980 0.779 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_107_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.779 0.880</ambient>
+          <diffuse>0.078 0.980 0.779 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_108">
+      <pose>1770.000 1670.000 10.000 0.000000 0.081864 1.551503</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_108_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.845 0.880</ambient>
+          <diffuse>0.078 0.980 0.845 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_108_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.845 0.880</ambient>
+          <diffuse>0.078 0.980 0.845 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_109">
+      <pose>1850.000 1670.000 10.000 0.000000 0.010985 1.839344</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_109_shaft">
+        <pose>3.349187 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>6.698374</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_109_head">
+        <pose>7.948374 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_110">
+      <pose>1050.000 1750.000 10.000 0.000000 0.011610 -0.235180</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_110_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.584 0.880</ambient>
+          <diffuse>0.078 0.980 0.584 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_110_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.584 0.880</ambient>
+          <diffuse>0.078 0.980 0.584 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_111">
+      <pose>1130.000 1750.000 10.000 0.000000 0.044226 -0.101947</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_111_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.609 0.880</ambient>
+          <diffuse>0.078 0.980 0.609 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_111_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.609 0.880</ambient>
+          <diffuse>0.078 0.980 0.609 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_112">
+      <pose>1210.000 1750.000 10.000 0.000000 0.084153 0.079749</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_112_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.828 0.880</ambient>
+          <diffuse>0.078 0.980 0.828 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_112_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.828 0.880</ambient>
+          <diffuse>0.078 0.980 0.828 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_113">
+      <pose>1290.000 1750.000 10.000 0.000000 0.104752 0.241488</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_113_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.801 0.980 0.880</ambient>
+          <diffuse>0.078 0.801 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_113_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.801 0.980 0.880</ambient>
+          <diffuse>0.078 0.801 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_114">
+      <pose>1370.000 1750.000 10.000 0.000000 0.136259 0.177995</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_114_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.393 0.980 0.880</ambient>
+          <diffuse>0.078 0.393 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_114_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.393 0.980 0.880</ambient>
+          <diffuse>0.078 0.393 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_115">
+      <pose>1450.000 1750.000 10.000 0.000000 0.101107 -0.988990</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_115_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.512 0.980 0.880</ambient>
+          <diffuse>0.078 0.512 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_115_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.512 0.980 0.880</ambient>
+          <diffuse>0.078 0.512 0.980 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_116">
+      <pose>1530.000 1750.000 10.000 0.000000 0.008173 1.543630</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_116_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.684 0.880</ambient>
+          <diffuse>0.078 0.980 0.684 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_116_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.684 0.880</ambient>
+          <diffuse>0.078 0.980 0.684 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_117">
+      <pose>1610.000 1750.000 10.000 0.000000 -0.063501 0.991339</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_117_shaft">
+        <pose>1.027201 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.054402</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.329 0.880</ambient>
+          <diffuse>0.078 0.980 0.329 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_117_head">
+        <pose>3.304402 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.329 0.880</ambient>
+          <diffuse>0.078 0.980 0.329 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_118">
+      <pose>1690.000 1750.000 10.000 0.000000 0.041095 -0.382461</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_118_shaft">
+        <pose>1.000000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>2.000000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.798 0.880</ambient>
+          <diffuse>0.078 0.980 0.798 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_118_head">
+        <pose>3.250000 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.078 0.980 0.798 0.880</ambient>
+          <diffuse>0.078 0.980 0.798 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_119">
+      <pose>1770.000 1750.000 10.000 0.000000 0.013882 1.985521</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_119_shaft">
+        <pose>1.826586 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>3.653171</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.923 0.078 0.880</ambient>
+          <diffuse>0.980 0.923 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_119_head">
+        <pose>4.903171 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.923 0.078 0.880</ambient>
+          <diffuse>0.980 0.923 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+    <link name="arrow_120">
+      <pose>1850.000 1750.000 10.000 0.000000 0.009660 1.919494</pose>
+      <gravity>false</gravity>
+      <visual name="arrow_120_shaft">
+        <pose>3.460883 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>0.300000</radius><length>6.921767</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+      <visual name="arrow_120_head">
+        <pose>8.171767 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <cylinder><radius>1.200000</radius><length>2.500000</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.980 0.078 0.078 0.880</ambient>
+          <diffuse>0.980 0.078 0.078 0.880</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+  </model>
+</sdf>

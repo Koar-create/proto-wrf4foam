@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="guangzhou_wind_hires_demo">
+    <physics type="ode">
+      <max_step_size>0.004</max_step_size>
+      <real_time_update_rate>250</real_time_update_rate>
+    </physics>
+
+    <!-- Spawn is far from origin (~km). Set initial camera near the model. -->
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <!-- pose: x y z roll pitch yaw — overlook (1450,1350) -->
+        <pose>1450 1150 200 0 0.8 1.57</pose>
+      </camera>
+    </gui>
+
+    <!-- Local models (no online DB needed) -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Street-canyon reference (visual-only STL) -->
+    <include>
+      <uri>model://guangzhou_buildings</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Static wind arrows (hires LUT sample region, rod+cone) -->
+    <include>
+      <uri>model://wind_arrows_hotspot_hires</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Iris quadrotor: hires LUT + torque + attitude recovery + timed XY drift -->
+    <include>
+      <uri>model://iris_wind_quad_hires_demo</uri>
+      <pose>1450 1350 10 0 0 0</pose>
+    </include>
+  </world>
+</sdf>
