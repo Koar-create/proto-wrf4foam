@@ -21,7 +21,7 @@
       <!-- Simple collision box (visual is a mesh) -->
       <collision name="collision">
         <geometry>
-          <box><size>0.47 0.47 0.11</size></box>
+          <box><size>4.7 4.7 1.1</size></box>
         </geometry>
       </collision>
 
@@ -29,7 +29,7 @@
       <visual name="body_visual">
         <geometry>
           <mesh>
-            <scale>1 1 1</scale>
+            <scale>10 10 10</scale>
             <uri>model://iris_wind_quad_hires_demo/meshes/iris.stl</uri>
           </mesh>
         </geometry>
@@ -44,37 +44,37 @@
       <!-- Propeller visuals (visual-only; no joints) -->
       <!-- Positions copied from PX4 iris model (Gazebo Classic) -->
       <visual name="prop_0_ccw">
-        <pose>0.13 -0.22 0.023 0 0 0</pose>
+        <pose>1.3 -2.2 0.23 0 0 0</pose>
         <geometry>
           <mesh>
-            <scale>1 1 1</scale>
+            <scale>10 10 10</scale>
             <uri>model://iris_wind_quad_hires_demo/meshes/iris_prop_ccw.dae</uri>
           </mesh>
         </geometry>
       </visual>
       <visual name="prop_1_ccw">
-        <pose>-0.13 0.20 0.023 0 0 0</pose>
+        <pose>-1.3 2.0 0.23 0 0 0</pose>
         <geometry>
           <mesh>
-            <scale>1 1 1</scale>
+            <scale>10 10 10</scale>
             <uri>model://iris_wind_quad_hires_demo/meshes/iris_prop_ccw.dae</uri>
           </mesh>
         </geometry>
       </visual>
       <visual name="prop_2_cw">
-        <pose>0.13 0.22 0.023 0 0 0</pose>
+        <pose>1.3 2.2 0.23 0 0 0</pose>
         <geometry>
           <mesh>
-            <scale>1 1 1</scale>
+            <scale>10 10 10</scale>
             <uri>model://iris_wind_quad_hires_demo/meshes/iris_prop_cw.dae</uri>
           </mesh>
         </geometry>
       </visual>
       <visual name="prop_3_cw">
-        <pose>-0.13 -0.20 0.023 0 0 0</pose>
+        <pose>-1.3 -2.0 0.23 0 0 0</pose>
         <geometry>
           <mesh>
-            <scale>1 1 1</scale>
+            <scale>10 10 10</scale>
             <uri>model://iris_wind_quad_hires_demo/meshes/iris_prop_cw.dae</uri>
           </mesh>
         </geometry>
@@ -92,19 +92,19 @@
       <world_to_lut_offset_y>0</world_to_lut_offset_y>
       <world_to_lut_offset_z>0</world_to_lut_offset_z>
       <log_every_n>250</log_every_n>
-      <!-- At z=10 m the LUT column (1450,1350) is fully masked; z≈8.5 m matches open-air trilinear sample (see runtime wind=). -->
-      <hotspot_x>1450</hotspot_x>
+      <!-- Align with spawn: open-air vs building STL; LUT still valid at this XY. -->
+      <hotspot_x>1470</hotspot_x>
       <hotspot_y>1350</hotspot_y>
-      <hotspot_z>8.5</hotspot_z>
+      <hotspot_z>12</hotspot_z>
       <enable_wind_torque>true</enable_wind_torque>
       <wind_torque_arm_z>0.15</wind_torque_arm_z>
     </plugin>
 
     <plugin name="hover_pid" filename="libHoverPidPlugin.so">
       <link_name>base_link</link_name>
-      <target_x>1450</target_x>
+      <target_x>1470</target_x>
       <target_y>1350</target_y>
-      <target_z>10</target_z>
+      <target_z>12</target_z>
       <enable_xy>true</enable_xy>
       <kp>8</kp>
       <ki>0.1</ki>
@@ -118,7 +118,7 @@
     <plugin name="trail_marker" filename="libTrailMarkerPlugin.so">
       <link_name>base_link</link_name>
       <sample_period>0.75</sample_period>
-      <marker_radius>0.9</marker_radius>
+      <marker_radius>0.3</marker_radius>
       <max_points>60</max_points>
       <color_r>1.0</color_r>
       <color_g>0.3</color_g>

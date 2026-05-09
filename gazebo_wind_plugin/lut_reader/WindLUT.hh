@@ -23,6 +23,15 @@ struct WindLUT {
   // If a corner is invalid (valid_mask==0) it contributes as zero.
   std::array<float, 3> query(double x, double y, double z) const;
 
+  /// True if this grid point is in-domain (valid) and not inside_building (when mask present).
+  bool cellIsOutdoor(int ix, int iy, int iz) const;
+
+  /// If the requested (x_in,y_in,z_in) lies in a fully masked / inside-building column, find the nearest
+  /// outdoor grid point in XY on the same z-index slice (rounded from z_in). When inside_building is absent,
+  /// falls back to requiring trilinear |U| >= min_wind_fallback. Returns false if no candidate within radius.
+  bool snapHotspotNearestOutdoor(double x_in, double y_in, double z_in, double max_radius_m,
+                                 double min_wind_fallback, double* out_x, double* out_y, double* out_z) const;
+
 private:
   inline int idx(int ix, int iy, int iz) const {
     return (ix * dims[1] + iy) * dims[2] + iz;

@@ -2,10 +2,25 @@
 
 > 本文件由Cursor智能体自动维护，用于记录本仓库内任务执行过程、关键决策与可复现命令。
 
+## 2026-05-09
+
+### WindFieldPlugin：热点自动吸附到 LUT 建筑外格点
+- **动机**：`(1450,1350,10)` 在 VTI `inside_building` 掩膜内，`hotspot_check` 与插值风速可为 0。
+- **实现**：[`lut_reader/WindLUT.{hh,cc}`](gazebo_wind_plugin/lut_reader/WindLUT.hh) 增加 `cellIsOutdoor`、`snapHotspotNearestOutdoor`（固定 `z` 对应层 `iz`，在 XY 上搜最近室外格点；有掩膜优先用掩膜，否则用 `|U|≥min_wind`）；[`WindFieldPlugin.cc`](gazebo_wind_plugin/WindFieldPlugin.cc) 在 `hotspot_check` 前可选吸附。
+- **SDF（默认向后兼容）**：`hotspot_snap_outdoor` 默认 `true`；`hotspot_snap_max_radius_m` 默认 `120`；`hotspot_snap_min_wind` 默认 `0.05`（无建筑掩膜时的回退判据）。旧 demo 热点若在室外格点上则不移动。
+- **模型**：`iris_wind_quad_hires_demo` 的 `hotspot_*` 已改回 `(1450,1350,10)`，依赖自动吸附产生非零 `hotspot_check`。
+
+### Gazebo hires：四旋翼 10× 可见性 + mesh 风箭头
+- **机体**：[`iris_wind_quad_hires_demo/model.sdf`](gazebo_wind_plugin/models/iris_wind_quad_hires_demo/model.sdf) 机身/桨叶 mesh `scale=10`，桨叶局部 pose ×10，碰撞 `4.7×4.7×1.1`，[`TrailMarkerPlugin`](gazebo_wind_plugin/TrailMarkerPlugin.cc) `marker_radius=0.3`（尾迹球小于大机体）。
+- **箭头资产**：[`scripts/generate_arrow_unit_stl.py`](scripts/generate_arrow_unit_stl.py) 生成 [`wind_arrow_glyph/meshes/arrow_unit.stl`](gazebo_wind_plugin/models/wind_arrow_glyph/meshes/arrow_unit.stl)（+X 长 1 m，三角网格杆+锥）；[`wind_arrow_glyph`](gazebo_wind_plugin/models/wind_arrow_glyph/) 含 `model.config` / `model.sdf`。
+- **生成器**：[`scripts/generate_gazebo_wind_arrows.py`](scripts/generate_gazebo_wind_arrows.py) 的 `mesh` 模式为 **单 link + 多 visual**；默认 bbox **`--step 40`**、`--z-levels` 可多层；**`--mesh-len-*` / `--mesh-thick`** 加大箭长与粗细（远景可见性）。
+- **hires 出生点**：`guangzhou_wind_hires_demo` 与 `iris_wind_quad_hires_demo` 目标改为 **(1470,1350,12)**：`buildings.stl` 在 (1450,1350,10) 附近包进楼体网格，东移 20 m、略抬高以离开建筑视觉体。
+- **文档**：[`docs/ops/Gazebo风场插件gazebo_wind_plugin与Demo详解.md`](docs/ops/Gazebo风场插件gazebo_wind_plugin与Demo详解.md) §7.4 与目录索引已更新。
+
 ## 2026-05-07
 
 ### Gazebo Wind Field Plugin（WSL2 / Gazebo Classic）执行记录
-- **目标**：在 Gazebo Classic 11 中实现 `ModelPlugin`，每个 physics step 按 LUT 三线性插值获得 `(u,v,w)` 并施加拖曳型风力：\(F = 0.5\\rho C_D A |U_{rel}| U_{rel}\\)，用于演示无人机进入文丘里加速区后的可观察偏移。
+- **目标**：在 Gazebo Classic 11 中实现 `ModelPlugin`，每个 physics step 按 LUT 三线性插值获得 `(u,v,w)` 并施加拖曳型风力：$F = 0.5\\rho C_D A |U_{rel}| U_{rel}\$，用于演示无人机进入文丘里加速区后的可观察偏移。
 - **输入数据**：`data/wind_lut/20250903_1400/wind_lut.{json,vti}`（若 WSL2 端 VTK 不可用则回退补导出 `wind_lut.npz` + cnpy）。
 - **执行门**：
   - 先运行 `scripts/check_gazebo_env.sh` 确认 Gazebo/VTK/CMake/GCC/OS。
@@ -30,9 +45,9 @@
     - `export GAZEBO_PLUGIN_PATH="$PWD/gazebo_wind_plugin/build:${GAZEBO_PLUGIN_PATH:-}"`
     - `export GAZEBO_MODEL_PATH="$PWD/gazebo_wind_plugin/models:${GAZEBO_MODEL_PATH:-}"`
     - `export GAZEBO_MODEL_DATABASE_URI=""`（避免联网拉模型库）
-  - 运行：`gzserver gazebo_wind_plugin/worlds/guangzhou_wind.world --verbose`
+  - 运行：`gazebo gazebo_wind_plugin/worlds/guangzhou_wind.world --verbose`
   - 观察到日志：`[WindFieldPlugin] LUT loaded: dims=(501,501,101) ...`（证明 VTI + JSON 读取成功，插件成功 Load）
-  - 备注：`gzserver --iters N` 在本机环境下未按预期自动退出（可用 `timeout` / 手动 kill 做“有限步”验证）。
+  - 备注：`gazebo --iters N` 在本机环境下未按预期自动退出（可用 `timeout` / 手动 kill 做“有限步”验证）。
 
 ### Gazebo GUI「静止平面 + 细圆柱」深度诊断与文档闭环
 
@@ -71,8 +86,6 @@
     - `[HoverPidPlugin] ... enable_xy=0`
     - `[TrailMarkerPlugin] ...`
     - 且 `pos=(...)` 随时间在 XY 方向明显变化，证明可见漂移模式生效。
-
-## 2026-05-06
 
 ### `render_3d_streamlines_v2`：流线密度 + 标注字号（对齐 `docs/image2.png` 审美，相对旧版 `figure1_streamlines_v2`）
 - **问题**：默认盒状种子 `10×10×10`、标题字号 34 且随 `_cb_scale` 线性放大 → **流线极密、左上角标题过大易裁切**；色标刻度曾偏小。后又一度 **`4×4×4` + 大步长** → 画面偏稀、折线显直。
@@ -141,228 +154,3 @@
     - 高分辨率默认提示见 `--window-size` 帮助文案。
   - **Plan B（仍为 3D，不经本脚本 2D）**：若 `POpenFOAMReader` 无法读 polyhedral/时间目录，在算例根执行 OpenFOAM **`foamToVTK -latestTime`**（或 ParaView 直接打开 case），用 **ParaView / `pvpython`**：`Clip` + `Stream Tracer` + STL + `Save Screenshot`。
 - **备注**：流线调用已按新版 PyVista 使用 **`max_length`** 替代已弃用的 `max_time`。
-
-### WSL2 转发 Gazebo GUI 帧率低（澄清 + 推荐运行方式）
-
-#### 关键澄清
-
-- 你目前的命令是：
-  - `gazebo <world> --verbose`
-- **这不是“只跑服务器”**：`gazebo` 会在 WSL2 里同时启动 **`gzserver`（物理/仿真）** + **`gzclient`（GUI）**，因此 Windows 桌面弹出的窗口实际上是 **WSLg 转发的 Linux GUI**。
-
-#### 正确的“WSL2 只跑服务器”
-
-在 WSL2 里用 `gzserver`（或 `gazebo -s`）启动 world，确保不再弹 GUI：
-
-```bash
-export GAZEBO_PLUGIN_PATH="$HOME/WRF-OpenFOAM-Coupling/gazebo_wind_plugin/build:${GAZEBO_PLUGIN_PATH:-}"
-export GAZEBO_MODEL_PATH="$HOME/WRF-OpenFOAM-Coupling/gazebo_wind_plugin/models:/usr/share/gazebo-11/models:${GAZEBO_MODEL_PATH:-}"
-export GAZEBO_MODEL_DATABASE_URI=""
-
-gzserver "$HOME/WRF-OpenFOAM-Coupling/gazebo_wind_plugin/worlds/guangzhou_wind.world" --verbose
-```
-
-可选：若要显式指定 master：
-
-```bash
-export GAZEBO_MASTER_URI="http://0.0.0.0:11345"
-export GAZEBO_IP="$(hostname -I | awk '{print $1}')"
-```
-
-#### “Windows 原生跑 GUI”（推荐提帧）
-
-- 在 Windows 上安装 Gazebo Classic 11（原生 Windows 版本），然后在 Windows 侧启动 `gzclient` / `gazebo`（仅 GUI），通过 `GAZEBO_MASTER_URI` 连接到 WSL2 的 `gzserver`。
-- WSL2 当前 IP 可用 `hostname -I` 获取（例：`172.19.233.80`）。
-- Windows 侧环境变量示例（PowerShell）：
-
-```powershell
-$env:GAZEBO_MASTER_URI="http://172.19.233.80:11345"
-gzclient
-```
-
-> 注：若 Windows 侧无法直连该 IP/端口，需要检查 Windows 防火墙，或用 `netsh interface portproxy` 将 `127.0.0.1:11345` 转发到 WSL2 IP。
-- **`render_3d_streamlines_v2`（色标 + 对齐 image2 迭代）**：[`util/render_3d_streamlines_v2.py`](util/render_3d_streamlines_v2.py)
-  - **TypeError**：`scalar_bar_args` 已去掉不兼容的 `title_font_family` / `label_font_family`。
-  - **视觉迭代（相对 docs/image2）**：默认 **暗色背景** `#1e1e22`、建筑 `#5c5c62`、地面 `#3a3a40`；**热点盒状种子** **`7×7×6`**（`--seed-style box`，可调）；**双向积分** `both`、**细管** `tube-radius-m` 默认 **0.38**、`tube-sides` 32、`tube-opacity` 0.88；**`--initial-step` 默认 0.06**（顺滑折线）；**plane** 种子改为热点 **上游** `x` 而非 `xmin+5`；相机距离系数 **2.35×half_w**；标题/色标字号 **次线性**随分辨率缩放，色标单独提高可读性。
-  - **`--light-theme`**：恢复浅灰背景 + 浅建筑（旧风格）。
-  - **示例**：`python util/render_3d_streamlines_v2.py --window-size 3840,2160 --ground-plane` → [`figure1_streamlines_v2.png`](results/microhazard/20250903_1400/figure1_streamlines_v2.png)（默认种子与步长见上一节；早期 `10³` 种子曾达 **~1170** 条线量级）。
-
-### 批量：100m 切片水平风速空间 95% 分位数（排除敏感性算例）
-- **脚本**：[`util/compute_100m_spatial_p95_windspeed.py`](util/compute_100m_spatial_p95_windspeed.py)
-- **输入**：`steady_experiments_finer_ABL/<case_id>/postProcessing/100m.csv`；**排除**目录名含 `fvOpt_sensitivity_run` 的算例（与 `docs/project/Global_Constraints.md` 中 39 个敏感性实验一致）。
-- **计算**：水平风速 `sqrt(U:0^2 + U:1^2)`，对切片上全部点取 **第 95 百分位**；时间从 `<case_id>` 前缀 `YYYYMMDD_HHMM` 解析为 UTC。
-- **默认输出**：`results/wrf_openfoam/steady_ABL_100m_spatial_p95_windspeed.csv`（列 `time_utc`, `wind_speed_p95_m_s`）。
-- **运行示例**：
-  - `python util/compute_100m_spatial_p95_windspeed.py`
-  - `python util/compute_100m_spatial_p95_windspeed.py --root steady_experiments_finer_ABL --out results/wrf_openfoam/my_p95.csv`
-  - 若需遇错即失败：`python util/compute_100m_spatial_p95_windspeed.py --strict`
-- **说明**：`steady_experiments_finer_ABL/` 常被 `.gitignore` 忽略，需在本地存在算例树后再运行。
-
-## 2026-05-03
-
-### 英文 `README.md`（仓库说明）
-- **输入**：用户要求为本项目撰写英文 `README.md`。
-- **产出**：根目录新增 `README.md`，概述 WRF–OpenFOAM 耦合与城市 CFD、目录结构（`scripts/` / `util/` / `data/` / `analysis/` / `results/` / `surrogate_dataset/`）、surrogate 流水线（stage2 + task1–5）、观测合并与验证脚本入口、依赖说明与数据路径引用（指向 `.cursor/skills/project-layout-data-results-analysis/SKILL.md`）。
-- **说明**：任务脚本在磁盘上位于 `scripts/`（与 `AUTO-CHECKPOINT` 中部分历史记录里的 `util/task*.py` 表述可能不一致时，以当前仓库实际路径为准）。
-
-### `README.md` 补充：`steady_experiments_finer_ABL`、`docs`、`W_myExp03`
-- **输入**：用户反馈首版 README 未突出三条最重要路径。
-- **更新**：在 `README.md` 增加 **“The three roots that tie everything together”** 专节：分别说明 `steady_experiments_finer_ABL/`（稳态算例库、`boundaryData`、`processed_hdf5`、组织用 CSV）、`W_myExp03/`（WRF auxhist 与边界前处理侧车目录、常见硬编码路径）、`docs/`（`Global_Constraints`、methodology、ops、reference-candidate）；注明部分 clone 中 `docs/` 等可能被 `.gitignore` 排除但仍为工作流所需。表格下增加指向该节的交叉引用；Surrogate 与 WRF→CFD 小节用语与上述路径对齐。
-
-### util 目录平台粗分类（排除 old_scripts）
-- **输入**：遍历 `util/`（忽略 `util/old_scripts/`），将每个文件归为：1 仅 Windows、2 仅 Linux（此处按「POSIX/HOME 路径布局」理解）、3 其他。
-- **产出**：`util/platform_classification.json`（含判定口径、`summary`、逐文件 `category` 与 `reason`）。
-
-### `scripts/` 平台粗分类（排除 csv）
-- **范围**：`scripts/` 下除 `.csv` 外的脚本（如 `.py`、`.sh`、`.bat`）。
-- **产出**：`scripts/platform_classification.json`。
-
-### `merge_lidar_data.py` 迁至 `scripts/` 与数据路径
-- **移动**：`analysis/260409/merge_lidar_data.py` → `scripts/merge_lidar_data.py`（原路径文件已删除）。
-- **默认路径**（均相对仓库根 `Path(__file__).resolve().parents[1]`，无盘符/HOME）：
-  - CFD：`data/260409/raw/cfd/control`
-  - WRF：`data/260409/raw/wrf/WRF_lidar_simulation_1h-rolling.csv`
-  - LiDAR：`data/260409/raw/lidar/lidar_1h-rolling.csv`
-  - 输出：`data/260409/processed/merged_lidar_simulation_final.csv`（写入前 `mkdir` 父目录）
-- **运行**：`python scripts/merge_lidar_data.py`；可用 `--cfd-dir/--wrf-csv/--lidar-csv/--output` 覆盖。
-
-## 2026-04-29
-
-### 启动
-- **输入**：读取 `待使用的指令1.md` 并按其任务拆分开始执行。
-- **任务目标**：将 `steady_experiments_finer_ABL/` 下的OpenFOAM结果与入流条件、几何编码整合为 `surrogate_dataset/`，用于3D神经网络训练。
-
-### 读入任务定义（`待使用的指令1.md` 摘要）
-- **任务一**：从 `constant/triSurface/buildings.stl` 生成与训练网格对齐的几何编码（UDF截断200m + 建筑占位mask），输出 `surrogate_dataset/geometry/building_encoding_131x131x15.npy` 并产出QC图。
-- **任务二**：扫描111个case，检查 `processed_hdf5/<case_id>.h5` 是否存在且>1MB，集中拷贝到 `surrogate_dataset/fields/<case_id>.h5` 并汇总缺失列表。
-- **任务三**：解析各case `constant/boundaryData/{east,south}/...`，提取U_ref、wind_dir、k_max、k_500m、z_kmax与ABL分类，写入 `surrogate_dataset/inflow/<case_id>_inflow.json`。
-- **任务四**：汇总生成 `surrogate_dataset/index.csv`，并按ABL分层抽样划分 train/val/test（80/10/10，且每类val/test至少1个）。
-
-### 当前状态
-- **进度**：已读取任务说明，待遍历项目目录并开始实现/执行任务二（集中汇总字段HDF5）作为第一步落地。
-
-### 任务二落地（集中汇总 fields）
-- **新增脚本**：`util/task2_collect_fields.py`
-- **用途**：扫描 `steady_experiments_finer_ABL/<case_id>/processed_hdf5/<case_id>.h5`，过滤掉小于1MB或缺失的文件，并集中拷贝到 `surrogate_dataset/fields/`。
-- **忽略规则**：跳过 `-fvOpt_sensitivity_run-002` 与 `-fvOpt_sensitivity_run-005`。
-- **可复现运行**：
-  - Dry-run：
-    - `python util/task2_collect_fields.py --dry-run`
-  - 实际拷贝：
-    - `python util/task2_collect_fields.py`
-  - 输出报告（JSON）：
-    - 默认写入 `surrogate_dataset/fields/_task2_report.json`
-
-- **执行记录**：
-  - 运行：`python util/task2_collect_fields.py`
-  - 结果：扫描匹配case **111** 个，拷贝有效HDF5 **111** 个，缺失/过小 **0** 个；跳过不匹配/被忽略目录 **7** 个。
-
-### 任务三落地（提取入流条件向量）
-- **新增脚本**：`util/task3_extract_inflow.py`
-- **用途**：解析各case的 `constant/boundaryData/{east,south}/points` 与 `0/{U,k}`，按z高度求平均廓线，计算 `U_ref`、`wind_dir`、`k_max`、`k_500m`、`z_kmax` 与 `ABL_class`，输出到 `surrogate_dataset/inflow/<case_id>_inflow.json`。
-- **可复现运行**：
-  - Dry-run：
-    - `python util/task3_extract_inflow.py --dry-run`
-  - 实际生成JSON：
-    - `python util/task3_extract_inflow.py`
-
-- **执行记录**：
-  - 运行：`python -u util/task3_extract_inflow.py`
-  - 结果：选中case **111** 个，成功生成 **111** 个入流JSON；缺失 `boundaryData` 的case **0** 个。
-  - 备注：后续发现风向需按气象学“来向”定义修正（\( \theta_{from}=(\theta_{to}+180)\\%360 \)，其中 \(\\theta_{to}=\\mathrm{atan2}(u,v)\)）。
-  - 更新：增加 `LLJ_detected` 与 `LLJ_diag`（基于速度廓线的最大垂直切变阈值；阈值参考 `steady_experiments_finer_ABL/WRF Atmospheric Stability Data Organization.csv` 的 “Yes (Strong Shear)” 校准）。
-
-### 任务一落地（建筑几何编码：UDF + 占位mask）
-- **新增脚本**：`util/task1_building_encoding.py`
-- **用途**：从 `constant/triSurface/buildings.stl` 生成训练网格对齐的几何编码：
-  - 通道0：UDF（到最近三角面距离，截断到200m）
-  - 通道1：mask（对每个(x,y)列自上而下射线取屋顶最高命中点 z_roof，若 z < z_roof 则占位）
-- **可复现运行**：
-  - `python util/task1_building_encoding.py`
-  - 输出：`surrogate_dataset/geometry/building_encoding_131x131x15.npy` 与 `surrogate_dataset/geometry/building_encoding_qc.png`
-
-### 任务四落地（生成主索引 index.csv）
-- **新增脚本**：`util/task4_make_index.py`
-- **用途**：读取 `surrogate_dataset/fields/*.h5` 与 `surrogate_dataset/inflow/*_inflow.json`，生成 `surrogate_dataset/index.csv`，并按 `ABL_class` 分层抽样划分 `train/val/test`（整体约80/10/10，且每类val/test至少各1个）。
-- **可复现运行**：
-  - `python -u util/task4_make_index.py`
-- **执行记录**：
-  - 输出：`surrogate_dataset/index.csv`
-  - split统计：train=89, val=11, test=11（总计111）
-
-### 数据集目录文档
-- **新增**：`surrogate_dataset/README_产出清单.md`（罗列产出与复现命令）
-
-### 方法论文档：ABL稳定度与LLJ判据（中文版本）
-- **新增**：`docs/methodology/abl_stability_and_llj_detection_zh.md`
-- **用途**：为“基于 boundaryData 的稳定度诊断与 LLJ 检测”提供可复用的中文学术写作片段，与英文版保持章节与公式一致，便于在报告/论文/说明文档中引用。
-
-### WRF 稳定度组织表四面板图复现
-- **新增脚本**：`util/plot_wrf_stability_organization_csv.py`
-- **输入**：`steady_experiments_finer_ABL/WRF Atmospheric Stability Data Organization.csv`
-- **输出**：默认 `steady_experiments_finer_ABL/wrf_atmospheric_stability_organization.png`
-- **说明**：首图稳定度为 East/South 两边界序数（不稳定=0、中性=1、强稳定=2）融合：均值 <0.5 为不稳定，>1.5 为强稳定，否则为中性过渡；LLJ 白点为任一边界为 Yes 即打点；下方三图为双线（East 实线蓝、South 虚线橙），第三面板为对数轴。
-- **可复现运行**：
-  - `python util/plot_wrf_stability_organization_csv.py`
-  - 指定路径：`python util/plot_wrf_stability_organization_csv.py --csv "steady_experiments_finer_ABL/WRF Atmospheric Stability Data Organization.csv" --out steady_experiments_finer_ABL/my_plot.png`
-
-## 2026-04-30
-
-### 项目文件整理（data/results/analysis）与知识卡片Skill
-- **背景**：用户已将原先的 `260409/` 与 `260413-sensitivity_run_analysis/` 下数据与图件移动到统一结构：`data/`、`analysis/`、`results/`。
-- **目录现状**：
-  - 数据：`data/260409/{raw,processed}`、`data/260413/processed`
-  - 分析：`analysis/260409`、`analysis/260413-sensitivity`
-  - 结果：`results/{hovmoller,taylor_diagram,ws_composite_profile,ws_station_profile}/<batch>/`
-- **新增Skill（项目级）**：`.cursor/skills/project-layout-data-results-analysis/SKILL.md`
-  - **用途**：固化“新位置地图”（关键CSV/PNG/ipynb）与结果产出约定；当脚本默认路径仍指向旧目录时，建议显式传 `--csv/--out` 使用新路径。
-
-### 论文/演示选择性解读：SOWFA 一向耦合（WRF→LES→OpenFOAM）对 RANS 实验的启发
-- **输入**：
-  - 你的研究约束：`docs/project/Global_Constraints.md`
-  - 候选参考：`docs/reference-candidate/SOWFA.pdf`（NREL/PR-5000-61122, 2013-10, Churchfield 等）
-- **任务目标**：从 SOWFA 多尺度耦合经验中，抽取对“WRF 驱动稳态 RANS 城市/复杂地形下风场评估”最有迁移价值的信息，并形成可执行改进点（边界条件、近地层、湍流输入、域/采样设计、误差诊断）。
-- **关键摘录（将用于输出总结）**：
-  - 一向耦合流程：运行 WRF 与 WRF-LES；把时间序列插值到 OpenFOAM 边界位置并初始化内场；OpenFOAM 以 WRF-LES 的初场与边界驱动继续发展。
-  - 边界条件思想：侧边界对 \(U,T\) 等混合 Dirichlet/Neumann；压力多为 Neumann；地表可由“表面应力模型”与“地表热通量”驱动（强调与上游模型的一致性）。
-  - 湍流“发展距离/时间”显著：该案例中高波数能量约需 **1.5 km** 才“填充”，并出现 **overshoot→衰减** 的演化。
-  - 近地层失配警示：报告指出 OpenFOAM 域内近地层水平风速随下游距离快速下降，与 WRF-LES 不一致，原因不明——提示耦合链条中“近地层/地表参数化/入口湍流结构”可能是主要误差源。
-  - 未来工作方向与可迁移问题：内嵌分辨率、稳定度差异、入流扰动方法、动态 SGS 是否缓解谱 overshoot。
-
-## 2026-05-08
-
-### Windows 侧导出高精度小范围风场 LUT（hires）
-- **目标**：在 Windows 侧从同一 OpenFOAM steady frame 重新采样更细网格 LUT（dx=dy=dz=2m），覆盖热点周边 1km×1km 区域，z 上限 200m，并导出三件套 `wind_lut.{json,vti}`，同时生成 **pyvista** 的 z=10m QC 切片图。
-- **约束**：
-  - 不修改 Gazebo demo / 插件源码 / world / 模型文件。
-  - 不覆盖现有 LUT 目录；输出到新目录 `data/wind_lut/20250903_1400_hires/`，QC 输出到 `results/wind_lut/20250903_1400_hires/`。
-  - 若输出目录已存在且非空，脚本可用 `--fail-if-exists` 拒绝写入，避免误覆盖。
-- **可复现命令**：
-  - `python util/export_wind_lut_3d.py --xrange 950,1950 --yrange 850,1850 --dx 2 --dy 2 --dz 2 --zrange 0,200 --out-dir data/wind_lut/20250903_1400_hires/ --qc-dir results/wind_lut/20250903_1400_hires/ --fail-if-exists`
-
-### 更新 WSL2 侧 hires Gazebo demo 元指令
-- **目标**：根据已生成的 `20250903_1400_hires` LUT 与 WSL 缓存，把 `docs/ops/RBM-进一步改进-元指令.md` 改成可直接发送给 WSL2 Agent 的后续执行指令。
-- **前置状态**：
-  - 项目数据目录已有 `data/wind_lut/20250903_1400_hires/wind_lut.{json,vti}`。
-  - WSL 缓存目录已有 `~/wrf_openfoam_coupling_cache/wind_lut/20250903_1400_hires/wind_lut.{json,vti}`。
-  - LUT 元数据：origin `(950,850,0)`，spacing `(2,2,2)`，dimensions `(501,501,101)`，domain `x=[950,1950], y=[850,1850], z=[0,200]`。
-  - `results/wind_lut/20250903_1400_hires/` 当前未发现文件，因此元指令要求 WSL2 任务不要因 QC 目录为空而阻塞，只在最终说明中记录。
-- **文档更新**：
-  - 移除“Windows侧导出LUT”作为待执行任务的语义，明确不要重跑 `util/export_wind_lut_3d.py`。
-  - 保留“新建独立 demo”逻辑：新增 `guangzhou_wind_hires_demo.world`、`iris_wind_quad_hires_demo`、`wind_arrows_hotspot_hires`，不覆盖旧 demo。
-  - 共享 C++ 插件修改必须通过默认关闭的可选参数保持旧 demo 行为不变。
-
-### Gazebo 高精度视觉 Demo（WSL2 落地完成）
-- **脚本**：[`scripts/generate_gazebo_wind_arrows.py`](scripts/generate_gazebo_wind_arrows.py) 增加 `--model-name`、`--arrow-style {box,rod_cone}`、`--color-mode {legacy,hsv}`、`--bbox-mode` 与 `--x-min/--x-max/--y-min/--y-max/--step`。**说明**：Gazebo Classic 11 不支持 SDF `<cone>`（会报 `Unknown geometry type`），`rod_cone` 的“箭头头部”用 **半径 1.2 m、长 2.5 m 的圆柱**代替圆锥，几何语义仍为杆 + 钝头。
-- **静态箭头模型**：`gazebo_wind_plugin/models/wind_arrows_hotspot_hires/`（121 支，`z=10 m`，80 m 间距覆盖 `[1050,1850]×[950,1750]`），生成命令：
-  - `python3 scripts/generate_gazebo_wind_arrows.py --npz ~/wrf_openfoam_coupling_cache/wind_lut/20250903_1400_hires/wind_lut.npz --model-name wind_arrows_hotspot_hires --out-model-dir gazebo_wind_plugin/models/wind_arrows_hotspot_hires --arrow-style rod_cone --color-mode hsv --bbox-mode --x-min 1050 --x-max 1850 --y-min 950 --y-max 1750 --step 80 --z-levels 10`
-- **插件（向后兼容默认值）**：
-  - [`WindFieldPlugin.cc`](gazebo_wind_plugin/WindFieldPlugin.cc)：`hotspot_x/y/z` 默认 `1420/-880/145`；`enable_wind_torque` 默认 `false`；`wind_torque_arm_z` 默认 `0.15`。
-  - [`HoverPidPlugin.cc`](gazebo_wind_plugin/HoverPidPlugin.cc)：`enable_attitude_recovery` 默认 `false`；`attitude_kp` 默认 `15`；`drift_after_seconds` 默认 `-1`（不启用时完全沿用 SDF 的 `enable_xy`）。
-- **新资产**：`gazebo_wind_plugin/models/iris_wind_quad_hires_demo/`（从 `iris_wind_quad` 复制）；[`gazebo_wind_plugin/worlds/guangzhou_wind_hires_demo.world`](gazebo_wind_plugin/worlds/guangzhou_wind_hires_demo.world)。
-- **热点校验坐标**：LUT 在 `(1450,1350,10 m)` 邻域存在建筑掩膜，插值风速可为 0；`iris_wind_quad_hires_demo` 将 `hotspot_z` 设为 **8.5 m**（与运行时 `pos≈8.3 m` 的开放气流一致），使 `hotspot_check` 的 `|U|≠0`。**无人机目标高度仍为 10 m**。
-- **验证**：
-  - `cmake --build gazebo_wind_plugin/build -j`
-  - `export GAZEBO_PLUGIN_PATH="$PWD/gazebo_wind_plugin/build:${GAZEBO_PLUGIN_PATH:-}"`；`export GAZEBO_MODEL_PATH="$PWD/gazebo_wind_plugin/models:/usr/share/gazebo-11/models:${GAZEBO_MODEL_PATH:-}"`；`export GAZEBO_MODEL_DATABASE_URI=""`
-  - `timeout 20s gzserver gazebo_wind_plugin/worlds/guangzhou_wind.world --verbose`（旧 demo）
-  - `timeout 20s gzserver gazebo_wind_plugin/worlds/guangzhou_wind_hires_demo.world --verbose`（hires：日志含 `spacing=(2,2,2)`、`hotspot_check LUT(1450,1350,8.5)` 与周期 `wind=` / `hover_error=`）

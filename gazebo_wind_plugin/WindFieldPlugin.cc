@@ -43,6 +43,10 @@ public:
     enable_wind_torque_ = sdf->Get<bool>("enable_wind_torque", false).first;
     wind_torque_arm_z_ = sdf->Get<double>("wind_torque_arm_z", 0.15).first;
 
+    hotspot_snap_outdoor_ = sdf->Get<bool>("hotspot_snap_outdoor", true).first;
+    hotspot_snap_max_radius_m_ = sdf->Get<double>("hotspot_snap_max_radius_m", 120.0).first;
+    hotspot_snap_min_wind_ = sdf->Get<double>("hotspot_snap_min_wind", 0.05).first;
+
     if (json_path.empty() || vti_path.empty()) {
       gzerr << "[WindFieldPlugin] Missing <lut_json> or <lut_vti> in SDF\n";
       return;
@@ -59,11 +63,33 @@ public:
           << lut_.spacing[0] << "," << lut_.spacing[1] << "," << lut_.spacing[2] << ")\n";
 
     {
-      const auto hv = lut_.query(hotspot_x_, hotspot_y_, hotspot_z_);
+      double hx = hotspot_x_;
+      double hy = hotspot_y_;
+      double hz = hotspot_z_;
+      if (hotspot_snap_outdoor_) {
+        double sx = hx;
+        double sy = hy;
+        double sz = hz;
+        if (lut_.snapHotspotNearestOutdoor(hx, hy, hz, hotspot_snap_max_radius_m_, hotspot_snap_min_wind_, &sx, &sy,
+                                           &sz)) {
+          const double moved = std::hypot(sx - hx, sy - hy) + std::fabs(sz - hz);
+          if (moved > 1.0e-3) {
+            gzmsg << "[WindFieldPlugin] hotspot_snap_outdoor: (" << hx << "," << hy << "," << hz << ") -> (" << sx
+                  << "," << sy << "," << sz << ") within " << hotspot_snap_max_radius_m_ << " m (LUT mask / low-|U|)\n";
+          }
+          hx = sx;
+          hy = sy;
+          hz = sz;
+        } else {
+          gzwarn << "[WindFieldPlugin] hotspot_snap_outdoor failed within " << hotspot_snap_max_radius_m_
+                 << " m; using raw hotspot\n";
+        }
+      }
+      const auto hv = lut_.query(hx, hy, hz);
       const double u_mag = std::sqrt(static_cast<double>(hv[0]) * hv[0] + static_cast<double>(hv[1]) * hv[1] +
                                      static_cast<double>(hv[2]) * hv[2]);
-      gzmsg << "[WindFieldPlugin] hotspot_check LUT(" << hotspot_x_ << "," << hotspot_y_ << "," << hotspot_z_
-            << ") wind=(" << hv[0] << "," << hv[1] << "," << hv[2] << ") |U|=" << u_mag << " m/s\n";
+      gzmsg << "[WindFieldPlugin] hotspot_check LUT(" << hx << "," << hy << "," << hz << ") wind=(" << hv[0] << ","
+            << hv[1] << "," << hv[2] << ") |U|=" << u_mag << " m/s\n";
     }
 
     update_conn_ = event::Events::ConnectWorldUpdateBegin(std::bind(&WindFieldPlugin::OnUpdate, this));
@@ -137,6 +163,10 @@ private:
 
   bool enable_wind_torque_{false};
   double wind_torque_arm_z_{0.15};
+
+  bool hotspot_snap_outdoor_{true};
+  double hotspot_snap_max_radius_m_{120.0};
+  double hotspot_snap_min_wind_{0.05};
 };
 
 GZ_REGISTER_MODEL_PLUGIN(WindFieldPlugin)

@@ -206,6 +206,108 @@ bool WindLUT::loadFromJsonAndVti(const std::string& json_path, const std::string
   return true;
 }
 
+bool WindLUT::cellIsOutdoor(int ix, int iy, int iz) const {
+  if (ix < 0 || iy < 0 || iz < 0 || ix >= dims[0] || iy >= dims[1] || iz >= dims[2]) return false;
+  const std::size_t id = static_cast<std::size_t>(idx(ix, iy, iz));
+  if (!valid_mask.empty() && valid_mask[id] == 0) return false;
+  if (!inside_building.empty() && inside_building[id] != 0) return false;
+  return true;
+}
+
+bool WindLUT::snapHotspotNearestOutdoor(double x_in, double y_in, double z_in, double max_radius_m,
+                                        double min_wind_fallback, double* out_x, double* out_y,
+                                        double* out_z) const {
+  if (out_x == nullptr || out_y == nullptr || out_z == nullptr) return false;
+  if (dims[0] <= 0 || dims[1] <= 0 || dims[2] <= 0 || U.empty()) return false;
+
+  auto clampi = [](int v, int lo, int hi) { return std::max(lo, std::min(hi, v)); };
+
+  const int iz =
+      clampi(static_cast<int>(std::lround((z_in - origin[2]) / spacing[2])), 0, dims[2] - 1);
+  const int ixc =
+      clampi(static_cast<int>(std::lround((x_in - origin[0]) / spacing[0])), 0, dims[0] - 1);
+  const int iyc =
+      clampi(static_cast<int>(std::lround((y_in - origin[1]) / spacing[1])), 0, dims[1] - 1);
+
+  const double z_grid = origin[2] + static_cast<double>(iz) * spacing[2];
+  const double max_r2 = max_radius_m * max_radius_m;
+  const int max_step =
+      std::max(1, static_cast<int>(std::ceil(max_radius_m / std::min(spacing[0], spacing[1]))));
+
+  auto umag_at_grid_xy = [&](int ix, int iy) -> double {
+    const double px = origin[0] + static_cast<double>(ix) * spacing[0];
+    const double py = origin[1] + static_cast<double>(iy) * spacing[1];
+    const auto w = query(px, py, z_grid);
+    return std::sqrt(static_cast<double>(w[0]) * w[0] + static_cast<double>(w[1]) * w[1] +
+                       static_cast<double>(w[2]) * w[2]);
+  };
+
+  auto search_xy = [&](bool use_mask) -> bool {
+    bool found = false;
+    double best_d2 = 0.0;
+    int best_ix = 0;
+    int best_iy = 0;
+    for (int dx = -max_step; dx <= max_step; ++dx) {
+      for (int dy = -max_step; dy <= max_step; ++dy) {
+        const int ix = ixc + dx;
+        const int iy = iyc + dy;
+        if (ix < 0 || ix >= dims[0] || iy < 0 || iy >= dims[1]) continue;
+        const double px = origin[0] + static_cast<double>(ix) * spacing[0];
+        const double py = origin[1] + static_cast<double>(iy) * spacing[1];
+        const double tdx = px - x_in;
+        const double tdy = py - y_in;
+        if (tdx * tdx + tdy * tdy > max_r2) continue;
+
+        bool ok = false;
+        if (use_mask) {
+          ok = cellIsOutdoor(ix, iy, iz);
+        } else {
+          ok = umag_at_grid_xy(ix, iy) >= min_wind_fallback;
+        }
+        if (!ok) continue;
+        const double d2 = tdx * tdx + tdy * tdy;
+        if (!found || d2 < best_d2) {
+          found = true;
+          best_d2 = d2;
+          best_ix = ix;
+          best_iy = iy;
+        }
+      }
+    }
+    if (found) {
+      *out_x = origin[0] + static_cast<double>(best_ix) * spacing[0];
+      *out_y = origin[1] + static_cast<double>(best_iy) * spacing[1];
+      *out_z = z_grid;
+      return true;
+    }
+    return false;
+  };
+
+  const bool have_building_mask = !inside_building.empty();
+
+  if (have_building_mask) {
+    if (cellIsOutdoor(ixc, iyc, iz)) {
+      *out_x = x_in;
+      *out_y = y_in;
+      *out_z = z_in;
+      return true;
+    }
+    if (search_xy(true)) return true;
+    return search_xy(false);
+  }
+
+  const auto w0 = query(x_in, y_in, z_in);
+  const double u0 = std::sqrt(static_cast<double>(w0[0]) * w0[0] + static_cast<double>(w0[1]) * w0[1] +
+                              static_cast<double>(w0[2]) * w0[2]);
+  if (u0 >= min_wind_fallback) {
+    *out_x = x_in;
+    *out_y = y_in;
+    *out_z = z_in;
+    return true;
+  }
+  return search_xy(false);
+}
+
 std::array<float, 3> WindLUT::query(double x, double y, double z) const {
   if (dims[0] <= 1 || dims[1] <= 1 || dims[2] <= 1) return {0.f, 0.f, 0.f};
   if (U.empty()) return {0.f, 0.f, 0.f};
