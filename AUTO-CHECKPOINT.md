@@ -2,7 +2,19 @@
 
 > 本文件由Cursor智能体自动维护，用于记录本仓库内任务执行过程、关键决策与可复现命令。
 
-<<<<<<< HEAD
+## 2026-05-08
+
+### 新增时间序列绘图脚本（单站点×单高度）
+- **输入**：用户要求参考 `scripts/plot_hovmoller_lidar_wrf_cfd.py`，新增一个命令行脚本画时间序列，支持 `--obtid --height [--3h-rolling] --tz [utc/lst]`；从 `data/260409/processed/merged_lidar_simulation_final.csv` 里按站点选择“最接近高度”；输出保存到 `results/` 下新目录；文件名需体现 obtid/height/rolling/tz；CSV 默认 UTC，`lst` 时 x 轴展示 UTC+8；配色/线型参考 `results/颜色映射.md`。
+- **产出**：新增 `scripts/plot_timeseries_lidar_wrf_cfd.py`
+  - 默认输入：`data/260409/processed/merged_lidar_simulation_final.csv`
+  - 默认输出目录：`results/timeseries_lidar_wrf_cfd/260409/`
+  - 输出文件名编码：`obtid` + `h<height>` + `raw|roll3h` + `tz-utc|tz-lst`
+- **可复现运行**：
+  - `python scripts/plot_timeseries_lidar_wrf_cfd.py --obtid GAW103 --height 100 --tz utc`
+  - `python scripts/plot_timeseries_lidar_wrf_cfd.py --obtid GAW103 --height 100 200 300 --3h-rolling --tz lst`
+- **小修改**：LiDAR 观测线型改为黑色 `o-`（原为仅散点）。
+
 ## 2026-05-06
 
 ### 批量：100m 切片水平风速空间 95% 分位数（排除敏感性算例）
@@ -28,8 +40,6 @@
   - 深色封面 + 白色内容页，禁止纯文字页（每页至少一个视觉元素）
 - **仓库配置**：更新 `.gitignore`，对 `.cursor/skills/**` 做反忽略，确保 skill 可被 git 跟踪。
 
-=======
->>>>>>> bee351a3a5e9f8e8e54becf54dfe6e1177ce4c1f
 ## 2026-05-03
 
 ### 英文 `README.md`（仓库说明）
