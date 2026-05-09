@@ -20,6 +20,11 @@ reference-candidate/
 docs/
 scripts/
 
+# keep project-level Cursor skills tracked
+!.cursor/
+!.cursor/skills/
+!.cursor/skills/**
+
 # large amount of data
 *.png
 *.jpg
