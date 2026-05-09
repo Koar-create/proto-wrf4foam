@@ -61,3 +61,16 @@ target_link_libraries(TrailMarkerPlugin
   ${GAZEBO_LIBRARIES}
 )
 
+add_library(ContactWatcherPlugin SHARED
+  ContactWatcherPlugin.cc
+)
+
+target_include_directories(ContactWatcherPlugin PRIVATE
+  ${GAZEBO_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(ContactWatcherPlugin
+  ${GAZEBO_LIBRARIES}
+)
+

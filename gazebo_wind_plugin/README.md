@@ -31,6 +31,7 @@ Artifacts (shared libraries):
 | `libWindFieldPlugin.so` | `WindFieldPlugin.cc`, `lut_reader/WindLUT.cc` |
 | `libHoverPidPlugin.so` | `HoverPidPlugin.cc` |
 | `libTrailMarkerPlugin.so` | `TrailMarkerPlugin.cc` |
+| `libContactWatcherPlugin.so` | `ContactWatcherPlugin.cc` |
 
 Point Gazebo at the build output, for example:
 
@@ -106,7 +107,19 @@ World-frame translational PID on position error `target - pos`; applies force to
 | `enable_attitude_recovery` | bool | `false` | Apply `-attitude_kp * roll/pitch` torques. |
 | `attitude_kp` | double | `15` | Attitude recovery gain. |
 | `drift_after_seconds` | double | `-1` | If ≥ 0, disable XY PID after this sim time (s). |
+| `disable_topic` | string | empty | Optional Gazebo transport topic; first `GzString` message latches `disabled`. |
+| `crash_zero_thrust` | bool | `false` | When latched, return zero force/torque each step (free fall). |
 | `log_every_n` | int | `250` | Periodic `gzmsg`: error, force, **roll/pitch in degrees**. |
+
+### ContactWatcherPlugin (`libContactWatcherPlugin.so`)
+
+`SensorPlugin` attached to a `<sensor type="contact">` on the drone collision body. Each update reads `Contacts()`, computes the peak normal force, periodically logs `[ContactWatcher] count=N peak_force=…N a=… b=…`. The first time the peak crosses `crash_threshold_n` it logs `[ContactWatcher] CRASH …` and publishes a one-shot `GzString` `"crash"` on `publish_disable_topic` (default `~/hover_pid/disable`) so a subscribed `HoverPidPlugin` can zero its outputs.
+
+| Element | Type | Default | Description |
+| --- | --- | --- | --- |
+| `crash_threshold_n` | double | `5` | Latch threshold for peak normal force (N). |
+| `publish_disable_topic` | string | `~/hover_pid/disable` | Gazebo transport topic for the one-shot disable message. |
+| `log_every_n` | int | `50` | Periodic contact summary cadence in sensor updates. |
 
 ### TrailMarkerPlugin (`libTrailMarkerPlugin.so`)
 
@@ -189,7 +202,42 @@ The worlds set an initial GUI camera near the demo coordinates (~km offsets from
 
 - `scripts/generate_gazebo_wind_arrows.py` — static wind arrow models.
 - `scripts/generate_arrow_unit_stl.py` — unit arrow mesh for hires arrows.
-- `scripts/extract_demo_building_collision.py` — crop **buildings.stl** near hotspot (default **50 m** XY), split connected components, write `data/demo_assets/collision_building_*.stl` and print bbox; `pip install trimesh numpy`. Use `--emit-bbox-only` if the filtered mesh stays one giant component.
+- `scripts/extract_demo_building_collision.py` — V-HACD / CoACD convex decomposition of buildings near hotspot; writes `data/demo_assets/building_*/hull_*.stl` and `collision_manifest.json`. Falls back to LUT `inside_building` mask via `--from-lut wind_lut.vti` when the city STL is unavailable on this host.
+- `scripts/build_demo_collision_model.py` — turns the manifest into `gazebo_wind_plugin/models/demo_building_collision/model.sdf` (one `<link>` per hull, `collide_bitmask=0x01`, ODE surface tuning).
+- `scripts/verify_collision_alignment.py` — three-way QC slice (LUT mask vs. visual STL vs. hull boundaries) at a chosen Z; nonzero exit if hulls overflow `inside_building` beyond tolerance.
+- `scripts/probe_wind_at_hotspot.py` — sample the LUT around the hotspot, compute the dominant wind direction, write `wind_probe_quiver.png`, and print a recommended pt1 spawn pose `<pose>` snippet on the upwind side of the collision union.
 - `scripts/check_gazebo_env.sh` — environment sanity checks.
 
 LUT cache path used in many SDF examples: `~/wrf_openfoam_coupling_cache/wind_lut/...` (copy large `.vti` here on WSL per ops docs).
+
+## Collision pipeline (RBM-4 pt1/pt2)
+
+The static `demo_building_collision` model is **regenerated** rather than hand-edited. Visual-only `guangzhou_buildings` provides scenery; collision lives in the per-hull SDF below.
+
+```bash
+# 1) extract hulls (CoACD preferred; falls back to V-HACD then convex_hull)
+python scripts/extract_demo_building_collision.py \
+  --input <path>/buildings.stl \
+  --hotspot 1470,1350 --radius-m 50
+
+# 2) regenerate the Gazebo collision model from the manifest
+python scripts/build_demo_collision_model.py \
+  --manifest data/demo_assets/collision_manifest.json \
+  --model-dir gazebo_wind_plugin/models/demo_building_collision
+
+# 3) verify hull ⊂ LUT inside_building at z=80 m (exit code 2 on overflow)
+python scripts/verify_collision_alignment.py \
+  --manifest data/demo_assets/collision_manifest.json \
+  --lut ~/wrf_openfoam_coupling_cache/wind_lut/<dataset>/wind_lut.vti \
+  --z 80 --out data/demo_assets/qc_alignment.png
+
+# 4) (optional) recommend pt1 spawn on the upwind side
+python scripts/probe_wind_at_hotspot.py \
+  --lut ~/wrf_openfoam_coupling_cache/wind_lut/<dataset>/wind_lut.vti \
+  --manifest data/demo_assets/collision_manifest.json \
+  --hotspot 1470,1350,80
+```
+
+`./scripts/run_gazebo_guangzhou_demo_pt1_crash.sh collision-build` chains the same four steps with sensible defaults; environment overrides are `BUILDINGS_STL`, `LUT_VTI`, `HOTSPOT`, `RADIUS_M`. When `BUILDINGS_STL` is unset the extractor falls back to the LUT mask (`scipy.ndimage.label` connected components → axis-aligned boxes), so the demo can still run on hosts without the city mesh.
+
+**Drone side** (already in `iris_wind_quad_hires_pt1_crash` / `pt2_hover`): the body collision has `<collide_bitmask>0x01</collide_bitmask>` and a `contact` sensor hosting `libContactWatcherPlugin.so`. On the first `peak_force ≥ crash_threshold_n` the watcher publishes one `GzString` on `~/hover_pid/disable`; the pt1 hover PID has `<crash_zero_thrust>true</crash_zero_thrust>` so the drone goes into free fall. pt2 keeps `crash_zero_thrust=false` and only logs the brush.

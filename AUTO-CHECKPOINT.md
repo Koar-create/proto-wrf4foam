@@ -4,6 +4,27 @@
 
 ## 2026-05-10
 
+### 高阶 Gazebo 碰撞方案：V-HACD 凸壳 + ContactWatcherPlugin
+- **动机**：截图证据显示 drone 沿 -X 直线穿过 visual 楼面，旧 box 代理 `(1442,1350,123) 28×32×92` 与 visual 几何错位；trail 完全没有偏折；既无 contact sensor 也无 CRASH 日志（详见高阶方案 plan）。
+- **离线流水线（新建/重写）**：
+  - [`scripts/extract_demo_building_collision.py`](scripts/extract_demo_building_collision.py) 重写：CLI `--input <buildings.stl>` 或 **`--from-lut wind_lut.vti`** 兜底；多 `--hotspot` 支持；CoACD → trimesh.decomposition.convex_decomposition (testVHACD) → `convex_hull` 三级回退；输出 `data/demo_assets/building_<id>/hull_*.stl` + `collision_manifest.json` + `qc_overlay.png`；保留 `--emit-bbox-only` 兜底。
+  - [`scripts/build_demo_collision_model.py`](scripts/build_demo_collision_model.py)：从 manifest 生成多 `<link>` 的 [`models/demo_building_collision/model.sdf`](gazebo_wind_plugin/models/demo_building_collision/model.sdf)，每个 `<collision>` 含 `collide_bitmask=0x01`、ODE `max_vel/min_depth`、`mu/mu2/restitution`，可选 transparent visual overlay（默认开）。
+  - [`scripts/verify_collision_alignment.py`](scripts/verify_collision_alignment.py)：LUT `inside_building` / 凸壳 / 可选 visual mesh 三方 PyVista 切片 PNG；hull 越界超 `--tolerance-cells` 退出码 2；输出 `data/demo_assets/qc_alignment.png`。
+  - [`scripts/probe_wind_at_hotspot.py`](scripts/probe_wind_at_hotspot.py)：LUT 三线性插值 hotspot 周围 `n_xy×n_xy×n_z` 网格抽 (u,v,w)，输出 `wind_probe.txt`/`wind_probe_quiver.png`，并按主流向 + collision union 中心给出 pt1 spawn 推荐 `<pose>`。
+- **Gazebo 插件**：
+  - [`ContactWatcherPlugin.{hh,cc}`](gazebo_wind_plugin/ContactWatcherPlugin.cc) `SensorPlugin`：周期日志 `[ContactWatcher] count=… peak_force=…N`；首次过 `crash_threshold_n`（默认 5 N）发布 `GzString "crash"` 到 `~/hover_pid/disable`；CMakeLists 增 `libContactWatcherPlugin.so`。
+  - [`HoverPidPlugin`](gazebo_wind_plugin/HoverPidPlugin.cc) 增 SDF：`<disable_topic>`（默认空）、`<crash_zero_thrust>`（默认 false，向后兼容）；订阅 `disable_topic` 后 `disabled_=true` + 清积分；当 `crash_zero_thrust=true` 时 `OnUpdate` 直接 return，drone 自由落体。
+- **drone SDF（pt1/pt2）**：[`iris_wind_quad_hires_pt1_crash`](gazebo_wind_plugin/models/iris_wind_quad_hires_pt1_crash/model.sdf) / [`pt2_hover`](gazebo_wind_plugin/models/iris_wind_quad_hires_pt2_hover/model.sdf) 的 `<collision>` 加 `collide_bitmask=0x01` + ODE 表面调参；新增 `<sensor type="contact">` 挂 `libContactWatcherPlugin.so`；pt1 `crash_threshold_n=5 + crash_zero_thrust=true`，pt2 `crash_threshold_n=20 + crash_zero_thrust=false`（仅日志）。
+- **World 物理收紧**：[`guangzhou_demo_pt1_crash.world`](gazebo_wind_plugin/worlds/guangzhou_demo_pt1_crash.world) / [`pt2_hover.world`](gazebo_wind_plugin/worlds/guangzhou_demo_pt2_hover.world) `max_step_size=0.002`、`real_time_update_rate=500`、`<ode><solver type=quick iters=50 sor=1.3>`、`cfm=1e-4 erp=0.6`；pt1 spawn 改 `(1495,1350,80)`（远离当前 box 视觉重叠）。
+- **启动脚本**：[`scripts/run_gazebo_guangzhou_demo_pt1_crash.sh`](scripts/run_gazebo_guangzhou_demo_pt1_crash.sh) 新增 `collision-build` 子命令（一键 extract → build → verify → probe；支持 `BUILDINGS_STL`/`LUT_VTI`/`HOTSPOT`/`RADIUS_M` 环境变量；缺 STL 时自动 LUT 兜底）。
+- **文档**：[`gazebo_wind_plugin/README.md`](gazebo_wind_plugin/README.md) 新增「Collision pipeline (RBM-4 pt1/pt2)」一节 + ContactWatcher SDF 表 + HoverPid `disable_topic`/`crash_zero_thrust` 表项。
+- **依赖修复**：本机 numpy 2.2.6 (`~/.local`) 与系统 scipy 1.8.0 (`/usr/lib/python3/dist-packages`) ABI 冲突 → `pip install --user --upgrade 'scipy>=1.13'` 装入 scipy 1.15.3 覆盖系统版（trimesh 间接 import scipy 才能加载）。
+- **probe 增强**：[`probe_wind_at_hotspot.py`](scripts/probe_wind_at_hotspot.py) 在 `--manifest` 模式下做 raycast，沿 +upwind 方向把 spawn 推到 union XY bbox 外，再加 `--upwind-clearance-m`，避免 spawn 落在 collision box 内（之前 LUT 兜底产生大 box 导致 spawn 内嵌的失效）。
+- **pt1 调参**：[`iris_wind_quad_hires_pt1_crash`](gazebo_wind_plugin/models/iris_wind_quad_hires_pt1_crash/model.sdf) `<area>` 0.04 → **0.5**、`<C_D>` 1.0 → **1.2**（pt2 不变；让 ~1 m/s 风能在 demo 时间窗内推动 1.5 kg drone）；spawn `(1484.23, 1310.86, 80)` 紧贴 box south face 外 ~3 m。
+- **smoke 验证（pt1，timeout 30s）**：日志依次出现 `[ContactWatcher] CRASH peak_force=507.5N` → `disable msg published on ~/hover_pid/disable` → `[HoverPidPlugin] disabled by 'crash' (crash_zero_thrust=1)` → 后续 `b=ground_plane::link::collision`（drone 落地）。
+- **smoke 验证（pt2，timeout 22s）**：HoverPid `hover_error` 收敛到 XY≈0，`roll/pitch` 在 ±0.3° 微抖，无 CRASH，无 disable。
+- **后续**：若拿到真实 `buildings.stl`，`BUILDINGS_STL=<path> ./scripts/run_gazebo_guangzhou_demo_pt1_crash.sh collision-build` 即可重生成更精细的 CoACD 凸壳；spawn 与 area 也可按真几何重新 probe。
+
 ### hires 热点 / 目标 / 出生高度改为 80 m
 - **范围**：`iris_wind_quad_hires_demo` 与 `iris_wind_quad_hires_pt1_crash` / `pt2_hover` 的 `hotspot_z`、`target_z`；`guangzhou_wind_hires_demo.world` 与 RBM-4 两 world 的机体 spawn；GUI 相机 Z 随热点 +40 m；`demo_building_collision` 模型整体上移 +68 m 以保持与旧 12 m 热点相对几何。
 

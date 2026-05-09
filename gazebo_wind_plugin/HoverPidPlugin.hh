@@ -4,8 +4,13 @@
 
 #include <gazebo/common/common.hh>
 #include <gazebo/gazebo.hh>
+#include <gazebo/msgs/msgs.hh>
 #include <gazebo/physics/physics.hh>
+#include <gazebo/transport/transport.hh>
 
+#include <boost/shared_ptr.hpp>
+
+#include <atomic>
 #include <string>
 
 namespace gazebo {
@@ -46,6 +51,18 @@ private:
 
   /// If >= 0: for sim_time < value force XY PID on, then force XY off. If < 0: use enable_xy from SDF only.
   double drift_after_seconds_{-1.0};
+
+  /// Optional Gazebo transport topic. If non-empty, subscribe to GzString
+  /// messages; first message latches `disabled_` so all force/torque outputs
+  /// become zero. Used by ContactWatcherPlugin on crash.
+  std::string disable_topic_;
+  bool crash_zero_thrust_{false};
+  std::atomic<bool> disabled_{false};
+
+  transport::NodePtr node_;
+  transport::SubscriberPtr disable_sub_;
+
+  void OnDisableMsg(const boost::shared_ptr<const msgs::GzString>& msg);
 };
 
 }  // namespace gazebo

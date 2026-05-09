@@ -34,6 +34,9 @@ void HoverPidPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
 
   drift_after_seconds_ = sdf->Get<double>("drift_after_seconds", -1.0).first;
 
+  disable_topic_ = sdf->Get<std::string>("disable_topic", std::string()).first;
+  crash_zero_thrust_ = sdf->Get<bool>("crash_zero_thrust", false).first;
+
   log_every_n_ = sdf->Get<int>("log_every_n", 250).first;
 
   last_time_ = model_->GetWorld() ? model_->GetWorld()->SimTime() : common::Time::Zero;
@@ -42,9 +45,28 @@ void HoverPidPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
         << " Ki_xy=" << ki_ << " Kd_xy=" << kd_ << " Kp_z=" << kp_z_ << " Ki_z=" << ki_z_ << " Kd_z=" << kd_z_
         << " link=" << link_name_ << " enable_xy=" << (enable_xy_ ? 1 : 0)
         << " drift_after_seconds=" << drift_after_seconds_ << " enable_attitude_recovery=" << (enable_attitude_recovery_ ? 1 : 0)
+        << " disable_topic=" << disable_topic_ << " crash_zero_thrust=" << (crash_zero_thrust_ ? 1 : 0)
         << "\n";
 
+  if (!disable_topic_.empty()) {
+    auto world = model_->GetWorld();
+    node_.reset(new transport::Node());
+    node_->Init(world ? world->Name() : "");
+    disable_sub_ = node_->Subscribe(disable_topic_, &HoverPidPlugin::OnDisableMsg, this);
+    gzmsg << "[HoverPidPlugin] subscribed disable_topic=" << disable_topic_ << "\n";
+  }
+
   update_conn_ = event::Events::ConnectWorldUpdateBegin(std::bind(&HoverPidPlugin::OnUpdate, this));
+}
+
+void HoverPidPlugin::OnDisableMsg(const boost::shared_ptr<const msgs::GzString>& msg) {
+  if (disabled_.exchange(true)) return;
+  integral_.Set(0.0, 0.0, 0.0);
+  prev_err_.Set(0.0, 0.0, 0.0);
+  first_step_ = true;
+  gzmsg << "[HoverPidPlugin] disabled by '" << (msg ? msg->data() : std::string("?"))
+        << "' on " << disable_topic_ << " (crash_zero_thrust="
+        << (crash_zero_thrust_ ? 1 : 0) << ")\n";
 }
 
 void HoverPidPlugin::OnUpdate() {
@@ -55,6 +77,10 @@ void HoverPidPlugin::OnUpdate() {
 
   auto world = model_->GetWorld();
   if (!world) return;
+
+  if (disabled_.load() && crash_zero_thrust_) {
+    return;
+  }
 
   const common::Time now = world->SimTime();
   double dt = (now - last_time_).Double();
