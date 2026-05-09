@@ -35,7 +35,7 @@ def _nearest_index(coords: np.ndarray, value: float) -> int:
 
 
 def _color_for_speed(speed: float, vmin: float, vmax: float) -> tuple[float, float, float, float]:
-    # Simple blue->red ramp (legacy box arrows)
+    # Simple blue->red ramp (--color-mode legacy)
     if vmax <= vmin:
         t = 0.5
     else:
@@ -187,7 +187,6 @@ def _write_model(
     model_name: str,
     samples: list[ArrowSample],
     *,
-    arrow_style: str,
     color_mode: str,
     mesh_uri: str,
     mesh_len_min: float,
@@ -204,132 +203,38 @@ def _write_model(
 
     pick_color = _color_hsv_speed if color_mode == "hsv" else _color_for_speed
 
+    # Many separate links each loading the same STL often renders only one instance; use one link + N visuals.
     lines: list[str] = []
     lines.append('<?xml version="1.0" ?>')
     lines.append('<sdf version="1.6">')
     lines.append(f'  <model name="{model_name}">')
     lines.append("    <static>true</static>")
-
-    # Gazebo Classic: cylinder axis is +Z; rod_cone rotates to +X via pitch=-pi/2.
-    pitch_align = -0.5 * math.pi
-
-    # Many separate links each loading the same STL often renders only one instance; use one link + N visuals for mesh.
-    if arrow_style == "mesh":
-        lines.append('    <link name="arrows_root">')
-        lines.append("      <pose>0 0 0 0 0 0</pose>")
-        lines.append("      <gravity>false</gravity>")
-        for i, s in enumerate(samples):
-            mag = s.mag
-            roll, pitch, yaw = _pose_rpy_for_dir(s.u, s.v, s.w)
-            r, g, b, a = pick_color(mag, vmin, vmax)
-            L = max(mesh_len_min, min(mesh_len_max, mag * mesh_len_k))
-            tw = mesh_thick
-            lines.append(f'      <visual name="arrow_{i}_mesh">')
-            lines.append(f"        <pose>{s.x:.3f} {s.y:.3f} {s.z:.3f} {roll:.6f} {pitch:.6f} {yaw:.6f}</pose>")
-            lines.append("        <geometry>")
-            lines.append("          <mesh>")
-            lines.append(f"            <scale>{L:.6f} {tw:.6f} {tw:.6f}</scale>")
-            lines.append(f"            <uri>{mesh_uri}</uri>")
-            lines.append("          </mesh>")
-            lines.append("        </geometry>")
-            lines.append("        <material>")
-            lines.append(f"          <ambient>{r:.3f} {g:.3f} {b:.3f} {a:.3f}</ambient>")
-            lines.append(f"          <diffuse>{r:.3f} {g:.3f} {b:.3f} {a:.3f}</diffuse>")
-            lines.append("        </material>")
-            lines.append("        <cast_shadows>false</cast_shadows>")
-            lines.append("      </visual>")
-        lines.append("    </link>")
-        lines.append("  </model>")
-        lines.append("</sdf>")
-        with open(os.path.join(model_dir, "model.sdf"), "w", encoding="utf-8") as f:
-            f.write("\n".join(lines) + "\n")
-        return
-
+    lines.append('    <link name="arrows_root">')
+    lines.append("      <pose>0 0 0 0 0 0</pose>")
+    lines.append("      <gravity>false</gravity>")
     for i, s in enumerate(samples):
         mag = s.mag
         roll, pitch, yaw = _pose_rpy_for_dir(s.u, s.v, s.w)
         r, g, b, a = pick_color(mag, vmin, vmax)
-
-        link_name = f"arrow_{i}"
-        lines.append(f'    <link name="{link_name}">')
-        lines.append(f"      <pose>{s.x:.3f} {s.y:.3f} {s.z:.3f} {roll:.6f} {pitch:.6f} {yaw:.6f}</pose>")
-        lines.append("      <gravity>false</gravity>")
-
-        if arrow_style == "box":
-            base_len = 5.0
-            max_len = 25.0
-            thickness = 1.2
-            if vmax > 1e-6:
-                L = base_len + (mag / vmax) * (max_len - base_len)
-            else:
-                L = base_len
-            L = float(max(1.0, min(max_len, L)))
-            shaft_len = 0.82 * L
-            head_len = 0.18 * L
-            lines.append(f'      <visual name="{link_name}_shaft">')
-            lines.append(f"        <pose>{shaft_len/2.0:.3f} 0 0 0 0 0</pose>")
-            lines.append("        <geometry>")
-            lines.append(f'          <box><size>{shaft_len:.3f} {thickness:.3f} {thickness:.3f}</size></box>')
-            lines.append("        </geometry>")
-            lines.append("        <material>")
-            lines.append(f"          <ambient>{r:.3f} {g:.3f} {b:.3f} {a:.3f}</ambient>")
-            lines.append(f"          <diffuse>{r:.3f} {g:.3f} {b:.3f} {a:.3f}</diffuse>")
-            lines.append("        </material>")
-            lines.append("        <cast_shadows>false</cast_shadows>")
-            lines.append("      </visual>")
-            lines.append(f'      <visual name="{link_name}_head">')
-            lines.append(f"        <pose>{shaft_len + head_len/2.0:.3f} 0 0 0 0 0</pose>")
-            lines.append("        <geometry>")
-            lines.append(f'          <box><size>{head_len:.3f} {thickness*1.9:.3f} {thickness*1.9:.3f}</size></box>')
-            lines.append("        </geometry>")
-            lines.append("        <material>")
-            lines.append(f"          <ambient>{r:.3f} {g:.3f} {b:.3f} {a:.3f}</ambient>")
-            lines.append(f"          <diffuse>{r:.3f} {g:.3f} {b:.3f} {a:.3f}</diffuse>")
-            lines.append("        </material>")
-            lines.append("        <cast_shadows>false</cast_shadows>")
-            lines.append("      </visual>")
-
-        elif arrow_style == "rod_cone":
-            shaft_radius = 0.3
-            head_radius = 1.2
-            head_len = 2.5
-            L = max(2.0, min(12.0, mag * 2.0))
-            # Shaft: cylinder along +Z in geom frame, center at (L/2,0,0) with pitch -90° -> along +X from tail.
-            lines.append(f'      <visual name="{link_name}_shaft">')
-            lines.append(f"        <pose>{L/2.0:.6f} 0 0 0 {pitch_align:.6f} 0</pose>")
-            lines.append("        <geometry>")
-            lines.append(f"          <cylinder><radius>{shaft_radius:.6f}</radius><length>{L:.6f}</length></cylinder>")
-            lines.append("        </geometry>")
-            lines.append("        <material>")
-            lines.append(f"          <ambient>{r:.3f} {g:.3f} {b:.3f} {a:.3f}</ambient>")
-            lines.append(f"          <diffuse>{r:.3f} {g:.3f} {b:.3f} {a:.3f}</diffuse>")
-            lines.append("        </material>")
-            lines.append("        <cast_shadows>false</cast_shadows>")
-            lines.append("      </visual>")
-            # Head: Gazebo Classic 11 does not implement <cone>; use same-size cylinder as blunt tip (along +X).
-            hx = L + head_len / 2.0
-            lines.append(f'      <visual name="{link_name}_head">')
-            lines.append(f"        <pose>{hx:.6f} 0 0 0 {pitch_align:.6f} 0</pose>")
-            lines.append("        <geometry>")
-            lines.append(f"          <cylinder><radius>{head_radius:.6f}</radius><length>{head_len:.6f}</length></cylinder>")
-            lines.append("        </geometry>")
-            lines.append("        <material>")
-            lines.append(f"          <ambient>{r:.3f} {g:.3f} {b:.3f} {a:.3f}</ambient>")
-            lines.append(f"          <diffuse>{r:.3f} {g:.3f} {b:.3f} {a:.3f}</diffuse>")
-            lines.append("        </material>")
-            lines.append("        <cast_shadows>false</cast_shadows>")
-            lines.append("      </visual>")
-
-        elif arrow_style == "mesh":
-            raise RuntimeError("mesh style should use single-link branch above")
-        else:
-            raise ValueError(f"Unknown arrow_style: {arrow_style}")
-
-        lines.append("    </link>")
-
+        L = max(mesh_len_min, min(mesh_len_max, mag * mesh_len_k))
+        tw = mesh_thick
+        lines.append(f'      <visual name="arrow_{i}_mesh">')
+        lines.append(f"        <pose>{s.x:.3f} {s.y:.3f} {s.z:.3f} {roll:.6f} {pitch:.6f} {yaw:.6f}</pose>")
+        lines.append("        <geometry>")
+        lines.append("          <mesh>")
+        lines.append(f"            <scale>{L:.6f} {tw:.6f} {tw:.6f}</scale>")
+        lines.append(f"            <uri>{mesh_uri}</uri>")
+        lines.append("          </mesh>")
+        lines.append("        </geometry>")
+        lines.append("        <material>")
+        lines.append(f"          <ambient>{r:.3f} {g:.3f} {b:.3f} {a:.3f}</ambient>")
+        lines.append(f"          <diffuse>{r:.3f} {g:.3f} {b:.3f} {a:.3f}</diffuse>")
+        lines.append("        </material>")
+        lines.append("        <cast_shadows>false</cast_shadows>")
+        lines.append("      </visual>")
+    lines.append("    </link>")
     lines.append("  </model>")
     lines.append("</sdf>")
-
     with open(os.path.join(model_dir, "model.sdf"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
 
@@ -343,15 +248,9 @@ def main() -> int:
     )
     ap.add_argument("--model-name", default="wind_arrows_hotspot", help="SDF model name / model.config name")
     ap.add_argument(
-        "--arrow-style",
-        choices=("box", "rod_cone", "mesh"),
-        default="box",
-        help="box: legacy; rod_cone: Gazebo cylinders; mesh: wind_arrow_glyph/arrow_unit.stl (smooth tip)",
-    )
-    ap.add_argument(
         "--arrow-mesh-uri",
         default="model://wind_arrow_glyph/meshes/arrow_unit.stl",
-        help="URI for --arrow-style mesh (must be on GAZEBO_MODEL_PATH)",
+        help="STL mesh URI for arrow glyph (must resolve on GAZEBO_MODEL_PATH)",
     )
     ap.add_argument(
         "--color-mode",
@@ -448,7 +347,6 @@ def main() -> int:
         args.out_model_dir,
         args.model_name,
         samples,
-        arrow_style=args.arrow_style,
         color_mode=args.color_mode,
         mesh_uri=args.arrow_mesh_uri,
         mesh_len_min=args.mesh_len_min,
