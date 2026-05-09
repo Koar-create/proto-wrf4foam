@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <!--
+    RBM-4 pt2: stub world-frame PID holds XY while allowing visible buffeting; Z gains are softer.
+    stub PID: replace with D's HOCBF algorithm at the HoverPidPlugin / controller boundary.
+  -->
+  <world name="guangzhou_demo_pt2_hover">
+    <physics type="ode">
+      <max_step_size>0.004</max_step_size>
+      <real_time_update_rate>250</real_time_update_rate>
+    </physics>
+
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <pose>1440 1300 120 0 0.75 1.25</pose>
+      </camera>
+    </gui>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://guangzhou_buildings</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://demo_building_collision</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://wind_arrows_hotspot_hires</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Near east face of collision proxy (~4 m from wall) -->
+    <include>
+      <uri>model://iris_wind_quad_hires_pt2_hover</uri>
+      <pose>1460 1350 80 0 0 0</pose>
+    </include>
+  </world>
+</sdf>

@@ -27,6 +27,10 @@ private:
   double kp_{8.0};
   double ki_{0.1};
   double kd_{4.0};
+  /// Z-axis PID gains; if omitted in SDF, default to kp_/ki_/kd_ at load time.
+  double kp_z_{8.0};
+  double ki_z_{0.1};
+  double kd_z_{4.0};
   bool enable_xy_{true};
 
   ignition::math::Vector3d integral_{0, 0, 0};

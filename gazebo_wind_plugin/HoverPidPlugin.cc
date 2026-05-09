@@ -23,6 +23,10 @@ void HoverPidPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
   ki_ = sdf->Get<double>("ki", 0.1).first;
   kd_ = sdf->Get<double>("kd", 4.0).first;
 
+  kp_z_ = sdf->Get<double>("kp_z", kp_).first;
+  ki_z_ = sdf->Get<double>("ki_z", ki_).first;
+  kd_z_ = sdf->Get<double>("kd_z", kd_).first;
+
   enable_xy_ = sdf->Get<bool>("enable_xy", true).first;
 
   enable_attitude_recovery_ = sdf->Get<bool>("enable_attitude_recovery", false).first;
@@ -34,8 +38,9 @@ void HoverPidPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
 
   last_time_ = model_->GetWorld() ? model_->GetWorld()->SimTime() : common::Time::Zero;
 
-  gzmsg << "[HoverPidPlugin] target=(" << target_.X() << "," << target_.Y() << "," << target_.Z() << ") Kp=" << kp_
-        << " Ki=" << ki_ << " Kd=" << kd_ << " link=" << link_name_ << " enable_xy=" << (enable_xy_ ? 1 : 0)
+  gzmsg << "[HoverPidPlugin] target=(" << target_.X() << "," << target_.Y() << "," << target_.Z() << ") Kp_xy=" << kp_
+        << " Ki_xy=" << ki_ << " Kd_xy=" << kd_ << " Kp_z=" << kp_z_ << " Ki_z=" << ki_z_ << " Kd_z=" << kd_z_
+        << " link=" << link_name_ << " enable_xy=" << (enable_xy_ ? 1 : 0)
         << " drift_after_seconds=" << drift_after_seconds_ << " enable_attitude_recovery=" << (enable_attitude_recovery_ ? 1 : 0)
         << "\n";
 
@@ -80,7 +85,7 @@ void HoverPidPlugin::OnUpdate() {
 
   double fx = kp_ * err.X() + ki_ * integral_.X() + kd_ * derr.X();
   double fy = kp_ * err.Y() + ki_ * integral_.Y() + kd_ * derr.Y();
-  const double fz = kp_ * err.Z() + ki_ * integral_.Z() + kd_ * derr.Z();
+  const double fz = kp_z_ * err.Z() + ki_z_ * integral_.Z() + kd_z_ * derr.Z();
 
   bool xy_on = enable_xy_;
   if (drift_after_seconds_ >= 0.0) {
@@ -109,8 +114,12 @@ void HoverPidPlugin::OnUpdate() {
   if (log_every_n_ > 0) {
     ++step_i_;
     if (step_i_ % static_cast<std::uint64_t>(log_every_n_) == 0) {
+      const auto euler = pose.Rot().Euler();
+      const double roll_deg = euler.X() * 180.0 / M_PI;
+      const double pitch_deg = euler.Y() * 180.0 / M_PI;
       gzmsg << "[HoverPidPlugin] hover_error=" << err.X() << "," << err.Y() << "," << err.Z() << " hover_force="
-            << force.X() << "," << force.Y() << "," << force.Z() << "\n";
+            << force.X() << "," << force.Y() << "," << force.Z() << " roll=" << roll_deg << "deg pitch=" << pitch_deg
+            << "deg\n";
     }
   }
 }

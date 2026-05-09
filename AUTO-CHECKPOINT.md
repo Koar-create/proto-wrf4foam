@@ -2,6 +2,26 @@
 
 > 本文件由Cursor智能体自动维护，用于记录本仓库内任务执行过程、关键决策与可复现命令。
 
+## 2026-05-10
+
+### hires 热点 / 目标 / 出生高度改为 80 m
+- **范围**：`iris_wind_quad_hires_demo` 与 `iris_wind_quad_hires_pt1_crash` / `pt2_hover` 的 `hotspot_z`、`target_z`；`guangzhou_wind_hires_demo.world` 与 RBM-4 两 world 的机体 spawn；GUI 相机 Z 随热点 +40 m；`demo_building_collision` 模型整体上移 +68 m 以保持与旧 12 m 热点相对几何。
+
+### RBM-4：hires 两段式 world + 建筑碰撞代理 + HoverPid Z 增益
+- **依据**：[docs/ops/RBM-4-feedback-to-gazebo_guangzhou_wind_hires_demo.md](docs/ops/RBM-4-feedback-to-gazebo_guangzhou_wind_hires_demo.md)。
+- **HoverPidPlugin**：[`HoverPidPlugin.{hh,cc}`](gazebo_wind_plugin/HoverPidPlugin.hh) 增加可选 `kp_z`/`ki_z`/`kd_z`（缺省等于 `kp`/`ki`/`kd`）；周期日志增加 `roll`/`pitch`（度）。
+- **hires 机体**：[`iris_wind_quad_hires_demo/model.sdf`](gazebo_wind_plugin/models/iris_wind_quad_hires_demo/model.sdf) 增加 `<velocity_decay><angular>0.4</angular></velocity_decay>`；`wind_torque_arm_z` 改为 `0.3`。
+- **轻量模型**：[`iris_wind_quad_hires_pt1_crash`](gazebo_wind_plugin/models/iris_wind_quad_hires_pt1_crash/model.sdf)（`enable_xy=false`、`drift_after_seconds=0`）、[`iris_wind_quad_hires_pt2_hover`](gazebo_wind_plugin/models/iris_wind_quad_hires_pt2_hover/model.sdf)（`kp_z/ki_z/kd_z`、`attitude_kp=8`、`drift_after_seconds=-1`；SDF 内注释 stub PID）；mesh URI 指向 `iris_wind_quad_hires_demo/meshes/`。
+- **碰撞占位**：[`demo_building_collision`](gazebo_wind_plugin/models/demo_building_collision/model.sdf) 默认 **box** 静态体（热点 (1470,1350,80) 附近）；`meshes/.gitkeep` 供后续 `building_A.stl`。
+- **Worlds**：[`guangzhou_demo_pt1_crash.world`](gazebo_wind_plugin/worlds/guangzhou_demo_pt1_crash.world)、[`guangzhou_demo_pt2_hover.world`](gazebo_wind_plugin/worlds/guangzhou_demo_pt2_hover.world)；GUI 相机约相对热点 (-30,-50,+40)。
+- **脚本**：[`scripts/extract_demo_building_collision.py`](scripts/extract_demo_building_collision.py)（`trimesh`+`numpy`，50 m 面过滤、连通分量导出、`--emit-bbox-only`）；输出目录 [`data/demo_assets/`](data/demo_assets/.gitkeep)。
+- **启动脚本**（与 [`scripts/run_gazebo_guangzhou_wind_hires_demo.sh`](scripts/run_gazebo_guangzhou_wind_hires_demo.sh) 同结构）：[`scripts/run_gazebo_guangzhou_demo_pt1_crash.sh`](scripts/run_gazebo_guangzhou_demo_pt1_crash.sh)、[`scripts/run_gazebo_guangzhou_demo_pt2_hover.sh`](scripts/run_gazebo_guangzhou_demo_pt2_hover.sh)。
+- **验证**：`cmake --build gazebo_wind_plugin/build -j`；建议 `timeout 20s gzserver .../guangzhou_demo_pt2_hover.world --verbose`，日志中查找 `roll=`、`pitch=`、`[WindFieldPlugin]` / `[HoverPidPlugin]`。
+
+### gazebo_wind_plugin 英文 README
+- **交付**：新增 [`gazebo_wind_plugin/README.md`](gazebo_wind_plugin/README.md)（英文），汇总 CMake 依赖、三插件 SDF 参数默认值、`WindLUT` JSON/VTI 字段、可选掩膜与热点吸附、`worlds/` 与 `models/` 目录职责、`GAZEBO_PLUGIN_PATH` / `GAZEBO_MODEL_PATH` 与示例启动命令；链到 [`docs/ops/Gazebo风场插件gazebo_wind_plugin与Demo详解.md`](docs/ops/Gazebo风场插件gazebo_wind_plugin与Demo详解.md) 作长文补充。
+- **范围**：仅文档；未改插件源码或 CMake。`build/` 与 mesh 二进制归类说明，不逐文件枚举。
+
 ## 2026-05-09
 
 ### WindFieldPlugin：热点自动吸附到 LUT 建筑外格点
@@ -14,7 +34,7 @@
 - **机体**：[`iris_wind_quad_hires_demo/model.sdf`](gazebo_wind_plugin/models/iris_wind_quad_hires_demo/model.sdf) 机身/桨叶 mesh `scale=10`，桨叶局部 pose ×10，碰撞 `4.7×4.7×1.1`，[`TrailMarkerPlugin`](gazebo_wind_plugin/TrailMarkerPlugin.cc) `marker_radius=0.3`（尾迹球小于大机体）。
 - **箭头资产**：[`scripts/generate_arrow_unit_stl.py`](scripts/generate_arrow_unit_stl.py) 生成 [`wind_arrow_glyph/meshes/arrow_unit.stl`](gazebo_wind_plugin/models/wind_arrow_glyph/meshes/arrow_unit.stl)（+X 长 1 m，三角网格杆+锥）；[`wind_arrow_glyph`](gazebo_wind_plugin/models/wind_arrow_glyph/) 含 `model.config` / `model.sdf`。
 - **生成器**：[`scripts/generate_gazebo_wind_arrows.py`](scripts/generate_gazebo_wind_arrows.py) 的 `mesh` 模式为 **单 link + 多 visual**；默认 bbox **`--step 40`**、`--z-levels` 可多层；**`--mesh-len-*` / `--mesh-thick`** 加大箭长与粗细（远景可见性）。
-- **hires 出生点**：`guangzhou_wind_hires_demo` 与 `iris_wind_quad_hires_demo` 目标改为 **(1470,1350,12)**：`buildings.stl` 在 (1450,1350,10) 附近包进楼体网格，东移 20 m、略抬高以离开建筑视觉体。
+- **hires 出生点**：`guangzhou_wind_hires_demo` 与 `iris_wind_quad_hires_demo` 目标为 **(1470,1350,80)**（高度由 12 m 调整为 80 m）；`buildings.stl` 在 (1450,1350,10) 附近包进楼体网格，东移 20 m、略抬高以离开建筑视觉体。
 - **文档**：[`docs/ops/Gazebo风场插件gazebo_wind_plugin与Demo详解.md`](docs/ops/Gazebo风场插件gazebo_wind_plugin与Demo详解.md) §7.4 与目录索引已更新。
 
 ## 2026-05-07

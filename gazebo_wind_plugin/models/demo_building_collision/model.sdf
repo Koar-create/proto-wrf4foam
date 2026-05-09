@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <!--
+    Box proxy aligned with hires hotspot narrative (west of open spawn). After running
+    scripts/extract_demo_building_collision.py, you can switch collision/visual to mesh
+    model://demo_building_collision/meshes/building_A.stl using printed bbox for pose.
+  -->
+  <model name="demo_building_collision">
+    <static>true</static>
+    <!-- Lift with hotspot Z (was 12 m → 80 m): +68 m on model origin -->
+    <pose>1442 1350 123 0 0 0</pose>
+
+    <link name="building_link">
+      <gravity>false</gravity>
+      <collision name="col">
+        <geometry>
+          <box>
+            <size>28 32 92</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="vis">
+        <geometry>
+          <box>
+            <size>28 32 92</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.45 0.45 0.48 0.45</ambient>
+          <diffuse>0.5 0.5 0.52 0.5</diffuse>
+        </material>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+    </link>
+  </model>
+</sdf>

@@ -37,8 +37,8 @@
     <!-- Iris quadrotor: hires LUT + torque + attitude recovery + timed XY drift -->
     <include>
       <uri>model://iris_wind_quad_hires_demo</uri>
-      <!-- Open-air relative to buildings.stl: (1450,1350,10) sits in mesh volume; +20 m E, +2 m Z -->
-      <pose>1470 1350 12 0 0 0</pose>
+      <!-- Open-air relative to buildings.stl; demo height 80 m -->
+      <pose>1470 1350 80 0 0 0</pose>
     </include>
   </world>
 </sdf>

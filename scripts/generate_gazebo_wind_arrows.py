@@ -109,19 +109,25 @@ def _generate_samples_centered(
     ny: int,
     dx: float,
     dy: float,
+    z_xy_stagger: bool,
 ) -> list[ArrowSample]:
     xs = [center_x + (i - (nx - 1) / 2.0) * dx for i in range(nx)]
     ys = [center_y + (j - (ny - 1) / 2.0) * dy for j in range(ny)]
 
     out: list[ArrowSample] = []
-    for z in z_levels:
+    for zi, z in enumerate(z_levels):
+        ox, oy = (
+            _xy_stagger_for_layer(zi, dx, dy)
+            if z_xy_stagger and len(z_levels) > 1
+            else (0.0, 0.0)
+        )
         iz = _nearest_index(z_coords, z)
         for y in ys:
-            iy = _nearest_index(y_coords, y)
+            iy = _nearest_index(y_coords, y + oy)
             for x in xs:
-                ix = _nearest_index(x_coords, x)
+                ix = _nearest_index(x_coords, x + ox)
                 u, v, w = (float(U[ix, iy, iz, 0]), float(U[ix, iy, iz, 1]), float(U[ix, iy, iz, 2]))
-                out.append(ArrowSample(x=x, y=y, z=float(z_coords[iz]), u=u, v=v, w=w))
+                out.append(ArrowSample(x=x + ox, y=y + oy, z=float(z_coords[iz]), u=u, v=v, w=w))
     return out
 
 
@@ -133,6 +139,25 @@ def _frange_inclusive(a: float, b: float, step: float) -> list[float]:
         out.append(round(x, 6))
         x += step
     return out
+
+
+def _xy_stagger_for_layer(layer_index: int, step_x: float, step_y: float) -> tuple[float, float]:
+    """
+    Per-height horizontal shift so multi-z-level arrows do not share identical (x, y).
+
+    Layer 0 is the reference grid; higher layers use sub-cell offsets (brick-style) so
+    columns do not stack visually on the same XY pillars.
+    """
+    if layer_index <= 0:
+        return (0.0, 0.0)
+    k = (layer_index - 1) % 4
+    if k == 0:
+        return (0.5 * step_x, 0.0)
+    if k == 1:
+        return (0.0, 0.5 * step_y)
+    if k == 2:
+        return (0.5 * step_x, 0.5 * step_y)
+    return (0.25 * step_x, 0.25 * step_y)
 
 
 def _generate_samples_bbox(
@@ -147,18 +172,24 @@ def _generate_samples_bbox(
     y_max: float,
     step: float,
     z_levels: list[float],
+    z_xy_stagger: bool,
 ) -> list[ArrowSample]:
     xs = _frange_inclusive(x_min, x_max, step)
     ys = _frange_inclusive(y_min, y_max, step)
     out: list[ArrowSample] = []
-    for z in z_levels:
+    for zi, z in enumerate(z_levels):
+        ox, oy = (
+            _xy_stagger_for_layer(zi, step, step)
+            if z_xy_stagger and len(z_levels) > 1
+            else (0.0, 0.0)
+        )
         iz = _nearest_index(z_coords, z)
         for y in ys:
-            iy = _nearest_index(y_coords, y)
+            iy = _nearest_index(y_coords, y + oy)
             for x in xs:
-                ix = _nearest_index(x_coords, x)
+                ix = _nearest_index(x_coords, x + ox)
                 u, v, w = (float(U[ix, iy, iz, 0]), float(U[ix, iy, iz, 1]), float(U[ix, iy, iz, 2]))
-                out.append(ArrowSample(x=x, y=y, z=float(z_coords[iz]), u=u, v=v, w=w))
+                out.append(ArrowSample(x=x + ox, y=y + oy, z=float(z_coords[iz]), u=u, v=v, w=w))
     return out
 
 
@@ -263,7 +294,12 @@ def main() -> int:
     ap.add_argument(
         "--z-levels",
         default="50,145",
-        help="Comma-separated z levels (meters) to sample",
+        help="Comma-separated z levels (meters). With multiple levels, XY grid is staggered per layer by default (see --no-z-xy-stagger).",
+    )
+    ap.add_argument(
+        "--no-z-xy-stagger",
+        action="store_true",
+        help="Disable per-z-layer XY offset (restores stacked columns on the same horizontal grid).",
     )
     ap.add_argument("--nx", type=int, default=7)
     ap.add_argument("--ny", type=int, default=7)
@@ -315,6 +351,8 @@ def main() -> int:
     if U.ndim != 4 or U.shape[-1] != 3:
         raise ValueError(f"Unexpected U shape: {U.shape}")
 
+    z_xy_stagger = not args.no_z_xy_stagger
+
     if args.bbox_mode:
         samples = _generate_samples_bbox(
             U,
@@ -327,6 +365,7 @@ def main() -> int:
             y_max=args.y_max,
             step=args.step,
             z_levels=z_levels,
+            z_xy_stagger=z_xy_stagger,
         )
     else:
         samples = _generate_samples_centered(
@@ -341,6 +380,7 @@ def main() -> int:
             ny=args.ny,
             dx=args.dx,
             dy=args.dy,
+            z_xy_stagger=z_xy_stagger,
         )
 
     _write_model(

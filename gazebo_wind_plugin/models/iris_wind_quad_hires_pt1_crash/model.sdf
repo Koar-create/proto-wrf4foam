@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
-  <model name="iris_wind_quad_hires_demo">
+  <model name="iris_wind_quad_hires_pt1_crash">
     <static>false</static>
 
     <link name="base_link">
@@ -22,14 +22,12 @@
         <angular>0.4</angular>
       </velocity_decay>
 
-      <!-- Simple collision box (visual is a mesh) -->
       <collision name="collision">
         <geometry>
           <box><size>4.7 4.7 1.1</size></box>
         </geometry>
       </collision>
 
-      <!-- Body visual -->
       <visual name="body_visual">
         <geometry>
           <mesh>
@@ -45,8 +43,6 @@
         </material>
       </visual>
 
-      <!-- Propeller visuals (visual-only; no joints) -->
-      <!-- Positions copied from PX4 iris model (Gazebo Classic) -->
       <visual name="prop_0_ccw">
         <pose>1.3 -2.2 0.23 0 0 0</pose>
         <geometry>
@@ -96,7 +92,6 @@
       <world_to_lut_offset_y>0</world_to_lut_offset_y>
       <world_to_lut_offset_z>0</world_to_lut_offset_z>
       <log_every_n>250</log_every_n>
-      <!-- Align with spawn: open-air vs building STL; LUT still valid at this XY. -->
       <hotspot_x>1470</hotspot_x>
       <hotspot_y>1350</hotspot_y>
       <hotspot_z>80</hotspot_z>
@@ -104,19 +99,19 @@
       <wind_torque_arm_z>0.3</wind_torque_arm_z>
     </plugin>
 
+    <!-- Pt1: no XY hold; drift_after_seconds=0 forces timed XY path off for t>=0 (redundant with enable_xy=false). -->
     <plugin name="hover_pid" filename="libHoverPidPlugin.so">
       <link_name>base_link</link_name>
       <target_x>1470</target_x>
       <target_y>1350</target_y>
       <target_z>80</target_z>
-      <enable_xy>true</enable_xy>
+      <enable_xy>false</enable_xy>
       <kp>8</kp>
       <ki>0.1</ki>
       <kd>4</kd>
       <log_every_n>250</log_every_n>
-      <enable_attitude_recovery>true</enable_attitude_recovery>
-      <attitude_kp>15</attitude_kp>
-      <drift_after_seconds>8</drift_after_seconds>
+      <enable_attitude_recovery>false</enable_attitude_recovery>
+      <drift_after_seconds>0</drift_after_seconds>
     </plugin>
 
     <plugin name="trail_marker" filename="libTrailMarkerPlugin.so">
