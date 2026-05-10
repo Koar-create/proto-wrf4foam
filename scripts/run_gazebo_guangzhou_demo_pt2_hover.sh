@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# RBM-4 pt2：stub Hover PID（含较弱 Z 增益）抵抗风，便于观察颠簸；可与 demo_building_collision 同框
+# RBM-4 pt2：stub Hover PID（含较弱 Z 增益）抵抗风，便于观察颠簸；建筑碰撞与 guangzhou_buildings 视觉 STL 一致
 # 须在仓库根目录执行：cd /path/to/WRF-OpenFOAM-Coupling && ./scripts/run_gazebo_guangzhou_demo_pt2_hover.sh <子命令>
 set -euo pipefail
 

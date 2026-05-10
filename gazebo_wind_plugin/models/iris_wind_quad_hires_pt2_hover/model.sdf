@@ -19,7 +19,9 @@
       </inertial>
 
       <velocity_decay>
-        <angular>0.4</angular>
+        <!-- Lower angular damping so wind-driven roll/pitch/yaw oscillations remain visible
+             instead of being snapped flat each step. -->
+        <angular>0.18</angular>
       </velocity_decay>
 
       <collision name="collision">
@@ -113,8 +115,10 @@
       <lut_vti>/home/jeezen/wrf_openfoam_coupling_cache/wind_lut/20250903_1400_hires/wind_lut.vti</lut_vti>
       <link_name>base_link</link_name>
       <rho>1.225</rho>
-      <C_D>1.0</C_D>
-      <area>0.04</area>
+      <C_D>1.2</C_D>
+      <!-- Effective drag area boosted ~6× so 1-3 m/s wind generates a visible
+           force on a 1.5 kg drone; PID still holds within ~0.5 m of target. -->
+      <area>0.25</area>
       <world_to_lut_offset_x>0</world_to_lut_offset_x>
       <world_to_lut_offset_y>0</world_to_lut_offset_y>
       <world_to_lut_offset_z>0</world_to_lut_offset_z>
@@ -123,7 +127,10 @@
       <hotspot_y>1350</hotspot_y>
       <hotspot_z>80</hotspot_z>
       <enable_wind_torque>true</enable_wind_torque>
-      <wind_torque_arm_z>0.3</wind_torque_arm_z>
+      <!-- 6-DOF wind torque: arm_z drives roll/pitch (legacy);
+           arm_x lets horizontal wind also drive a yaw torque so heading slowly drifts. -->
+      <wind_torque_arm_z>0.5</wind_torque_arm_z>
+      <wind_torque_arm_x>0.12</wind_torque_arm_x>
     </plugin>
 
     <!-- stub PID: replace with D's HOCBF algorithm at this plugin boundary
@@ -131,19 +138,27 @@
          so a soft brush against the building is just logged via ContactWatcher. -->
     <plugin name="hover_pid" filename="libHoverPidPlugin.so">
       <link_name>base_link</link_name>
-      <target_x>1470</target_x>
-      <target_y>1350</target_y>
+      <!-- Match the world spawn (south of building, outdoor) so PID holds the drone outside. -->
+      <target_x>1471</target_x>
+      <target_y>1309</target_y>
       <target_z>80</target_z>
       <enable_xy>true</enable_xy>
-      <kp>8</kp>
-      <ki>0.1</ki>
-      <kd>4</kd>
+      <!-- XY softened so the drone visibly oscillates a few decimetres around target
+           under buffeting instead of being clamped rigidly. -->
+      <kp>5</kp>
+      <ki>0.08</ki>
+      <kd>3</kd>
+      <!-- Z stays slightly stiffer to keep altitude steady (vertical wind component is small). -->
       <kp_z>4</kp_z>
       <ki_z>0.05</ki_z>
-      <kd_z>2</kd_z>
+      <kd_z>2.5</kd_z>
       <log_every_n>250</log_every_n>
       <enable_attitude_recovery>true</enable_attitude_recovery>
-      <attitude_kp>8</attitude_kp>
+      <!-- Soft attitude spring (was 8): allows ±5-10° wind-induced tilt before recovery. -->
+      <attitude_kp>2.0</attitude_kp>
+      <!-- Feed-forward m*|g| on +Z so the Z PID only fights wind/buffeting, not gravity.
+           Without this the soft kp_z=4 leaves a ~3 m steady-state altitude error. -->
+      <gravity_compensation>true</gravity_compensation>
       <drift_after_seconds>-1</drift_after_seconds>
       <disable_topic>~/hover_pid/disable</disable_topic>
       <crash_zero_thrust>false</crash_zero_thrust>

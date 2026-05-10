@@ -19,7 +19,9 @@
       </inertial>
 
       <velocity_decay>
-        <angular>0.4</angular>
+        <!-- Lower angular damping so wind-driven tumble persists and pre-impact attitude
+             swing is clearly visible; raises also amplify post-contact gyration. -->
+        <angular>0.12</angular>
       </velocity_decay>
 
       <collision name="collision">
@@ -125,7 +127,12 @@
       <hotspot_y>1350</hotspot_y>
       <hotspot_z>80</hotspot_z>
       <enable_wind_torque>true</enable_wind_torque>
-      <wind_torque_arm_z>0.3</wind_torque_arm_z>
+      <!-- Stronger pitch/roll torque on the way to the wall, plus a lateral arm so
+           horizontal wind also drives a yaw torque (τ_z = arm_x*fy − arm_y*fx).
+           Combined with low angular damping the drone shows a 3-axis tumble. -->
+      <wind_torque_arm_z>0.55</wind_torque_arm_z>
+      <wind_torque_arm_x>0.18</wind_torque_arm_x>
+      <wind_torque_arm_y>0.08</wind_torque_arm_y>
     </plugin>
 
     <!-- Pt1: no XY hold; drift_after_seconds=0 forces timed XY path off for t>=0 (redundant with enable_xy=false).
@@ -142,6 +149,11 @@
       <kd>4</kd>
       <log_every_n>250</log_every_n>
       <enable_attitude_recovery>false</enable_attitude_recovery>
+      <!-- Feed-forward m*|g| so altitude stays at target_z=80 during pre-crash drift
+           instead of sagging to ~78.3 m via Z PID steady-state. After CRASH the
+           ContactWatcher publishes ~/hover_pid/disable and crash_zero_thrust=true
+           returns 0 N immediately, so gravity FF stops too and free-fall begins. -->
+      <gravity_compensation>true</gravity_compensation>
       <drift_after_seconds>0</drift_after_seconds>
       <disable_topic>~/hover_pid/disable</disable_topic>
       <crash_zero_thrust>true</crash_zero_thrust>

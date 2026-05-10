@@ -4,6 +4,38 @@
 
 ## 2026-05-10
 
+### 增强 pt1/pt2 demo 的 6-DOF 表现力
+- **目标**：让两架机的位移与姿态在演示中可见、可读，而不是被刚性 PID 压平或被低风力淹没。
+- **插件扩展**：
+  - [`WindFieldPlugin`](gazebo_wind_plugin/WindFieldPlugin.cc) 新增 `<wind_torque_arm_x>` / `<wind_torque_arm_y>`（默认 0），力矩改为 `r×F`，`r=(arm_x, arm_y, arm_z)`；横向臂使水平风也产生 `τ_z = arm_x·fy − arm_y·fx`，激励**偏航**与交叉轴扭，使 demo 6 个自由度都被风激起。向后兼容旧 SDF。
+  - [`HoverPidPlugin`](gazebo_wind_plugin/HoverPidPlugin.hh) 新增 `<gravity_compensation>`（默认 false）：load 时读 link 质量与 world 重力，每步在 `fz` 上加常量 `m·|g|`。`crash_zero_thrust` 触发后 plugin 直接 return，FF 也随之停止 → 自由落体不变。
+- **pt2 hover 调谐**（[`iris_wind_quad_hires_pt2_hover/model.sdf`](gazebo_wind_plugin/models/iris_wind_quad_hires_pt2_hover/model.sdf)）：
+  - 风：`area 0.04→0.25`、`C_D 1.0→1.2`、`wind_torque_arm_z 0.3→0.5`、新增 `wind_torque_arm_x=0.12`。
+  - PID：`kp 8→5`、`kd 4→3`、`ki 0.1→0.08`、`kd_z 2→2.5`、`attitude_kp 8→2`；启用 `gravity_compensation=true`。
+  - link：`velocity_decay angular 0.4→0.18`。world 初始 yaw=0.20 rad 让航向偏转可读。
+  - 现象：稳态 z=80.002 m、xy 偏差 ±2 cm、roll/pitch 在 −1.6°…−1.8° 间小幅摆动 → 风扰可见但稳定。
+- **pt1 crash 调谐**（[`iris_wind_quad_hires_pt1_crash/model.sdf`](gazebo_wind_plugin/models/iris_wind_quad_hires_pt1_crash/model.sdf)）：
+  - 风：`wind_torque_arm_z 0.3→0.55`、新增 `arm_x=0.18 arm_y=0.08`。
+  - PID：`gravity_compensation=true`（其余仍 `enable_xy=false`）。
+  - link：`velocity_decay angular 0.4→0.12`；world 初始 yaw=0.35 rad。
+  - 现象：60 s smoke 中漂向 +Y，roll 渐发展到 ≤ −62°、pitch ≤ −21°，然后在 `peak_force≈8 N` 撞上 **`guangzhou_buildings::buildings_link::buildings_collision`**（视觉建筑 mesh 本身），HoverPid 由 `~/hover_pid/disable` 失能并自由落体到 `ground_plane`。
+- **文档**：[`gazebo_wind_plugin/README.md`](gazebo_wind_plugin/README.md) 同步加 `wind_torque_arm_x/y`、`gravity_compensation` 表项与说明。
+
+### pt1/pt2 spawn 移出建筑（统一到红圈位置）
+- **问题**：换成 `buildings.stl` 真碰撞后，pt2 旧 spawn `(1460, 1350, 80)` 与 hover target `(1470, 1350, 80)` 都落在 LUT 建筑包围盒 `x=[1436,1506] y=[1314,1366]` 内，机体直接嵌入墙体；pt1 旧 `(1484.23, 1310.86, 80)` 偏东 14 m，南侧外缘但相机右侧。
+- **改动**：
+  - [`worlds/guangzhou_demo_pt1_crash.world`](gazebo_wind_plugin/worlds/guangzhou_demo_pt1_crash.world) spawn → `(1471, 1309, 80)`：建筑南侧居中外约 5 m。
+  - [`worlds/guangzhou_demo_pt2_hover.world`](gazebo_wind_plugin/worlds/guangzhou_demo_pt2_hover.world) spawn → `(1471, 1309, 80)`：与 pt1 同位。
+  - [`models/iris_wind_quad_hires_pt2_hover/model.sdf`](gazebo_wind_plugin/models/iris_wind_quad_hires_pt2_hover/model.sdf) `<hover_pid> target_x/y` → `1471/1309`，避免 PID 把机体拉回建筑内的旧 hotspot。
+- **保留**：pt1 `enable_xy=false` 故 hover target 维持原值（不影响行为）；`<wind_field>` 的 `hotspot_*` 仍指 `(1470,1350,80)`，仅做 LUT 吸附/调试，无碰撞影响。
+- **物理含义**：主流风 `u=-0.165, v=+0.363 m/s` 仍指北偏东，pt1 会在数秒内被推过 `y=1314` 撞建筑南面；pt2 PID 锁在 `(1471,1309,80)` 上风口悬停，便于稳定观测颠簸。
+
+### 演示碰撞与视觉对齐（去掉红色凸包代理）
+- **问题**：`demo_building_collision` 使用凸包/分解网格 + 半透明红 visual，体积远大于 `guangzhou_buildings` 的 `buildings.stl`，无人机撞在「红块」上而非可见楼面。
+- **改动**：在 [`gazebo_wind_plugin/models/guangzhou_buildings/model.sdf`](gazebo_wind_plugin/models/guangzhou_buildings/model.sdf) 为同一 `buildings.stl` 增加 `<collision>`（`collide_bitmask=0x01` 及与旧代理一致的 ODE 表面参数）；从 [`guangzhou_demo_pt1_crash.world`](gazebo_wind_plugin/worlds/guangzhou_demo_pt1_crash.world) / [`guangzhou_demo_pt2_hover.world`](gazebo_wind_plugin/worlds/guangzhou_demo_pt2_hover.world) 移除 `model://demo_building_collision` include。
+- **保留**：`demo_building_collision` 模型与 `build_demo_collision_model.py` 流水线仍可用于需要凸分解或离线校验的场景；默认演示 world 不再加载。
+- **注意**：全量 STL 三角网格碰撞可能比凸包更耗 CPU；若卡顿可再考虑热点区域 CoACD + `--no-visual`。
+
 ### 高阶 Gazebo 碰撞方案：V-HACD 凸壳 + ContactWatcherPlugin
 - **动机**：截图证据显示 drone 沿 -X 直线穿过 visual 楼面，旧 box 代理 `(1442,1350,123) 28×32×92` 与 visual 几何错位；trail 完全没有偏折；既无 contact sensor 也无 CRASH 日志（详见高阶方案 plan）。
 - **离线流水线（新建/重写）**：

@@ -42,22 +42,17 @@
     </include>
 
     <include>
-      <uri>model://demo_building_collision</uri>
-      <pose>0 0 0 0 0 0</pose>
-    </include>
-
-    <include>
       <uri>model://wind_arrows_hotspot_hires</uri>
       <pose>0 0 0 0 0 0</pose>
     </include>
 
-    <!-- Spawn ~3 m south of demo_building_collision bbox (ymin=1314) per
-         scripts/probe_wind_at_hotspot.py --upwind-clearance-m 3.
-         Dominant wind at hotspot ≈ (-1, +2) m/s, so drone drifts +Y into
-         the bbox within seconds even at the demo's small drag area. -->
+    <!-- Spawn ~5 m south of building footprint (centered on x=1471, ymin=1314).
+         Dominant wind at hotspot ≈ (-0.17, +0.36) m/s, so drone drifts +Y into
+         the south face within seconds even at the demo's small drag area.
+         Initial yaw = 0.35 rad (~20°): off-axis so wind torque visibly twists heading. -->
     <include>
       <uri>model://iris_wind_quad_hires_pt1_crash</uri>
-      <pose>1484.23 1310.86 80 0 0 0</pose>
+      <pose>1471 1309 80 0 0 0.35</pose>
     </include>
   </world>
 </sdf>

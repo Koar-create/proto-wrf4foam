@@ -7,6 +7,35 @@
       <pose>0 0 0 0 0 0</pose>
       <gravity>false</gravity>
 
+      <!-- Same mesh as visual so contacts align with what you see (ODE static trimesh). -->
+      <collision name="buildings_collision">
+        <geometry>
+          <mesh>
+            <uri>model://guangzhou_buildings/meshes/buildings.stl</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+        <surface>
+          <contact>
+            <collide_bitmask>0x01</collide_bitmask>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>0.6</mu>
+              <mu2>0.6</mu2>
+            </ode>
+          </friction>
+          <bounce>
+            <restitution_coefficient>0.05</restitution_coefficient>
+            <threshold>0.5</threshold>
+          </bounce>
+        </surface>
+      </collision>
+
       <visual name="buildings_visual">
         <geometry>
           <mesh>

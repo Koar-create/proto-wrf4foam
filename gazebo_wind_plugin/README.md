@@ -4,7 +4,7 @@ Gazebo **Classic** model plugins that sample a precomputed 3-D wind field from a
 
 Longer ops notes: [RBM-2-iris_wind_quad-done-and-gazebo_wind_plugin-review.md](../docs/ops/RBM-2-iris_wind_quad-done-and-gazebo_wind_plugin-review.md), and the RBM-4 narrative spec [RBM-4-feedback-to-gazebo_guangzhou_wind_hires_demo.md](../docs/ops/RBM-4-feedback-to-gazebo_guangzhou_wind_hires_demo.md) (Chinese).
 
-**RBM-4 two-act hires worlds** (building collision proxy + different hover configs) live in `worlds/guangzhou_demo_pt1_crash.world` and `worlds/guangzhou_demo_pt2_hover.world`, using models `iris_wind_quad_hires_pt1_crash` / `iris_wind_quad_hires_pt2_hover` and static `demo_building_collision` (default **box** proxy near hotspot **(1470,1350,80)**; replace with extracted STL if desired).
+**RBM-4 two-act hires worlds** (mesh-aligned building collision + different hover configs) live in `worlds/guangzhou_demo_pt1_crash.world` and `worlds/guangzhou_demo_pt2_hover.world`, using models `iris_wind_quad_hires_pt1_crash` / `iris_wind_quad_hires_pt2_hover` and static `guangzhou_buildings` (same `buildings.stl` for visual and ODE collision). Optional `demo_building_collision` remains for convex-hull workflows but is **not** included in these worlds by default.
 
 ## Requirements
 
@@ -64,7 +64,7 @@ Each update: reads link world pose (plus optional LUT offset), samples `(u,v,w)`
 
 `F = 0.5 * rho * C_D * area * |U_rel| * U_rel`
 
-to the configured link. Optional torque: `tau = r × F` with `r = (0, 0, wind_torque_arm_z)` when `enable_wind_torque` is true.
+to the configured link. Optional torque: `tau = r × F` with `r = (wind_torque_arm_x, wind_torque_arm_y, wind_torque_arm_z)` when `enable_wind_torque` is true. Setting `arm_z` only excites roll/pitch (legacy single-axis behaviour); adding non-zero `arm_x` / `arm_y` lets horizontal wind also drive a yaw torque (`τ_z = arm_x·fy − arm_y·fx`), giving 6-DOF buffeting instead of yaw-locked drift.
 
 | Element | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -82,7 +82,9 @@ to the configured link. Optional torque: `tau = r × F` with `r = (0, 0, wind_to
 | `hotspot_y` | double | `-880` | Hotspot Y for startup diagnostic sample (m). |
 | `hotspot_z` | double | `145` | Hotspot Z for startup diagnostic sample (m). |
 | `enable_wind_torque` | bool | `false` | Enable `r × F` torque about base link origin. |
-| `wind_torque_arm_z` | double | `0.15` | Moment arm Z component (m). |
+| `wind_torque_arm_x` | double | `0` | Moment arm X component (m); excites yaw + cross-axis torque. |
+| `wind_torque_arm_y` | double | `0` | Moment arm Y component (m); excites yaw + cross-axis torque. |
+| `wind_torque_arm_z` | double | `0.15` | Moment arm Z component (m); excites roll/pitch from horizontal wind. |
 | `hotspot_snap_outdoor` | bool | `true` | Before hotspot check, snap to nearest outdoor XY if needed. |
 | `hotspot_snap_max_radius_m` | double | `120` | Max XY search radius for snap (m). |
 | `hotspot_snap_min_wind` | double | `0.05` | Min `|U|` (m/s) fallback when no building mask. |
@@ -90,6 +92,8 @@ to the configured link. Optional torque: `tau = r × F` with `r = (0, 0, wind_to
 ### HoverPidPlugin (`libHoverPidPlugin.so`)
 
 World-frame translational PID on position error `target - pos`; applies force to the link each step. Simple integral clamp (anti-windup). XY uses `kp`/`ki`/`kd`; Z uses `kp_z`/`ki_z`/`kd_z` when set, otherwise defaults to the XY gains at load time. Optional roll/pitch damping torque when `enable_attitude_recovery` is true. If `drift_after_seconds ≥ 0`, XY forces are enabled only while `sim_time < drift_after_seconds`, then XY PID is turned off (Z continues).
+
+Setting `gravity_compensation` to true reads the controlled link's mass and the world's gravity at load time and adds a constant `m·|g|` along +Z each step on top of the PID output, so soft Z gains (e.g. `kp_z=4`) no longer leak into a multi-metre steady-state altitude error. The feed-forward stops when `disable_topic` latches with `crash_zero_thrust=true` (free-fall).
 
 | Element | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -105,7 +109,8 @@ World-frame translational PID on position error `target - pos`; applies force to
 | `kd_z` | double | same as `kd` | Z derivative gain. |
 | `enable_xy` | bool | `true` | Enable XY PID (subject to `drift_after_seconds`). |
 | `enable_attitude_recovery` | bool | `false` | Apply `-attitude_kp * roll/pitch` torques. |
-| `attitude_kp` | double | `15` | Attitude recovery gain. |
+| `attitude_kp` | double | `15` | Attitude recovery gain (lower = visible buffeting tilt; higher = stiff hold). |
+| `gravity_compensation` | bool | `false` | If true, add a constant `m·|g|` feed-forward along +Z so Z PID only fights wind, not gravity. |
 | `drift_after_seconds` | double | `-1` | If ≥ 0, disable XY PID after this sim time (s). |
 | `disable_topic` | string | empty | Optional Gazebo transport topic; first `GzString` message latches `disabled`. |
 | `crash_zero_thrust` | bool | `false` | When latched, return zero force/torque each step (free fall). |
@@ -155,11 +160,11 @@ Samples link pose every `sample_period` seconds and spawns a **static** sphere m
 - **`iris_wind_quad`** — Standard-scale quad visual + collision; `WindFieldPlugin`, `HoverPidPlugin`, `TrailMarkerPlugin` (LUT paths in SDF are examples under `~/wrf_openfoam_coupling_cache/...`).
 - **`iris_wind_quad_hires_demo`** — 10× scaled mesh/collision for visibility; wind torque (`wind_torque_arm_z=0.3`), link angular `velocity_decay`, attitude recovery, timed XY drift; hires LUT paths in SDF.
 - **`iris_wind_quad_hires_pt1_crash`** / **`iris_wind_quad_hires_pt2_hover`** — Thin wrappers: same meshes via `model://iris_wind_quad_hires_demo/meshes/...`, different `HoverPid` / spawn used by RBM-4 worlds.
-- **`demo_building_collision`** — Static **box** collision/visual proxy near hires hotspot (replace with `meshes/building_A.stl` after extraction).
+- **`demo_building_collision`** — Optional static convex-hull collision model (regenerated by `build_demo_collision_model.py`); can include a translucent debug visual. RBM-4 pt1/pt2 worlds use `guangzhou_buildings` mesh collision instead.
 - **`wind_arrows_hotspot`** — Static many-link wind arrows (box shaft/head) near the low-res demo region.
 - **`wind_arrows_hotspot_hires`** — Dense static arrows using mesh glyph; references `wind_arrow_glyph` mesh URI.
 - **`wind_arrow_glyph`** — Shared unit arrow mesh (`meshes/arrow_unit.stl`) and a tiny off-world stub visual for Gazebo model resolution.
-- **`guangzhou_buildings`** — Visual-only street/canyon STL reference.
+- **`guangzhou_buildings`** — Street/canyon `buildings.stl` with matching **visual + mesh collision** (static trimesh).
 - **`px4_iris_assets`** — **Stub** model only: prevents Gazebo model-path scans from failing on the nested `repo/` checkout. **Do not** include this for flight demos; use `iris_wind_quad` or `iris_wind_quad_hires_demo`.
 
 Meshes under `models/*/meshes/` (`.stl`, `.dae`) are binary assets used by the SDF files; they are not documented line-by-line here.
@@ -212,7 +217,9 @@ LUT cache path used in many SDF examples: `~/wrf_openfoam_coupling_cache/wind_lu
 
 ## Collision pipeline (RBM-4 pt1/pt2)
 
-The static `demo_building_collision` model is **regenerated** rather than hand-edited. Visual-only `guangzhou_buildings` provides scenery; collision lives in the per-hull SDF below.
+**Default demos:** `guangzhou_buildings` carries collision on the same STL as the visuals (no separate red proxy).
+
+**Optional convex decomposition:** the static `demo_building_collision` model is **regenerated** rather than hand-edited. Use the steps below when you want hull-based collision (e.g. performance tuning or QC vs. the LUT mask) instead of the full building mesh.
 
 ```bash
 # 1) extract hulls (CoACD preferred; falls back to V-HACD then convex_hull)

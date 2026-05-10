@@ -42,6 +42,8 @@ public:
 
     enable_wind_torque_ = sdf->Get<bool>("enable_wind_torque", false).first;
     wind_torque_arm_z_ = sdf->Get<double>("wind_torque_arm_z", 0.15).first;
+    wind_torque_arm_x_ = sdf->Get<double>("wind_torque_arm_x", 0.0).first;
+    wind_torque_arm_y_ = sdf->Get<double>("wind_torque_arm_y", 0.0).first;
 
     hotspot_snap_outdoor_ = sdf->Get<bool>("hotspot_snap_outdoor", true).first;
     hotspot_snap_max_radius_m_ = sdf->Get<double>("hotspot_snap_max_radius_m", 120.0).first;
@@ -124,7 +126,11 @@ public:
     link->AddForce(force);
 
     if (enable_wind_torque_) {
-      ignition::math::Vector3d moment_arm(0.0, 0.0, wind_torque_arm_z_);
+      // r × F where r = (arm_x, arm_y, arm_z) is an effective drag-center offset
+      // from the body CG. arm_z excites roll/pitch (legacy behaviour); arm_x/arm_y
+      // also let horizontal wind force generate yaw torque (τ_z = arm_x*fy - arm_y*fx),
+      // giving 6-DOF buffeting instead of yaw-locked drift.
+      ignition::math::Vector3d moment_arm(wind_torque_arm_x_, wind_torque_arm_y_, wind_torque_arm_z_);
       ignition::math::Vector3d torque = moment_arm.Cross(force);
       link->AddTorque(torque);
     }
@@ -163,6 +169,8 @@ private:
 
   bool enable_wind_torque_{false};
   double wind_torque_arm_z_{0.15};
+  double wind_torque_arm_x_{0.0};
+  double wind_torque_arm_y_{0.0};
 
   bool hotspot_snap_outdoor_{true};
   double hotspot_snap_max_radius_m_{120.0};

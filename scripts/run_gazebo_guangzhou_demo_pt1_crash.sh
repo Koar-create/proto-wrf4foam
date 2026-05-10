@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# RBM-4 pt1：无水平 PID，风将机体推向 demo_building_collision（默认 box 代理）
+# RBM-4 pt1：无水平 PID，风将机体推向 guangzhou_buildings（与视觉一致的 mesh 碰撞）
 # 须在仓库根目录执行：cd /path/to/WRF-OpenFOAM-Coupling && ./scripts/run_gazebo_guangzhou_demo_pt1_crash.sh <子命令>
 set -euo pipefail
 
@@ -29,7 +29,7 @@ cmd_help() {
   build             cmake 配置并编译插件（生成 libWindFieldPlugin.so 等）
   cache             将高精度 LUT 从仓库 data/ 同步到 WSL 原生缓存（若本机已有可跳过）
   arrows            从缓存 NPZ 重新生成 wind_arrows_hotspot_hires 模型（需已安装 python3 + numpy）
-  collision-build   一键跑碰撞流水线：extract（CoACD 凸分解）→ build（生成 demo_building_collision/model.sdf）→ verify（LUT 对齐 PNG），再可选 probe（推荐 pt1 spawn）
+  collision-build   可选：extract（CoACD 凸分解）→ build（生成 demo_building_collision/model.sdf）→ verify（LUT 对齐 PNG），再可选 probe；默认 world 已用 guangzhou_buildings 网格碰撞，无需此步即可跑通
                     环境变量：BUILDINGS_STL=<path>（默认尝试 LUT 兜底）；HOTSPOT='1470,1350'；RADIUS_M=50；LUT_VTI=<path>
   server            仅启动 gzserver（无 GUI），--verbose
   gui               启动 gazebo（gzserver + gzclient），--verbose

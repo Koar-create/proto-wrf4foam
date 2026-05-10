@@ -49,6 +49,13 @@ private:
   bool enable_attitude_recovery_{false};
   double attitude_kp_{15.0};
 
+  /// Optional feed-forward thrust compensation. When true the plugin queries the
+  /// link mass at load time and adds m*|g| along +Z each step on top of the PID
+  /// output, so the Z PID gains only have to fight wind/disturbance instead of
+  /// also having to absorb gravity as a steady-state error.
+  bool gravity_compensation_{false};
+  double gravity_ff_force_z_{0.0};
+
   /// If >= 0: for sim_time < value force XY PID on, then force XY off. If < 0: use enable_xy from SDF only.
   double drift_after_seconds_{-1.0};
 

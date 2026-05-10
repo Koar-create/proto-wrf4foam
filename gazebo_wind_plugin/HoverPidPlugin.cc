@@ -32,6 +32,21 @@ void HoverPidPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
   enable_attitude_recovery_ = sdf->Get<bool>("enable_attitude_recovery", false).first;
   attitude_kp_ = sdf->Get<double>("attitude_kp", 15.0).first;
 
+  gravity_compensation_ = sdf->Get<bool>("gravity_compensation", false).first;
+  if (gravity_compensation_) {
+    auto link = model_->GetLink(link_name_);
+    auto world_for_g = model_->GetWorld();
+    if (link && world_for_g) {
+      const double mass = link->GetInertial() ? link->GetInertial()->Mass() : 0.0;
+      const double g_mag = world_for_g->Gravity().Length();
+      gravity_ff_force_z_ = mass * g_mag;
+      gzmsg << "[HoverPidPlugin] gravity_compensation: mass=" << mass << " kg, |g|=" << g_mag
+            << " m/s^2, ff_thrust=" << gravity_ff_force_z_ << " N\n";
+    } else {
+      gzwarn << "[HoverPidPlugin] gravity_compensation requested but link/world unavailable; skipping FF.\n";
+    }
+  }
+
   drift_after_seconds_ = sdf->Get<double>("drift_after_seconds", -1.0).first;
 
   disable_topic_ = sdf->Get<std::string>("disable_topic", std::string()).first;
@@ -111,7 +126,10 @@ void HoverPidPlugin::OnUpdate() {
 
   double fx = kp_ * err.X() + ki_ * integral_.X() + kd_ * derr.X();
   double fy = kp_ * err.Y() + ki_ * integral_.Y() + kd_ * derr.Y();
-  const double fz = kp_z_ * err.Z() + ki_z_ * integral_.Z() + kd_z_ * derr.Z();
+  double fz = kp_z_ * err.Z() + ki_z_ * integral_.Z() + kd_z_ * derr.Z();
+  if (gravity_compensation_) {
+    fz += gravity_ff_force_z_;
+  }
 
   bool xy_on = enable_xy_;
   if (drift_after_seconds_ >= 0.0) {

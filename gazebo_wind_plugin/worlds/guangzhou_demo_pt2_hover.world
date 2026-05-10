@@ -42,19 +42,15 @@
     </include>
 
     <include>
-      <uri>model://demo_building_collision</uri>
-      <pose>0 0 0 0 0 0</pose>
-    </include>
-
-    <include>
       <uri>model://wind_arrows_hotspot_hires</uri>
       <pose>0 0 0 0 0 0</pose>
     </include>
 
-    <!-- Near east face of collision proxy (~4 m from wall) -->
+    <!-- Same outdoor spawn as pt1 (~5 m south of building); hover PID holds this XY but
+         allows visible 6-DOF buffeting. Small initial yaw makes heading drift legible. -->
     <include>
       <uri>model://iris_wind_quad_hires_pt2_hover</uri>
-      <pose>1460 1350 80 0 0 0</pose>
+      <pose>1471 1309 80 0 0 0.20</pose>
     </include>
   </world>
 </sdf>
