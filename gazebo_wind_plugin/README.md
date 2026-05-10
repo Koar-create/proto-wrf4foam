@@ -263,3 +263,7 @@ python scripts/probe_wind_at_hotspot.py \
 `./scripts/run_gazebo_guangzhou_demo_pt1_crash.sh collision-build` chains the same four steps with sensible defaults; environment overrides are `BUILDINGS_STL`, `LUT_VTI`, `HOTSPOT`, `RADIUS_M`. When `BUILDINGS_STL` is unset the extractor falls back to the LUT mask (`scipy.ndimage.label` connected components → axis-aligned boxes), so the demo can still run on hosts without the city mesh.
 
 **Drone side** (already in `iris_wind_quad_hires_pt1_crash` / `pt2_hover`): the body collision has `<collide_bitmask>0x01</collide_bitmask>` and a `contact` sensor hosting `libContactWatcherPlugin.so`. On the first `peak_force ≥ crash_threshold_n` the watcher publishes one `GzString` on `~/hover_pid/disable`; the pt1 hover PID has `<crash_zero_thrust>true</crash_zero_thrust>` so the drone goes into free fall. pt2 keeps `crash_zero_thrust=false` and only logs the brush.
+
+## Maintainer
+
+- **Zhixian Yang** — [zyang248@connect.hkust-gz.edu.cn](mailto:zyang248@connect.hkust-gz.edu.cn)

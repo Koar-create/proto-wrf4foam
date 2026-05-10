@@ -37,7 +37,8 @@ CONFIG_TEMPLATE = """<?xml version=\"1.0\"?>
   <version>1.1</version>
   <sdf version=\"1.6\">model.sdf</sdf>
   <author>
-    <name>WRF-OpenFOAM-Coupling</name>
+    <name>Zhixian Yang</name>
+    <email>zyang248@connect.hkust-gz.edu.cn</email>
   </author>
   <description>
     RBM-4 high-order collision proxy: convex-hull decomposition near hotspot {hotspots}.

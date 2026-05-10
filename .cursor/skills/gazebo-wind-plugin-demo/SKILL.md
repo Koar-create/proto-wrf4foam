@@ -4,9 +4,12 @@ description: >-
   Knowledge card for the Gazebo Classic wind-field + hover PID demo in this repo:
   original goals, what is implemented now, and what is still unverified.
   Use when the user asks "what's done / what's next" for the wind-plugin demo video.
+maintainer: Zhixian Yang <zyang248@connect.hkust-gz.edu.cn>
 ---
 
 # Gazebo Wind Plugin Demo（Classic 11）知识卡片
+
+**维护者**：Zhixian Yang（zyang248@connect.hkust-gz.edu.cn）
 
 ## 最初要实现的工作（目标定义）
 

@@ -201,8 +201,8 @@ def _write_model_config(model_dir: str, model_name: str) -> None:
   <version>1.0</version>
   <sdf version="1.6">model.sdf</sdf>
   <author>
-    <name>auto</name>
-    <email>n/a</email>
+    <name>Zhixian Yang</name>
+    <email>zyang248@connect.hkust-gz.edu.cn</email>
   </author>
   <description>
     Visual-only wind arrows sampled from Wind LUT (static).

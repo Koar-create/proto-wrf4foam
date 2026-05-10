@@ -2,7 +2,18 @@
 
 > 本文件由Cursor智能体自动维护，用于记录本仓库内任务执行过程、关键决策与可复现命令。
 
+**仓库维护**：Zhixian Yang（zyang248@connect.hkust-gz.edu.cn）
+
 ## 2026-05-10
+
+### 追踪文档署名（README / SKILL / 本文件）
+- **范围**：仅 `git ls-files` 内的 Markdown；为原先无维护者信息的文档补齐署名。
+- **改动**：[`gazebo_wind_plugin/README.md`](gazebo_wind_plugin/README.md) 文末增加 **Maintainer**；[`.cursor/skills/gazebo-wind-plugin-demo/SKILL.md`](.cursor/skills/gazebo-wind-plugin-demo/SKILL.md) frontmatter 增加 `maintainer` 并在正文标题下增加一行维护者；本文件页眉增加 **仓库维护** 行。
+
+### Gazebo `model.config` 署名（git 追踪范围内）
+- **范围**：仅统计 `git ls-files` 所列文件；仓库内凡含 `<author>` 的 `model.config` 均已为 **Zhixian Yang** / **zyang248@connect.hkust-gz.edu.cn**。
+- **本次补齐**：[`iris_wind_quad_hires_pt2_hover/model.config`](gazebo_wind_plugin/models/iris_wind_quad_hires_pt2_hover/model.config) 原先仅有 `<name>`，已补上 `<email>` 与其它模型一致。
+- **未改动**：`gazebo_wind_plugin/models/px4_iris_assets/repo/` 下上游拷贝的 `model.config` **未被 git 追踪**（`git status` 为未跟踪目录），故不在本次批量范围内；各 `*.dae` 中 COLLADA 的 `<author>Blender User</author>` 为网格导出元数据，保留。
 
 ### 旋翼高速旋转（RotorSpinPlugin + 独立 prop link）
 - **动机**：prop 若只是 `base_link` 上的 `<visual>`，无法绕轴旋转；需独立 `<link>` + `<joint type="revolute">` + 每步驱动关节角速度。
