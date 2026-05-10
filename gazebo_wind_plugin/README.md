@@ -1,6 +1,6 @@
 # gazebo_wind_plugin
 
-Gazebo **Classic** model plugins that sample a precomputed 3-D wind field from a JSON + VTK ImageData (`.vti`) lookup table (LUT), apply a quadratic drag force to a link, and ship small helpers for demo flight (world-frame hover PID, visual trail markers). Optional LUT masks support outdoor-only queries and hotspot snapping near buildings.
+Gazebo **Classic** model plugins that sample a precomputed 3-D wind field from a JSON + VTK ImageData (`.vti`) lookup table (LUT), apply a quadratic drag force to a link, and ship small helpers for demo flight (world-frame hover PID, visual trail markers, **visible rotor spin** on revolute joints). Optional LUT masks support outdoor-only queries and hotspot snapping near buildings.
 
 Longer ops notes: [RBM-2-iris_wind_quad-done-and-gazebo_wind_plugin-review.md](../docs/ops/RBM-2-iris_wind_quad-done-and-gazebo_wind_plugin-review.md), and the RBM-4 narrative spec [RBM-4-feedback-to-gazebo_guangzhou_wind_hires_demo.md](../docs/ops/RBM-4-feedback-to-gazebo_guangzhou_wind_hires_demo.md) (Chinese).
 
@@ -32,6 +32,7 @@ Artifacts (shared libraries):
 | `libHoverPidPlugin.so` | `HoverPidPlugin.cc` |
 | `libTrailMarkerPlugin.so` | `TrailMarkerPlugin.cc` |
 | `libContactWatcherPlugin.so` | `ContactWatcherPlugin.cc` |
+| `libRotorSpinPlugin.so` | `RotorSpinPlugin.cc` |
 
 Point Gazebo at the build output, for example:
 
@@ -56,7 +57,7 @@ Hotspot logging in `WindFieldPlugin` can optionally call `snapHotspotNearestOutd
 
 ## Plugins and SDF parameters
 
-Register names: `WindFieldPlugin`, `HoverPidPlugin`, `TrailMarkerPlugin` (see `GZ_REGISTER_MODEL_PLUGIN` in each `.cc` file).
+Register names: `WindFieldPlugin`, `HoverPidPlugin`, `TrailMarkerPlugin`, `ContactWatcherPlugin`, `RotorSpinPlugin` (see `GZ_REGISTER_MODEL_PLUGIN` in each `.cc` file).
 
 ### WindFieldPlugin (`libWindFieldPlugin.so`)
 
@@ -126,6 +127,20 @@ Setting `gravity_compensation` to true reads the controlled link's mass and the 
 | `publish_disable_topic` | string | `~/hover_pid/disable` | Gazebo transport topic for the one-shot disable message. |
 | `log_every_n` | int | `50` | Periodic contact summary cadence in sensor updates. |
 
+### RotorSpinPlugin (`libRotorSpinPlugin.so`)
+
+`ModelPlugin` that drives **revolute** joints with the ODE joint motor (`SetParam("fmax")`, `SetParam("vel")`) so propeller **visual** meshes spin at a target angular rate (rad/s). This is **cosmetic**: it does not replace `HoverPidPlugin` / `WindFieldPlugin` forces. Put each rotor on its own lightweight link (no collision) connected to `base_link` with `<joint type="revolute"><axis><xyz>0 0 1</xyz>…`.
+
+| Element | Type | Default | Description |
+| --- | --- | --- | --- |
+| `<rotor><joint>` | string | *(required)* | Name of the revolute joint to drive. |
+| `<rotor><rate>` | double | `0` | Target angular velocity (rad/s); **+** = CCW about +Z, **−** = CW. Alternate signs on diagonal motors so net yaw torque on the body stays small. |
+| `max_torque` | double | `0.5` | Joint motor torque cap (N·m); keeps reaction on `base_link` bounded. |
+| `spin_up_tau` | double | `1.5` | Seconds to ramp from 0 to full `rate` at load. |
+| `spin_down_tau` | double | `1.0` | After `disable_topic` latches, exponential decay time constant (s) to 0 rad/s. |
+| `disable_topic` | string | empty | Optional; subscribe to the same topic as `ContactWatcherPlugin` / `HoverPidPlugin` (e.g. `~/hover_pid/disable`) so rotors **spool down** on crash. |
+| `log_every_n` | int | `0` | If &gt; 0, periodic `gzmsg` with ramp/decay factors. |
+
 ### TrailMarkerPlugin (`libTrailMarkerPlugin.so`)
 
 Samples link pose every `sample_period` seconds and spawns a **static** sphere model via Gazebo transport `~/factory`; deletes oldest markers via `~/request` with `entity_delete` when `max_points` is exceeded. Visual-only; useful for trajectory debugging.
@@ -159,7 +174,7 @@ Samples link pose every `sample_period` seconds and spawns a **static** sphere m
 
 - **`iris_wind_quad`** — Standard-scale quad visual + collision; `WindFieldPlugin`, `HoverPidPlugin`, `TrailMarkerPlugin` (LUT paths in SDF are examples under `~/wrf_openfoam_coupling_cache/...`).
 - **`iris_wind_quad_hires_demo`** — 10× scaled mesh/collision for visibility; wind torque (`wind_torque_arm_z=0.3`), link angular `velocity_decay`, attitude recovery, timed XY drift; hires LUT paths in SDF.
-- **`iris_wind_quad_hires_pt1_crash`** / **`iris_wind_quad_hires_pt2_hover`** — Thin wrappers: same meshes via `model://iris_wind_quad_hires_demo/meshes/...`, different `HoverPid` / spawn used by RBM-4 worlds.
+- **`iris_wind_quad_hires_pt1_crash`** / **`iris_wind_quad_hires_pt2_hover`** — Thin wrappers: same meshes via `model://iris_wind_quad_hires_demo/meshes/...`, different `HoverPid` / spawn used by RBM-4 worlds; four `prop_*` links + revolute joints + `RotorSpinPlugin` for **visible** high-speed rotors (spool-down on `~/hover_pid/disable` after crash in pt1).
 - **`demo_building_collision`** — Optional static convex-hull collision model (regenerated by `build_demo_collision_model.py`); can include a translucent debug visual. RBM-4 pt1/pt2 worlds use `guangzhou_buildings` mesh collision instead.
 - **`wind_arrows_hotspot`** — Static many-link wind arrows (box shaft/head) near the low-res demo region.
 - **`wind_arrows_hotspot_hires`** — Dense static arrows using mesh glyph; references `wind_arrow_glyph` mesh URI.

@@ -4,6 +4,14 @@
 
 ## 2026-05-10
 
+### 旋翼高速旋转（RotorSpinPlugin + 独立 prop link）
+- **动机**：prop 若只是 `base_link` 上的 `<visual>`，无法绕轴旋转；需独立 `<link>` + `<joint type="revolute">` + 每步驱动关节角速度。
+- **实现**：[`RotorSpinPlugin.{hh,cc}`](gazebo_wind_plugin/RotorSpinPlugin.hh) `ModelPlugin`：对若干 `<rotor><joint>…</joint><rate>…</rate></rotor>` 调用 `joint->SetParam("fmax",0,max_torque)` + `SetParam("vel",0,target)`；`spin_up_tau` 线性 ramp；可选 `disable_topic` 与 ContactWatcher 同源，latch 后 `spin_down_tau` 指数衰减到 0。纯视觉/运动学增强，**不改变** WindField/HoverPid 受力模型。
+- **CMake**：[`CMakeLists.txt`](gazebo_wind_plugin/CMakeLists.txt) 增加 `libRotorSpinPlugin.so`。
+- **模型**：[`iris_wind_quad_hires_pt2_hover/model.sdf`](gazebo_wind_plugin/models/iris_wind_quad_hires_pt2_hover/model.sdf)、[`iris_wind_quad_hires_pt1_crash/model.sdf`](gazebo_wind_plugin/models/iris_wind_quad_hires_pt1_crash/model.sdf) 将原 4 个 prop visual 拆为 `prop_0..3` link（5 g 点质量、无 collision）+ `prop_*__joint` 绕 Z；`rate=±80 rad/s`，`max_torque=0.5`；pt1 `spin_down_tau=1.2`；两机均 `disable_topic=~/hover_pid/disable`。
+- **验证**：pt2 smoke 见 `[RotorSpinPlugin] 4 rotor(s): …`；pt1 CRASH 后日志 `[RotorSpinPlugin] disabled by 'crash' …`。
+- **文档**：[`gazebo_wind_plugin/README.md`](gazebo_wind_plugin/README.md) 增加 `libRotorSpinPlugin` 表与 RotorSpinPlugin 参数表。
+
 ### 增强 pt1/pt2 demo 的 6-DOF 表现力
 - **目标**：让两架机的位移与姿态在演示中可见、可读，而不是被刚性 PID 压平或被低风力淹没。
 - **插件扩展**：

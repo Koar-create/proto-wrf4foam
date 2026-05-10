@@ -74,3 +74,16 @@ target_link_libraries(ContactWatcherPlugin
   ${GAZEBO_LIBRARIES}
 )
 
+add_library(RotorSpinPlugin SHARED
+  RotorSpinPlugin.cc
+)
+
+target_include_directories(RotorSpinPlugin PRIVATE
+  ${GAZEBO_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(RotorSpinPlugin
+  ${GAZEBO_LIBRARIES}
+)
+
