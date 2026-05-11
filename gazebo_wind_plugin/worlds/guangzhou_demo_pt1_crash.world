@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
-  <!-- RBM-4 pt1: wind pushes vehicle into building collision (no XY hover hold).
-       Physics tuned for 5 m/s drone × 0.002 s step ≈ 1 cm/step penetration max,
-       far smaller than the convex-hull collision shells. -->
+  <!-- RBM-4 pt1: curtain-wall inspection loop; exaggerated wind + softened XY gains mid-route
+       slam the vehicle into guangzhou_buildings mesh collision (ContactWatcher → disable → free fall).
+       Physics tuned for 0.002 s step. -->
   <world name="guangzhou_demo_pt1_crash">
     <physics type="ode">
       <max_step_size>0.002</max_step_size>
@@ -46,10 +46,7 @@
       <pose>0 0 0 0 0 0</pose>
     </include>
 
-    <!-- Spawn ~5 m south of building footprint (centered on x=1471, ymin=1314).
-         Dominant wind at hotspot ≈ (-0.17, +0.36) m/s, so drone drifts +Y into
-         the south face within seconds even at the demo's small drag area.
-         Initial yaw = 0.35 rad (~20°): off-axis so wind torque visibly twists heading. -->
+    <!-- Start/End of inspection loop (~5 m south of façade). Initial yaw aids visible wind torque. -->
     <include>
       <uri>model://iris_wind_quad_hires_pt1_crash</uri>
       <pose>1471 1309 80 0 0 0.35</pose>

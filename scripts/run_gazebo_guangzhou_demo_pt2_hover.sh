@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# RBM-4 pt2：stub Hover PID（含较弱 Z 增益）抵抗风，便于观察颠簸；建筑碰撞与 guangzhou_buildings 视觉 STL 一致
+# RBM-4 pt2：与 pt1 同巡检航线 + 演示型 barrier（绕开建筑）；stub 控制器可换 HOCBF
 # 须在仓库根目录执行：cd /path/to/WRF-OpenFOAM-Coupling && ./scripts/run_gazebo_guangzhou_demo_pt2_hover.sh <子命令>
 set -euo pipefail
 
@@ -31,7 +31,7 @@ cmd_help() {
   arrows   从缓存 NPZ 重新生成 wind_arrows_hotspot_hires 模型（需已安装 python3 + numpy）
   server   仅启动 gzserver（无 GUI），--verbose
   gui      启动 gazebo（gzserver + gzclient），--verbose
-  smoke    约 22s 无头运行 gzserver 做快速日志自检（timeout）
+  smoke    约 75s 无头 gzserver（覆盖部分航线与 barrier 日志）
 
 World: gazebo_wind_plugin/worlds/guangzhou_demo_pt2_hover.world
 模型: iris_wind_quad_hires_pt2_hover（日志中应出现 roll=/pitch= 等）
@@ -104,7 +104,7 @@ cmd_gui() {
 cmd_smoke() {
   require_repo_root
   export_gazebo_env
-  timeout 22s gzserver "${WORLD_REL}" --verbose
+  timeout 75s gzserver "${WORLD_REL}" --verbose
 }
 
 main() {

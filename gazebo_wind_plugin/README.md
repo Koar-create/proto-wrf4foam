@@ -1,10 +1,10 @@
 # gazebo_wind_plugin
 
-Gazebo **Classic** model plugins that sample a precomputed 3-D wind field from a JSON + VTK ImageData (`.vti`) lookup table (LUT), apply a quadratic drag force to a link, and ship small helpers for demo flight (world-frame hover PID, visual trail markers, **visible rotor spin** on revolute joints). Optional LUT masks support outdoor-only queries and hotspot snapping near buildings.
+Gazebo **Classic** model plugins that sample a precomputed 3-D wind field from a JSON + VTK ImageData (`.vti`) lookup table (LUT), apply a quadratic drag force to a link, and ship small helpers for demo flight (world-frame hover PID, **inspection waypoint follower with optional barrier**, visual trail markers, **visible rotor spin** on revolute joints). Optional LUT masks support outdoor-only queries and hotspot snapping near buildings.
 
 Longer ops notes: [RBM-2-iris_wind_quad-done-and-gazebo_wind_plugin-review.md](../docs/ops/RBM-2-iris_wind_quad-done-and-gazebo_wind_plugin-review.md), and the RBM-4 narrative spec [RBM-4-feedback-to-gazebo_guangzhou_wind_hires_demo.md](../docs/ops/RBM-4-feedback-to-gazebo_guangzhou_wind_hires_demo.md) (Chinese).
 
-**RBM-4 two-act hires worlds** (mesh-aligned building collision + different hover configs) live in `worlds/guangzhou_demo_pt1_crash.world` and `worlds/guangzhou_demo_pt2_hover.world`, using models `iris_wind_quad_hires_pt1_crash` / `iris_wind_quad_hires_pt2_hover` and static `guangzhou_buildings` (same `buildings.stl` for visual and ODE collision). Optional `demo_building_collision` remains for convex-hull workflows but is **not** included in these worlds by default.
+**RBM-4 two-act hires worlds** (mesh-aligned building collision + shared curtain-wall inspection loop) live in `worlds/guangzhou_demo_pt1_crash.world` and `worlds/guangzhou_demo_pt2_hover.world`, using models `iris_wind_quad_hires_pt1_crash` / `iris_wind_quad_hires_pt2_hover` and static `guangzhou_buildings` (same `buildings.stl` for visual and ODE collision). Pt1 uses exaggerated `wind_bias_*` / `force_scale` and softened gains to crash mid-route; pt2 enables the demo barrier on `InspectionPathControllerPlugin`. Optional `demo_building_collision` remains for convex-hull workflows but is **not** included in these worlds by default.
 
 ## Requirements
 
@@ -30,6 +30,7 @@ Artifacts (shared libraries):
 | --- | --- |
 | `libWindFieldPlugin.so` | `WindFieldPlugin.cc`, `lut_reader/WindLUT.cc` |
 | `libHoverPidPlugin.so` | `HoverPidPlugin.cc` |
+| `libInspectionPathControllerPlugin.so` | `InspectionPathControllerPlugin.cc` |
 | `libTrailMarkerPlugin.so` | `TrailMarkerPlugin.cc` |
 | `libContactWatcherPlugin.so` | `ContactWatcherPlugin.cc` |
 | `libRotorSpinPlugin.so` | `RotorSpinPlugin.cc` |
@@ -57,7 +58,7 @@ Hotspot logging in `WindFieldPlugin` can optionally call `snapHotspotNearestOutd
 
 ## Plugins and SDF parameters
 
-Register names: `WindFieldPlugin`, `HoverPidPlugin`, `TrailMarkerPlugin`, `ContactWatcherPlugin`, `RotorSpinPlugin` (see `GZ_REGISTER_MODEL_PLUGIN` in each `.cc` file).
+Register names: `WindFieldPlugin`, `HoverPidPlugin`, `InspectionPathControllerPlugin`, `TrailMarkerPlugin`, `ContactWatcherPlugin`, `RotorSpinPlugin` (see `GZ_REGISTER_MODEL_PLUGIN` in each `.cc` file).
 
 ### WindFieldPlugin (`libWindFieldPlugin.so`)
 
@@ -86,6 +87,11 @@ to the configured link. Optional torque: `tau = r × F` with `r = (wind_torque_a
 | `wind_torque_arm_x` | double | `0` | Moment arm X component (m); excites yaw + cross-axis torque. |
 | `wind_torque_arm_y` | double | `0` | Moment arm Y component (m); excites yaw + cross-axis torque. |
 | `wind_torque_arm_z` | double | `0.15` | Moment arm Z component (m); excites roll/pitch from horizontal wind. |
+| `wind_bias_x` | double | `0` | Added to LUT `u` (m/s) after sampling; demo-only exaggeration. |
+| `wind_bias_y` | double | `0` | Added to LUT `v` (m/s). |
+| `wind_bias_z` | double | `0` | Added to LUT `w` (m/s). |
+| `force_scale` | double | `1` | Multiplies the quadratic-drag force magnitude (and matching torque). |
+| `disable_topic` | string | empty | If set, subscribe to this `GzString` topic (same as `ContactWatcher` / `HoverPid`); first message latches off all wind force and torque so the vehicle can fall under gravity after a crash. |
 | `hotspot_snap_outdoor` | bool | `true` | Before hotspot check, snap to nearest outdoor XY if needed. |
 | `hotspot_snap_max_radius_m` | double | `120` | Max XY search radius for snap (m). |
 | `hotspot_snap_min_wind` | double | `0.05` | Min `|U|` (m/s) fallback when no building mask. |
@@ -116,6 +122,34 @@ Setting `gravity_compensation` to true reads the controlled link's mass and the 
 | `disable_topic` | string | empty | Optional Gazebo transport topic; first `GzString` message latches `disabled`. |
 | `crash_zero_thrust` | bool | `false` | When latched, return zero force/torque each step (free fall). |
 | `log_every_n` | int | `250` | Periodic `gzmsg`: error, force, **roll/pitch in degrees**. |
+
+### InspectionPathControllerPlugin (`libInspectionPathControllerPlugin.so`)
+
+World-frame **waypoint queue** with the same translational PID + optional attitude damping + `gravity_compensation` semantics as `HoverPidPlugin`. Advances to the next `<waypoint>` when the horizontal/vertical error norm drops below `arrival_radius`. Optional **2D barrier**: treats an axis-aligned building footprint (`building_min/max_{x,y}`) as a solid and applies a distance-based repulsion + inward-velocity damping so trajectories stay at least `safety_margin` from the façade (demo substitute for HOCBF).
+
+| Element | Type | Default | Description |
+| --- | --- | --- | --- |
+| `<waypoint x="" y="" z="">` | repeat | *(required)* | Waypoints in world frame (m). |
+| `arrival_radius` | double | `3` | Advance when `‖target−pos‖ ≤` this. |
+| `loop` | bool | `true` | Restart at the first waypoint after the last. |
+| `kp` / `ki` / `kd` | double | `8` / `0.1` / `4` | XY PID gains. |
+| `kp_z` / `ki_z` / `kd_z` | double | same as XY | Z PID gains. |
+| `enable_xy` | bool | `true` | Master XY enable (still respects `drift_after_seconds`). |
+| `enable_attitude_recovery` | bool | `false` | Roll/pitch spring torques. |
+| `attitude_kp` | double | `15` | Attitude damping gain. |
+| `gravity_compensation` | bool | `false` | Adds `m·|g|` along +Z each step. |
+| `drift_after_seconds` | double | `-1` | Same semantics as `HoverPidPlugin`. |
+| `soften_xy_after_waypoint_index` | int | `-1` | If `current_wp_index ≥` this, multiply XY PID gains by `soften_xy_gain_scale` (pt1 crash choreography). |
+| `soften_xy_gain_scale` | double | `1` | Multiplier applied after the soften index. |
+| `enable_barrier_avoidance` | bool | `false` | Enable façade barrier field. |
+| `building_min_x` / `max_x` | double | `1436` / `1506` | Footprint bounds (m). |
+| `building_min_y` / `max_y` | double | `1314` / `1366` | Footprint bounds (m). |
+| `safety_margin` | double | `6` | Desired minimum clearance from the footprint (m). |
+| `barrier_gain` | double | `100` | Position-based repulsion gain. |
+| `barrier_vel_gain` | double | `25` | Inward radial velocity damping gain. |
+| `disable_topic` | string | empty | Subscribe to `GzString` latch (same as `HoverPid`). |
+| `crash_zero_thrust` | bool | `false` | Zero forces when disabled if true. |
+| `log_every_n` | int | `250` | Periodic `gzmsg` with waypoint index + error. |
 
 ### ContactWatcherPlugin (`libContactWatcherPlugin.so`)
 
@@ -174,7 +208,7 @@ Samples link pose every `sample_period` seconds and spawns a **static** sphere m
 
 - **`iris_wind_quad`** — Standard-scale quad visual + collision; `WindFieldPlugin`, `HoverPidPlugin`, `TrailMarkerPlugin` (LUT paths in SDF are examples under `~/wrf_openfoam_coupling_cache/...`).
 - **`iris_wind_quad_hires_demo`** — 10× scaled mesh/collision for visibility; wind torque (`wind_torque_arm_z=0.3`), link angular `velocity_decay`, attitude recovery, timed XY drift; hires LUT paths in SDF.
-- **`iris_wind_quad_hires_pt1_crash`** / **`iris_wind_quad_hires_pt2_hover`** — Thin wrappers: same meshes via `model://iris_wind_quad_hires_demo/meshes/...`, different `HoverPid` / spawn used by RBM-4 worlds; four `prop_*` links + revolute joints + `RotorSpinPlugin` for **visible** high-speed rotors (spool-down on `~/hover_pid/disable` after crash in pt1).
+- **`iris_wind_quad_hires_pt1_crash`** / **`iris_wind_quad_hires_pt2_hover`** — Thin wrappers: same meshes via `model://iris_wind_quad_hires_demo/meshes/...`, shared `InspectionPathControllerPlugin` loop (pt2 adds barrier); four `prop_*` links + revolute joints + `RotorSpinPlugin` for **visible** high-speed rotors (spool-down on `~/hover_pid/disable` after crash in pt1).
 - **`demo_building_collision`** — Optional static convex-hull collision model (regenerated by `build_demo_collision_model.py`); can include a translucent debug visual. RBM-4 pt1/pt2 worlds use `guangzhou_buildings` mesh collision instead.
 - **`wind_arrows_hotspot`** — Static many-link wind arrows (box shaft/head) near the low-res demo region.
 - **`wind_arrows_hotspot_hires`** — Dense static arrows using mesh glyph; references `wind_arrow_glyph` mesh URI.
@@ -262,7 +296,7 @@ python scripts/probe_wind_at_hotspot.py \
 
 `./scripts/run_gazebo_guangzhou_demo_pt1_crash.sh collision-build` chains the same four steps with sensible defaults; environment overrides are `BUILDINGS_STL`, `LUT_VTI`, `HOTSPOT`, `RADIUS_M`. When `BUILDINGS_STL` is unset the extractor falls back to the LUT mask (`scipy.ndimage.label` connected components → axis-aligned boxes), so the demo can still run on hosts without the city mesh.
 
-**Drone side** (already in `iris_wind_quad_hires_pt1_crash` / `pt2_hover`): the body collision has `<collide_bitmask>0x01</collide_bitmask>` and a `contact` sensor hosting `libContactWatcherPlugin.so`. On the first `peak_force ≥ crash_threshold_n` the watcher publishes one `GzString` on `~/hover_pid/disable`; the pt1 hover PID has `<crash_zero_thrust>true</crash_zero_thrust>` so the drone goes into free fall. pt2 keeps `crash_zero_thrust=false` and only logs the brush.
+**Drone side** (already in `iris_wind_quad_hires_pt1_crash` / `pt2_hover`): the body collision has `<collide_bitmask>0x01</collide_bitmask>` and a `contact` sensor hosting `libContactWatcherPlugin.so`. On the first `peak_force ≥ crash_threshold_n` the watcher publishes one `GzString` on `~/hover_pid/disable`; the pt1 `InspectionPathControllerPlugin` has `<crash_zero_thrust>true</crash_zero_thrust>` so the drone goes into free fall. pt2 keeps `crash_zero_thrust=false` and only logs the brush.
 
 ## Maintainer
 

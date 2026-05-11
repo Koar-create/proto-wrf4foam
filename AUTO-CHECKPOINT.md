@@ -6,6 +6,19 @@
 
 ## 2026-05-10
 
+### pt1/pt2 巡检 Demo 调优（2026-05-10 晚）
+- **航迹**：由 `buildings.stl` 热点区 XY 点云 → 2D 凸包 → 外扩 `standoff` → 密化折线，与 pt1/pt2 共用（脚本 [`scripts/generate_inspection_waypoints.py`](scripts/generate_inspection_waypoints.py) 可重生成）。
+- **pt2**：略减 `area`、风力矩臂、`attitude_kp=4.5`、`barrier_*` 缓和，避免 ±120° 级抖动；路线沿凸包贴楼而非大矩形切角。
+- **pt1**：大减 `wind_bias`/`force_scale`/`area`；**WindField** 增加 `disable_topic=~/hover_pid/disable`，撞楼后停风避免“吸在墙上不落”；机体接触 **mu=0.12** 利滑落；**关闭风力矩** + 轻 `attitude_kp` 保持前期可飞；`soften_xy_after_waypoint_index=14`（约 2/3 圈后失控）；旋翼 `spin_down_tau=2.4`。
+
+### pt1/pt2 巡检 Demo（RBM-6）：绕楼航线 + pt1 撞楼 / pt2 安全绕障
+- **动机**：由单点悬停升级为「高楼幕墙巡检」叙事；两机共享同一航点序列，表现力优先（pt1 可叠加非真实风偏置）。
+- **新插件**：`gazebo_wind_plugin/InspectionPathControllerPlugin.{hh,cc}` → `libInspectionPathControllerPlugin.so`：多航点到达判定、`loop` 闭环、与 `HoverPid` 一致的重力前馈/姿态恢复/`disable_topic`/`crash_zero_thrust`；可选 2D 建筑 AABB + `safety_margin` 距离障碍势场（`barrier_gain` / `barrier_vel_gain`）作为 pt2 的演示型 CBF 替代。
+- **风场**：`WindFieldPlugin` 增加 `<wind_bias_x/y/z>`（m/s，加入 LUT 风速）与 `<force_scale>`（默认 1，放大阻力），便于 pt1 保证撞楼。
+- **模型**：`iris_wind_quad_hires_pt1_crash` 用 `inspection_path` 替换 `hover_pid`（无 barrier + `soften_xy_after_waypoint_index=5` + 大风偏置）；`iris_wind_quad_hires_pt2_hover` 同航点 + barrier。
+- **脚本**：`run_gazebo_guangzhou_demo_pt1_crash.sh` / `pt2_hover.sh` 的 `smoke` 延长至 90s / 75s。
+- **实测**：pt1 约 95s 内 `CRASH`→`InspectionPathControllerPlugin disabled`→`RotorSpinPlugin disabled`；pt2 约 78s 内完成航点闭环（`loop: restart waypoints`）且无 `CRASH`。
+
 ### 追踪文档署名（README / SKILL / 本文件）
 - **范围**：仅 `git ls-files` 内的 Markdown；为原先无维护者信息的文档补齐署名。
 - **改动**：[`gazebo_wind_plugin/README.md`](gazebo_wind_plugin/README.md) 文末增加 **Maintainer**；[`.cursor/skills/gazebo-wind-plugin-demo/SKILL.md`](.cursor/skills/gazebo-wind-plugin-demo/SKILL.md) frontmatter 增加 `maintainer` 并在正文标题下增加一行维护者；本文件页眉增加 **仓库维护** 行。

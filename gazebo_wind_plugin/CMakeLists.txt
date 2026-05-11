@@ -48,6 +48,19 @@ target_link_libraries(HoverPidPlugin
   ${GAZEBO_LIBRARIES}
 )
 
+add_library(InspectionPathControllerPlugin SHARED
+  InspectionPathControllerPlugin.cc
+)
+
+target_include_directories(InspectionPathControllerPlugin PRIVATE
+  ${GAZEBO_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(InspectionPathControllerPlugin
+  ${GAZEBO_LIBRARIES}
+)
+
 add_library(TrailMarkerPlugin SHARED
   TrailMarkerPlugin.cc
 )

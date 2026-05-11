@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# RBM-4 pt1：无水平 PID，风将机体推向 guangzhou_buildings（与视觉一致的 mesh 碰撞）
+# RBM-4 pt1：幕墙巡检航线 + 夸张风偏置；中段弱化 XY 增益后撞 guangzhou_buildings mesh 碰撞
 # 须在仓库根目录执行：cd /path/to/WRF-OpenFOAM-Coupling && ./scripts/run_gazebo_guangzhou_demo_pt1_crash.sh <子命令>
 set -euo pipefail
 
@@ -33,7 +33,7 @@ cmd_help() {
                     环境变量：BUILDINGS_STL=<path>（默认尝试 LUT 兜底）；HOTSPOT='1470,1350'；RADIUS_M=50；LUT_VTI=<path>
   server            仅启动 gzserver（无 GUI），--verbose
   gui               启动 gazebo（gzserver + gzclient），--verbose
-  smoke             约 22s 无头运行 gzserver 做快速日志自检（timeout）
+  smoke             约 90s 无头 gzserver（巡检一圈内需足够时间触发 CRASH 日志）
 
 World: gazebo_wind_plugin/worlds/guangzhou_demo_pt1_crash.world
 模型: iris_wind_quad_hires_pt1_crash（与 run_gazebo_guangzhou_wind_hires_demo.sh 共用 hires LUT 与箭头 bbox 逻辑）
@@ -161,7 +161,7 @@ cmd_gui() {
 cmd_smoke() {
   require_repo_root
   export_gazebo_env
-  timeout 22s gzserver "${WORLD_REL}" --verbose
+  timeout 90s gzserver "${WORLD_REL}" --verbose
 }
 
 main() {

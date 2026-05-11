@@ -1,9 +1,14 @@
 #include <gazebo/common/common.hh>
 #include <gazebo/gazebo.hh>
+#include <gazebo/msgs/msgs.hh>
 #include <gazebo/physics/physics.hh>
+#include <gazebo/transport/transport.hh>
 
 #include <ignition/math/Vector3.hh>
 
+#include <boost/shared_ptr.hpp>
+
+#include <atomic>
 #include <cmath>
 #include <string>
 
@@ -49,6 +54,15 @@ public:
     hotspot_snap_max_radius_m_ = sdf->Get<double>("hotspot_snap_max_radius_m", 120.0).first;
     hotspot_snap_min_wind_ = sdf->Get<double>("hotspot_snap_min_wind", 0.05).first;
 
+    // Optional demo-only biases (m/s) added to the LUT sample; default 0 keeps legacy behaviour.
+    wind_bias_x_ = sdf->Get<double>("wind_bias_x", 0.0).first;
+    wind_bias_y_ = sdf->Get<double>("wind_bias_y", 0.0).first;
+    wind_bias_z_ = sdf->Get<double>("wind_bias_z", 0.0).first;
+    // Scales the final drag force/torque magnitude (quadratic-drag path); default 1.
+    force_scale_ = sdf->Get<double>("force_scale", 1.0).first;
+
+    disable_topic_ = sdf->Get<std::string>("disable_topic", std::string()).first;
+
     if (json_path.empty() || vti_path.empty()) {
       gzerr << "[WindFieldPlugin] Missing <lut_json> or <lut_vti> in SDF\n";
       return;
@@ -91,14 +105,29 @@ public:
       const double u_mag = std::sqrt(static_cast<double>(hv[0]) * hv[0] + static_cast<double>(hv[1]) * hv[1] +
                                      static_cast<double>(hv[2]) * hv[2]);
       gzmsg << "[WindFieldPlugin] hotspot_check LUT(" << hx << "," << hy << "," << hz << ") wind=(" << hv[0] << ","
-            << hv[1] << "," << hv[2] << ") |U|=" << u_mag << " m/s\n";
+            << hv[1] << "," << hv[2]             << ") |U|=" << u_mag << " m/s\n";
+    }
+
+    if (!disable_topic_.empty()) {
+      node_.reset(new transport::Node());
+      node_->Init(world_ ? world_->Name() : "");
+      disable_sub_ = node_->Subscribe(disable_topic_, &WindFieldPlugin::OnDisableMsg, this);
+      gzmsg << "[WindFieldPlugin] subscribed disable_topic=" << disable_topic_
+            << " (stops drag force/torque after crash)\n";
     }
 
     update_conn_ = event::Events::ConnectWorldUpdateBegin(std::bind(&WindFieldPlugin::OnUpdate, this));
   }
 
+  void OnDisableMsg(const boost::shared_ptr<const msgs::GzString>& msg) {
+    if (disabled_.exchange(true)) return;
+    gzmsg << "[WindFieldPlugin] disabled by '" << (msg ? msg->data() : std::string("?")) << "' on " << disable_topic_
+          << "\n";
+  }
+
   void OnUpdate() {
     if (!model_) return;
+    if (disabled_.load()) return;
 
     auto link = model_->GetLink(link_name_);
     if (!link) return;
@@ -109,9 +138,9 @@ public:
     const double z = pose.Pos().Z() + offset_z_;
 
     const auto uvw = lut_.query(x, y, z);
-    const double u_wind = uvw[0];
-    const double v_wind = uvw[1];
-    const double w_wind = uvw[2];
+    const double u_wind = uvw[0] + wind_bias_x_;
+    const double v_wind = uvw[1] + wind_bias_y_;
+    const double w_wind = uvw[2] + wind_bias_z_;
 
     const auto vel = link->WorldLinearVel();
     const double u_rel = u_wind - vel.X();
@@ -121,7 +150,7 @@ public:
 
     if (!(speed_rel > 0.0)) return;
 
-    const double F_scale = 0.5 * rho_ * C_D_ * area_ * speed_rel;
+    const double F_scale = 0.5 * rho_ * C_D_ * area_ * speed_rel * force_scale_;
     ignition::math::Vector3d force(F_scale * u_rel, F_scale * v_rel, F_scale * w_rel);
     link->AddForce(force);
 
@@ -175,6 +204,16 @@ private:
   bool hotspot_snap_outdoor_{true};
   double hotspot_snap_max_radius_m_{120.0};
   double hotspot_snap_min_wind_{0.05};
+
+  double wind_bias_x_{0.0};
+  double wind_bias_y_{0.0};
+  double wind_bias_z_{0.0};
+  double force_scale_{1.0};
+
+  std::string disable_topic_;
+  transport::NodePtr node_;
+  transport::SubscriberPtr disable_sub_;
+  std::atomic<bool> disabled_{false};
 };
 
 GZ_REGISTER_MODEL_PLUGIN(WindFieldPlugin)

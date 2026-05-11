@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
   <!--
-    RBM-4 pt2: stub world-frame PID holds XY while allowing visible buffeting; Z gains are softer.
-    stub PID: replace with D's HOCBF algorithm at the HoverPidPlugin / controller boundary.
+    RBM-4 pt2: same inspection loop as pt1 with demo barrier (CBF-style) so the vehicle
+    orbits the building without hard impacts. Replace InspectionPathControllerPlugin with HOCBF if desired.
   -->
   <world name="guangzhou_demo_pt2_hover">
     <physics type="ode">
@@ -46,8 +46,7 @@
       <pose>0 0 0 0 0 0</pose>
     </include>
 
-    <!-- Same outdoor spawn as pt1 (~5 m south of building); hover PID holds this XY but
-         allows visible 6-DOF buffeting. Small initial yaw makes heading drift legible. -->
+    <!-- Same outdoor spawn as pt1; inspection_path + barrier track the loop with visible buffeting. -->
     <include>
       <uri>model://iris_wind_quad_hires_pt2_hover</uri>
       <pose>1471 1309 80 0 0 0.20</pose>
