@@ -2,6 +2,17 @@
 
 > 本文件由Cursor智能体自动维护，用于记录本仓库内任务执行过程、关键决策与可复现命令。
 
+## 2026-05-11
+
+### 文献跨尺度分析台账 + 项目 Skill
+- **输入**：按计划新增可追加 JSONL 台账与 Cursor Skill，用于多篇 PDF 的「中尺度–微尺度 coupling/offline nesting」结构化摘录与落盘。
+- **产出**：
+  - [`docs/reference-candidate/literature-trans-scale-ledger.jsonl`](docs/reference-candidate/literature-trans-scale-ledger.jsonl)：每行一条 JSON；首条为 Lin et al. 2021 WRF4PALM/GMD（DOI `10.5194/gmd-14-2503-2021`），字段含 `ledger_schema_version`、`content`（Q1/1A/1B/1C/自评）。
+  - [`.cursor/skills/literature-trans-scale-analysis/SKILL.md`](.cursor/skills/literature-trans-scale-analysis/SKILL.md)：判据、JSON schema、`jsonl` 强制追加流程；`disable-model-invocation: true`，需用户 `@` 引用后执行。
+  - [`.cursor/skills/literature-trans-scale-analysis/reference.md`](.cursor/skills/literature-trans-scale-analysis/reference.md)：示例记录与 Q1 为 false 的占位结构。
+- **调用示例**：`根据 @.cursor/skills/literature-trans-scale-analysis/SKILL.md 分析 @docs/reference-candidate/<论文>.pdf`
+- **说明**：`docs/reference-candidate/README.md` 不存在，未新增该说明文件（避免无请求扩 scope）。
+
 ## 2026-05-08
 
 ### 新增时间序列绘图脚本（单站点×单高度）
