@@ -94,6 +94,7 @@ def quality_control(df: pd.DataFrame,
     n_removed = (~df['qc_ok']).sum()
     n_nan_obs = df['ws_obs'].isna().sum()
 
+    '''
     print(f"[QC] Rows (raw): {n0:,}")
     print(f"[QC] Rows removed (divergent/outlier): {n_removed:,} ({100*n_removed/n0:.1f}%)")
     print(f"[QC] LiDAR missing (NaN): {n_nan_obs:,} ({100*n_nan_obs/n0:.1f}%)")
@@ -107,6 +108,7 @@ def quality_control(df: pd.DataFrame,
             ['time_label','obtid'], observed=True)['ws_cfd']
               .agg(['count','max']).rename(columns={'count':'N_divergent','max':'ws_cfd_max'})
               .round(2).to_string())
+    '''
     return df
 
 
@@ -262,10 +264,10 @@ def compute_metrics_table(df: pd.DataFrame) -> pd.DataFrame:
 
 def main() -> None:
     df_raw = load_and_preprocess(DATA_PATH)
-    print(f"Loaded data: {len(df_raw):,} rows × {df_raw.shape[1]} columns")
-    print(f"Sites: {sorted(df_raw['obtid'].unique())}")
-    print(f"Time labels: {sorted(df_raw['time_label'].unique())}")
-    print(f"Height range: {df_raw['Height'].min():.1f}–{df_raw['Height'].max():.1f} m")
+    # print(f"Loaded data: {len(df_raw):,} rows × {df_raw.shape[1]} columns")
+    # print(f"Sites: {sorted(df_raw['obtid'].unique())}")
+    # print(f"Time labels: {sorted(df_raw['time_label'].unique())}")
+    # print(f"Height range: {df_raw['Height'].min():.1f}–{df_raw['Height'].max():.1f} m")
 
     df = quality_control(df_raw)
     metrics = compute_metrics_table(df)
@@ -275,8 +277,8 @@ def main() -> None:
     pd.set_option('display.width', 160)
     pd.set_option('display.float_format', '{:.3f}'.format)
 
-    print(f"\nMetrics table: {len(metrics)} rows (Site × Time × Layer)")
-    print(metrics.to_string(index=False))
+    # print(f"\nMetrics table: {len(metrics)} rows (Site × Time × Layer)")
+    # print(metrics.to_string(index=False))
 
     # ─── 分层聚合汇总（全站点、全时次）────────────────────────────────────────
     print("\n" + "=" * 70)

@@ -2,7 +2,21 @@
 
 > 本文件由Cursor智能体自动维护，用于记录本仓库内任务执行过程、关键决策与可复现命令。
 
+## 2026-05-12
+
+### `Research_Status_202605.md` + 约束文档瘦身（WRF 叙述 / checkMesh 细表外移）
+- **输入**：用户要求执行两项工作——（1）将 `analysis/260409/ws_composite_analysis.md` 中的研究结论整理为 `docs/project/Research_Status_YYYYMM.md`（避免对话体、区分已修订信念与当前结论）；（2）将 `Global_Constraints.md` 中适合独立维护的长叙述迁出。
+- **产出**：
+  - [`docs/project/Research_Status_202605.md`](docs/project/Research_Status_202605.md)：元数据、执行摘要、关键指标表、Superseded 表、开放检查项；链回 `ws_composite_analysis.md` 与 `print_metric.py`、Fig.4 输出 PNG。
+  - [`docs/methodology/wrf_inflow_diagnosis_summary.md`](docs/methodology/wrf_inflow_diagnosis_summary.md)：原 `Global_Constraints` §5 英文叙述全文。
+  - [`docs/methodology/mesh_quality_checkmesh_baseline.md`](docs/methodology/mesh_quality_checkmesh_baseline.md)：原 §8 逐数字 `checkMesh` 记录。
+- **更新**：[`docs/project/Global_Constraints.md`](docs/project/Global_Constraints.md) — §5 改为短 bullet + 指向 methodology；§6 敏感性结论压缩为一句并链到 Research_Status；§8 改为摘要 + 指向 mesh 基线文档。
+
 ## 2026-05-11
+
+### `Global_Constraints.md`：敏感性算例定位为内部讨论
+- **输入**：用户说明 buoyancyDestruction 敏感性实验相对主配置无优势，不对外作展示性成果。
+- **处理**：更新 [`docs/project/Global_Constraints.md`](docs/project/Global_Constraints.md) §6：区分对外主研究（72 例）与内部敏感性/消融（39 例）；写明不改进主实验、不当作审稿/对外平行 headline；保留路径命名说明（`*-fvOpt_sensitivity_run`）。
 
 ### 文献跨尺度分析台账 + 项目 Skill
 - **输入**：按计划新增可追加 JSONL 台账与 Cursor Skill，用于多篇 PDF 的「中尺度–微尺度 coupling/offline nesting」结构化摘录与落盘。
@@ -158,6 +172,16 @@
 - **可复现运行**：
   - `python util/plot_wrf_stability_organization_csv.py`
   - 指定路径：`python util/plot_wrf_stability_organization_csv.py --csv "steady_experiments_finer_ABL/WRF Atmospheric Stability Data Organization.csv" --out steady_experiments_finer_ABL/my_plot.png`
+
+## 2026-05-12
+
+### `print_metric_sample_variants.py`：按 UTC 体制 / LST 日×AM·PM / 日历日 / 保守时段 复算分层指标
+- **背景**：结合 `plot-fig4-lst.py` 的 LST 分组逻辑与 `analysis/260409/advice-to-adjust-metric-sample.md` 中的样本子集建议，在 `print_metric.py` 之外提供可复现的分块汇总（与 `main()` 相同列：WRF/CFD MBE·RMSE·IoA、CFD SS vs WRF）。
+- **产出**：[`analysis/260409/print_metric_sample_variants.py`](analysis/260409/print_metric_sample_variants.py)（同目录 `import print_metric` 复用加载/QC/指标函数）。
+- **可复现运行**：
+  - `python analysis/260409/print_metric_sample_variants.py`
+  - `python analysis/260409/print_metric_sample_variants.py --sections baseline utc_groups lst_periods`
+- **说明**：控制台标题使用 ASCII（避免 Windows cp1252 下 Unicode 箭头等编码错误）。
 
 ## 2026-04-30
 
