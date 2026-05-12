@@ -26,7 +26,7 @@ import argparse
 # ─── 路径与阈值配置（避免 Hardcoding）────────────────────────────────────────
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_PATH = REPO_ROOT / "data/260409/processed/merged_lidar_simulation_final.csv"
-OUTPUT_DIR = REPO_ROOT / "outputs"
+OUTPUT_DIR = REPO_ROOT / "results/ws_composite_profile/260409"
 
 WS_MAX_OBS = 30.0   # m/s
 WS_MAX_CFD = 20.0   # m/s
@@ -150,7 +150,8 @@ def plot_profiles_with_errorbars(df: pd.DataFrame,
                                  tz: str = "lst") -> None:
     """
     按 LST 日 × {AM, PM} 共 6 组、每组 12 子图(r3c4) 绘制风速复合廓线。
-    数据仍以 UTC 时刻过滤 (与 CSV 列对齐)；标签按 tz 切换显示。
+    数据仍以 UTC 时刻过滤 (与 CSV 列对齐)；子图标题按 tz 显示 LST 或 UTC。
+    x 轴仅表示风速物理量，不在 xlabel/xtick 重复标注时区（避免误读为「LST 风速」）。
     """
     tz = tz.lower()
     if tz not in {"utc", "lst"}:
@@ -222,10 +223,7 @@ def plot_profiles_with_errorbars(df: pd.DataFrame,
                 ax.set_ylim(0, 1000)
 
                 if ax in axes[-1, :]:
-                    ax.set_xlabel(f'Wind Speed (m s$^{{-1}}$) [{tz.upper()}]', fontsize=11)
-                    tick_locs = ax.get_xticks()
-                    ax.set_xticks(tick_locs)
-                    ax.set_xticklabels([f"{v:g}\n{tz.upper()}" for v in tick_locs])
+                    ax.set_xlabel(r'Wind Speed (m s$^{-1}$)', fontsize=11)
                 if ax in axes[:, 0]:
                     ax.set_ylabel('Height (m a.g.l.)', fontsize=11)
 
@@ -249,8 +247,8 @@ def _parse_args() -> argparse.Namespace:
         description="Generate Fig4 wind speed composite profiles, grouped by LST day "
                     "(AM = LST 07–18, PM = LST 19 → next 06).")
     p.add_argument("--tz", choices=["utc", "lst"], default="lst",
-                   help="Timezone label for displayed titles/xtick text: "
-                        "'lst' (default; matches grouping) or 'utc'.")
+                   help="Subplot title time zone only: 'lst' (default) or 'utc'. "
+                        "X-axis label is wind speed only (no LST/UTC suffix).")
     return p.parse_args()
 
 

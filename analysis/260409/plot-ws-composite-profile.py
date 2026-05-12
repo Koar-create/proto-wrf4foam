@@ -11,7 +11,7 @@ import argparse
 # ─── 路径与阈值配置（避免 Hardcoding）────────────────────────────────────────
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_PATH = REPO_ROOT / "data/260409/processed/merged_lidar_simulation_final.csv"   # 已处理数据
-OUTPUT_DIR = REPO_ROOT / "outputs"
+OUTPUT_DIR = REPO_ROOT / "results/ws_composite_profile/260409"
 
 WS_MAX_OBS  = 30.0   # m/s: 观测物理上限（仪器异常阈值）
 WS_MAX_CFD  = 20.0   # m/s: CFD 上限（>20 视为数值发散）
@@ -207,21 +207,17 @@ def plot_profiles_with_errorbars(df: pd.DataFrame, out_dir: Path = OUTPUT_DIR, t
                 for h_line in [300, 800]: ax.axhline(h_line, color='0.6', lw=0.8, ls=':', zorder=0)
                     
                 ax.set_title(tl_disp, fontweight='bold', pad=8)
-                ax.set_xlim(left=0); ax.set_ylim(0, 1000)
+                ax.set_xlim(left=0); ax.set_ylim(0, 2000)
                 if ax in axes[-1, :]:
-                    ax.set_xlabel(f'Wind Speed (m s$^{{-1}}$) [{tz.upper()}]', fontsize=11)
+                    ax.set_xlabel(r'Wind Speed (m s$^{-1}$)', fontsize=11)
 
-                    # 让每个子图底部的 xtick 文本也显式带上时区（满足论文图面可读性）
-                    tick_locs = ax.get_xticks()
-                    ax.set_xticks(tick_locs)
-                    ax.set_xticklabels([f"{v:g}\n{tz.upper()}" for v in tick_locs])
                 if ax in axes[:, 0]: ax.set_ylabel('Height (m a.g.l.)', fontsize=11)
             
             axes[0, 3].legend(handles=legend_handles, fontsize=10, loc='upper right', framealpha=0.9)
             fig.suptitle(f'Wind Speed Composite Profiles - 2025-09-{day:02d} {period_name}', 
                          fontsize=15, fontweight='bold')
             
-            save_path = out_dir / f"fig4_ws_composite_09{day:02d}_{period_name}_tz-{tz}.png"
+            save_path = out_dir / f"fig4_ws_composite_09{day:02d}_{period_name}_z2000m_tz-{tz}.png"
             fig.savefig(save_path, dpi=300)
             plt.close(fig)
             print(f"Saved: {save_path}")
@@ -229,7 +225,8 @@ def plot_profiles_with_errorbars(df: pd.DataFrame, out_dir: Path = OUTPUT_DIR, t
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Generate Fig4 wind speed composite profiles (12h panels).")
     p.add_argument("--tz", choices=["utc", "lst"], default="utc",
-                   help="Timezone label for display: utc (default) or lst (UTC+8).")
+                   help="Subplot title time zone only: 'lst' (default) or 'utc'. "
+                        "X-axis label is wind speed only (no LST/UTC suffix).")
     return p.parse_args()
 
 def main() -> None:

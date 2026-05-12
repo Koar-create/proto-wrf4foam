@@ -36,7 +36,9 @@ scripts/
 *.log
 *.json
 *.txt
+*.stl
 surrogate_dataset/inflow/*.json
+analysis/*/*.md
 
 # specific files
 lidar_station_info.json
