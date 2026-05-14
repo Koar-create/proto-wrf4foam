@@ -2,6 +2,17 @@
 
 > 本文件由Cursor智能体自动维护，用于记录本仓库内任务执行过程、关键决策与可复现命令。
 
+## 2026-05-14
+
+### 9 月 2 日白昼 CFD 偏差诊断包（`analysis/260514-sep02-daytime-cfd-diagnosis/`）
+- **输入**：按计划落实 `docs/ops/diagnose-anomaly-at-day02-daytime.md` 诊断链；数据以 `data/260409/processed/merged_lidar_simulation_final.csv` 为主；OpenFOAM `boundaryData` / `log.simpleFoam` 通过 manifest 指向本机算例（仓库内默认不附带算例树）。
+- **产出**：[`analysis/260514-sep02-daytime-cfd-diagnosis/README.md`](analysis/260514-sep02-daytime-cfd-diagnosis/README.md)；脚本 `scripts/metrics_sep02_daytime_vs_neighbors.py`、`profiles_sep02_daytime_composite.py`、`boundarydata_inflow_profiles_compare.py`、`boundarydata_qc_scan.py`、`parse_simplefoam_residuals.py`；共享解析 `scripts/_foam_boundary_io.py`；`example_cases_manifest.csv`（仅表头，需用户填 `case_path`）。
+- **实现说明**：`metrics`/`profiles` 通过 `_SCRIPT_DIR.parents[2]` 定位仓库根并 `sys.path` 导入 `analysis/260409/print_metric.py`；Windows 控制台对脚本内关键 `print` 使用英文，避免 cp1252 编码错误。
+- **已运行（本机）**：
+  - `python analysis/260514-sep02-daytime-cfd-diagnosis/scripts/metrics_sep02_daytime_vs_neighbors.py --out-dir analysis/260514-sep02-daytime-cfd-diagnosis/results`
+  - `python analysis/260514-sep02-daytime-cfd-diagnosis/scripts/profiles_sep02_daytime_composite.py --out-dir analysis/260514-sep02-daytime-cfd-diagnosis/results --utc-hours 3 4 5 6`
+  - 空 manifest 运行 `parse_simplefoam_residuals.py` 预期退出码 1 并提示 `No valid case paths in manifest.`
+
 ## 2026-05-12
 
 ### `Research_Status_202605.md` + 约束文档瘦身（WRF 叙述 / checkMesh 细表外移）
@@ -53,18 +64,6 @@
   - 若需遇错即失败：`python util/compute_100m_spatial_p95_windspeed.py --strict`
 - **说明**：`steady_experiments_finer_ABL/` 常被 `.gitignore` 忽略，需在本地存在算例树后再运行。
 
-## 2026-05-07
-
-### 新增项目级 Skill：生成 PPTX（pptxgenjs）
-- **输入**：参考 `docs/ops/how-to-generate-pptx-skill.md`，将“内容 → 生成 pptxgenjs 脚本 → 本地生成 output.pptx”的工作流固化为项目级 skill。
-- **产出**：
-  - `.cursor/skills/generate-pptx-pptxgenjs/SKILL.md`
-- **关键约束**：
-  - CommonJS：`require("pptxgenjs")`
-  - 输出固定 `output.pptx`，包含封面/章节页/总结页
-  - 深色封面 + 白色内容页，禁止纯文字页（每页至少一个视觉元素）
-- **仓库配置**：更新 `.gitignore`，对 `.cursor/skills/**` 做反忽略，确保 skill 可被 git 跟踪。
-
 ## 2026-05-03
 
 ### 英文 `README.md`（仓库说明）
@@ -93,6 +92,28 @@
   - 输出：`data/260409/processed/merged_lidar_simulation_final.csv`（写入前 `mkdir` 父目录）
 - **运行**：`python scripts/merge_lidar_data.py`；可用 `--cfd-dir/--wrf-csv/--lidar-csv/--output` 覆盖。
 
+## 2026-04-30
+
+### 项目文件整理（data/results/analysis）与知识卡片Skill
+- **背景**：用户已将原先的 `260409/` 与 `260413-sensitivity_run_analysis/` 下数据与图件移动到统一结构：`data/`、`analysis/`、`results/`。
+- **目录现状**：
+  - 数据：`data/260409/{raw,processed}`、`data/260413/processed`
+  - 分析：`analysis/260409`、`analysis/260413-sensitivity`
+  - 结果：`results/{hovmoller,taylor_diagram,ws_composite_profile,ws_station_profile}/<batch>/`
+- **新增Skill（项目级）**：`.cursor/skills/project-layout-data-results-analysis/SKILL.md`
+  - **用途**：固化“新位置地图”（关键CSV/PNG/ipynb）与结果产出约定；当脚本默认路径仍指向旧目录时，建议显式传 `--csv/--out` 使用新路径。
+
+### 论文/演示选择性解读：SOWFA 一向耦合（WRF→LES→OpenFOAM）对 RANS 实验的启发
+- **输入**：
+  - 你的研究约束：`docs/project/Global_Constraints.md`
+  - 候选参考：`docs/reference-candidate/SOWFA.pdf`（NREL/PR-5000-61122, 2013-10, Churchfield 等）
+- **任务目标**：从 SOWFA 多尺度耦合经验中，抽取对“WRF 驱动稳态 RANS 城市/复杂地形下风场评估”最有迁移价值的信息，并形成可执行改进点（边界条件、近地层、湍流输入、域/采样设计、误差诊断）。
+- **关键摘录（将用于输出总结）**：
+  - 一向耦合流程：运行 WRF 与 WRF-LES；把时间序列插值到 OpenFOAM 边界位置并初始化内场；OpenFOAM 以 WRF-LES 的初场与边界驱动继续发展。
+  - 边界条件思想：侧边界对 \(U,T\) 等混合 Dirichlet/Neumann；压力多为 Neumann；地表可由“表面应力模型”与“地表热通量”驱动（强调与上游模型的一致性）。
+  - 湍流“发展距离/时间”显著：该案例中高波数能量约需 **1.5 km** 才“填充”，并出现 **overshoot→衰减** 的演化。
+  - 近地层失配警示：报告指出 OpenFOAM 域内近地层水平风速随下游距离快速下降，与 WRF-LES 不一致，原因不明——提示耦合链条中“近地层/地表参数化/入口湍流结构”可能是主要误差源。
+  - 未来工作方向与可迁移问题：内嵌分辨率、稳定度差异、入流扰动方法、动态 SGS 是否缓解谱 overshoot。
 ## 2026-04-29
 
 ### 启动
@@ -172,36 +193,3 @@
 - **可复现运行**：
   - `python util/plot_wrf_stability_organization_csv.py`
   - 指定路径：`python util/plot_wrf_stability_organization_csv.py --csv "steady_experiments_finer_ABL/WRF Atmospheric Stability Data Organization.csv" --out steady_experiments_finer_ABL/my_plot.png`
-
-## 2026-05-12
-
-### `print_metric_sample_variants.py`：按 UTC 体制 / LST 日×AM·PM / 日历日 / 保守时段 复算分层指标
-- **背景**：结合 `plot-fig4-lst.py` 的 LST 分组逻辑与 `analysis/260409/advice-to-adjust-metric-sample.md` 中的样本子集建议，在 `print_metric.py` 之外提供可复现的分块汇总（与 `main()` 相同列：WRF/CFD MBE·RMSE·IoA、CFD SS vs WRF）。
-- **产出**：[`analysis/260409/print_metric_sample_variants.py`](analysis/260409/print_metric_sample_variants.py)（同目录 `import print_metric` 复用加载/QC/指标函数）。
-- **可复现运行**：
-  - `python analysis/260409/print_metric_sample_variants.py`
-  - `python analysis/260409/print_metric_sample_variants.py --sections baseline utc_groups lst_periods`
-- **说明**：控制台标题使用 ASCII（避免 Windows cp1252 下 Unicode 箭头等编码错误）。
-
-## 2026-04-30
-
-### 项目文件整理（data/results/analysis）与知识卡片Skill
-- **背景**：用户已将原先的 `260409/` 与 `260413-sensitivity_run_analysis/` 下数据与图件移动到统一结构：`data/`、`analysis/`、`results/`。
-- **目录现状**：
-  - 数据：`data/260409/{raw,processed}`、`data/260413/processed`
-  - 分析：`analysis/260409`、`analysis/260413-sensitivity`
-  - 结果：`results/{hovmoller,taylor_diagram,ws_composite_profile,ws_station_profile}/<batch>/`
-- **新增Skill（项目级）**：`.cursor/skills/project-layout-data-results-analysis/SKILL.md`
-  - **用途**：固化“新位置地图”（关键CSV/PNG/ipynb）与结果产出约定；当脚本默认路径仍指向旧目录时，建议显式传 `--csv/--out` 使用新路径。
-
-### 论文/演示选择性解读：SOWFA 一向耦合（WRF→LES→OpenFOAM）对 RANS 实验的启发
-- **输入**：
-  - 你的研究约束：`docs/project/Global_Constraints.md`
-  - 候选参考：`docs/reference-candidate/SOWFA.pdf`（NREL/PR-5000-61122, 2013-10, Churchfield 等）
-- **任务目标**：从 SOWFA 多尺度耦合经验中，抽取对“WRF 驱动稳态 RANS 城市/复杂地形下风场评估”最有迁移价值的信息，并形成可执行改进点（边界条件、近地层、湍流输入、域/采样设计、误差诊断）。
-- **关键摘录（将用于输出总结）**：
-  - 一向耦合流程：运行 WRF 与 WRF-LES；把时间序列插值到 OpenFOAM 边界位置并初始化内场；OpenFOAM 以 WRF-LES 的初场与边界驱动继续发展。
-  - 边界条件思想：侧边界对 \(U,T\) 等混合 Dirichlet/Neumann；压力多为 Neumann；地表可由“表面应力模型”与“地表热通量”驱动（强调与上游模型的一致性）。
-  - 湍流“发展距离/时间”显著：该案例中高波数能量约需 **1.5 km** 才“填充”，并出现 **overshoot→衰减** 的演化。
-  - 近地层失配警示：报告指出 OpenFOAM 域内近地层水平风速随下游距离快速下降，与 WRF-LES 不一致，原因不明——提示耦合链条中“近地层/地表参数化/入口湍流结构”可能是主要误差源。
-  - 未来工作方向与可迁移问题：内嵌分辨率、稳定度差异、入流扰动方法、动态 SGS 是否缓解谱 overshoot。
