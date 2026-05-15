@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from common import *
+import os
+import sys
+import re
+import numpy as np
 
 # --- 配置 ---
 BASE_PATH = sys.argv[1]

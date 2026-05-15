@@ -145,7 +145,7 @@ if __name__ == '__main__':
     )
     
     # 将新增的 TK 放入最终处理列表中
-    ds_ = ds_[['U', 'V', 'W', 'WS', 'H', 'TKE_PBL', 'Theta', 'TK']]
+    ds_ = ds_[['U', 'V', 'W', 'WS', 'ZNT', 'H', 'TKE_PBL', 'Theta', 'TK']]
 
     # --- Part 3: Horizontal Interpolation ---
     x_tgt = np.arange(-5000, 5000 + 1, 100)

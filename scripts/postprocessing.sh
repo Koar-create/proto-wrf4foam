@@ -37,7 +37,7 @@ if tail -n 5 ${LOG} | grep -q "Finalising parallel run"; then
     cd $PROJECT_ROOT
     python $UTIL/visualize_x-y_wind_field.py $1
     python $UTIL/visualize_x-z_wind_field.py $1
-    bash $PROJECT_ROOT/check_scientific_usability_diag.sh $EXPE/${LOG}
+    bash   $UTIL/check_scientific_usability_diag.sh $EXPE/${LOG}
     echo -e "\e[1;32mAll procedures done.\e[0m"
 else
     echo -e "\e[1;34mexperiment crashed or smth else.\e[0m"
