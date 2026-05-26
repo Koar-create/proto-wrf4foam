@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.ticker import ScalarFormatter
 from pathlib import Path
 import argparse
 
@@ -31,6 +32,7 @@ TIME_LABELS = {
     "2025-09-03 20:00:00": "2000 UTC"
 }
 '''
+# CSV 中可用 UTC 时刻范围 → 用于过滤 LST 跨界到 08-31 / 09-04 的格子
 TIME_LABELS = {f"2025-09-{d:02d} {h:02d}:00:00": f"{d:02d}_{h:02d}00 UTC"
                for d in range(1, 4) for h in range(24)}
 
@@ -64,7 +66,7 @@ def configure_matplotlib_style() -> None:
 
 def load_and_preprocess(path: str | Path) -> pd.DataFrame:
     """
-    加载已对齐的三源数据 CSV，派生所有需要的物理量。
+        加载已对齐的三源数据 CSV，派生所有需要的物理量。
 
     派生量：
       - ws_cfd  : CFD 水平风速 = sqrt(u²+v²)
@@ -106,35 +108,23 @@ def quality_control(df: pd.DataFrame,
 
     返回：原始 df 加 3 个布尔掩码列（qc_obs_ok, qc_cfd_ok, qc_ok）。
     """
-    n0 = len(df)
-
     # CFD 发散标记
-    cfd_ok  = df['ws_cfd'] <= ws_max_cfd
+    cfd_ok = df['ws_cfd'] <= ws_max_cfd
     # 观测物理上限（NaN 不触发该规则）
-    obs_ok  = (df['ws_obs'] <= ws_max_obs) | df['ws_obs'].isna()
+    obs_ok = (df['ws_obs'] <= ws_max_obs) | df['ws_obs'].isna()
 
     df = df.copy()
     df['qc_obs_ok'] = obs_ok
     df['qc_cfd_ok'] = cfd_ok
-    df['qc_ok']     = obs_ok & cfd_ok   # 行级别总掩码
-
-    n_removed = (~df['qc_ok']).sum()
-    n_nan_obs = df['ws_obs'].isna().sum()
-
-    print(f"[QC] Rows (raw): {n0:,}")
-    print(f"[QC] Rows removed (divergent/outlier): {n_removed:,} ({100*n_removed/n0:.1f}%)")
-    print(f"[QC] LiDAR missing (NaN): {n_nan_obs:,} ({100*n_nan_obs/n0:.1f}%)")
-    print(f"[QC] Usable paired rows (qc_ok & obs not NaN): "
-          f"{(df['qc_ok'] & df['ws_obs'].notna()).sum():,}")
-
-    # ── 诊断：发散行来自哪些时次/站点？────────────────────────────────────
-    if n_removed > 0:
-        print("\n[QC Diagnostic] Divergent rows by (time × site):")
-        print(df[~df['qc_ok']].groupby(
-            ['time_label','obtid'], observed=True)['ws_cfd']
-              .agg(['count','max']).rename(columns={'count':'N_divergent','max':'ws_cfd_max'})
-              .round(2).to_string())
+    df['qc_ok'] = obs_ok & cfd_ok   # 行级别总掩码
     return df
+
+
+def _style_wind_speed_xaxis(ax, *, with_xlabel: bool = False) -> None:
+    """x 轴为风速 (m/s)；禁用日期/时刻类 formatter，避免刻度或标签出现时间。"""
+    ax.xaxis.set_major_formatter(ScalarFormatter(useOffset=False))
+    if with_xlabel:
+        ax.set_xlabel(r'Wind Speed (m s$^{-1}$)', fontsize=11)
 
 
 def _format_time_label_for_display(t_raw: str, tz: str) -> str:
@@ -155,8 +145,9 @@ def _format_time_label_for_display(t_raw: str, tz: str) -> str:
 def plot_profiles_with_errorbars(df: pd.DataFrame, out_dir: Path = OUTPUT_DIR, tz: str = "utc") -> None:
     """
     更新版：只可视化 WS 的全站 Composite。
-    分6次生成图表（3天 × 每天2块 (前/后12小时) = 6张图）。
+    分6次生成图表（3天 × 每天2块 UTC 00–11 / 12–23 = 6张图）。
     布局为 3行 × 4列 (涵盖12小时)。
+    子图标题为时刻；x 轴仅风速，不在 xtick/xlabel 重复标注时区或时刻。
     """
     tz = tz.lower()
     if tz not in {"utc", "lst"}:
@@ -170,7 +161,7 @@ def plot_profiles_with_errorbars(df: pd.DataFrame, out_dir: Path = OUTPUT_DIR, t
     ]
     
     for day in range(1, 4):
-        for period_name, h_start in [('AM', 0), ('PM', 12)]:
+        for period_name, h_start in [('daytime', 0), ('nighttime', 12)]:
             hours = [h_start + i for i in range(12)]
             
             fig, axes = plt.subplots(3, 4, figsize=(14, 12), sharex=True, sharey=True, 
@@ -185,6 +176,9 @@ def plot_profiles_with_errorbars(df: pd.DataFrame, out_dir: Path = OUTPUT_DIR, t
                 
                 if sub.empty:
                     ax.set_title(tl_disp, fontweight='bold', pad=8)
+                    ax.set_xlim(left=0)
+                    ax.set_ylim(0, 2000)
+                    _style_wind_speed_xaxis(ax)
                     continue
                     
                 sub['H_bin'] = pd.cut(sub['Height'], bins=height_bins)
@@ -208,15 +202,20 @@ def plot_profiles_with_errorbars(df: pd.DataFrame, out_dir: Path = OUTPUT_DIR, t
                     
                 ax.set_title(tl_disp, fontweight='bold', pad=8)
                 ax.set_xlim(left=0); ax.set_ylim(0, 2000)
-                if ax in axes[-1, :]:
-                    ax.set_xlabel(r'Wind Speed (m s$^{-1}$)', fontsize=11)
+                _style_wind_speed_xaxis(ax)
 
-                if ax in axes[:, 0]: ax.set_ylabel('Height (m a.g.l.)', fontsize=11)
-            
+            for j in range(axes.shape[1]):
+                _style_wind_speed_xaxis(axes[-1, j], with_xlabel=True)
+            for row in range(axes.shape[0]):
+                axes[row, 0].set_ylabel('Height (m)', fontsize=11)
+
             axes[0, 3].legend(handles=legend_handles, fontsize=10, loc='upper right', framealpha=0.9)
-            fig.suptitle(f'Wind Speed Composite Profiles - 2025-09-{day:02d} {period_name}', 
-                         fontsize=15, fontweight='bold')
-            
+            period_title = period_name.capitalize()
+            fig.suptitle(
+                f'Wind Speed Composite Profiles - 2025-09-{day:02d} {period_title} (UTC {h_start:02d}–{(h_start + 11):02d} h)',
+                fontsize=15, fontweight='bold',
+            )
+
             save_path = out_dir / f"fig4_ws_composite_09{day:02d}_{period_name}_z2000m_tz-{tz}.png"
             fig.savefig(save_path, dpi=300)
             plt.close(fig)
@@ -235,14 +234,7 @@ def main() -> None:
     configure_matplotlib_style()
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    df_raw = load_and_preprocess(DATA_PATH)
-    print(f"Loaded data: {len(df_raw):,} rows × {df_raw.shape[1]} columns")
-    print(f"Sites: {sorted(df_raw['obtid'].unique())}")
-    print(f"Time labels: {sorted(df_raw['time_label'].unique())}")
-    print(f"Height range: {df_raw['Height'].min():.1f}–{df_raw['Height'].max():.1f} m")
-
-    df = quality_control(df_raw)
-    print("\nGenerating 6 WS composite figures...")
+    df = quality_control(load_and_preprocess(DATA_PATH))
     plot_profiles_with_errorbars(df, OUTPUT_DIR, tz=args.tz)
 
 

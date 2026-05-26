@@ -1,14 +1,14 @@
 """
-plot-fig4-lst.py — 与 plot-fig4.py 同源，但按 **LST(本地标准时, UTC+8)** 重组每张图的 12 个子图。
+plot-ws-composite-lst.py — 与 plot-ws-composite.py 同源，但按 **LST(本地标准时, UTC+8)** 重组每张图的 12 个子图。
 
 分组规则（每天产出 2 张图，共 6 张）：
-  AM 图：LST 07:00 – 18:00          （白天 12 小时）
-  PM 图：LST 19:00 – 次日 06:00     （夜间 12 小时, 跨日）
+  daytime 图：LST 07:00 – 18:00          （白天 12 小时）
+  nighttime 图：LST 19:00 – 次日 06:00   （夜间 12 小时, 跨日）
 
 每张图布局保持 3 行 × 4 列（r3c4），按时序从左到右、从上到下排列。
 数据筛选仍按 UTC（与 CSV 中 datetime 列一致），仅展示标签按时区切换。
 
-边界情况：09-01 AM 的第 1 格（r1c1）= LST 09-01 07:00 = UTC 08-31 23:00，
+边界情况：09-01 daytime 的第 1 格（r1c1）= LST 09-01 07:00 = UTC 08-31 23:00，
 该 UTC 时刻不在实验/观测可用范围内（CSV 仅覆盖 2025-09-01..09-03），
 因此显式调用 axis('off') 留空，避免误导。
 """
@@ -25,13 +25,13 @@ import argparse
 
 # ─── 路径与阈值配置（避免 Hardcoding）────────────────────────────────────────
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DATA_PATH = REPO_ROOT / "data/260409/processed/merged_lidar_simulation_final.csv"
+DATA_PATH = REPO_ROOT / "data/260409/processed/merged_lidar_simulation_final.csv"   # 已处理数据
 OUTPUT_DIR = REPO_ROOT / "results/ws_composite_profile/260409"
 
-WS_MAX_OBS = 30.0   # m/s
-WS_MAX_CFD = 20.0   # m/s
+WS_MAX_OBS  = 30.0   # m/s: 观测物理上限（仪器异常阈值）
+WS_MAX_CFD  = 20.0   # m/s: CFD 上限（>20 视为数值发散）
 
-HEIGHT_BINS = [0, 300, 800, 2100]
+HEIGHT_BINS = [0, 300, 800, 2100]                          # m：分层边界
 LAYER_NAMES_EN = ["Low (52–300 m)",
                   "Mid (300–800 m)",
                   "High (800–2000 m)"]
@@ -40,15 +40,15 @@ LAYER_NAMES_EN = ["Low (52–300 m)",
 TIME_LABELS = {f"2025-09-{d:02d} {h:02d}:00:00": f"{d:02d}_{h:02d}00 UTC"
                for d in range(1, 4) for h in range(24)}
 
-# ─── 色盲友好配色（与 plot-fig4.py 保持一致）─────────────────────────────────
-COLOR_OBS = "#1a1a2e"
-COLOR_WRF = "#e07b39"
-COLOR_CFD = "#2196a5"
+# ─── 色盲友好配色（IBM Color Blind Safe Palette 变体）────────────────────────
+COLOR_OBS = "#1a1a2e"   # 深蓝黑 – LiDAR 观测
+COLOR_WRF = "#e07b39"   # 橙色   – WRF 中尺度
+COLOR_CFD = "#2196a5"   # 青蓝   – OpenFOAM CFD
 
-
+# ─── 全局 Matplotlib 学术样式设置 ───────────────────────────────────────────
 def configure_matplotlib_style() -> None:
     plt.rcParams.update({
-        'font.family':       'DejaVu Serif',
+        'font.family':       'DejaVu Serif',   # 学术字体，类 LaTeX 效果
         'font.size':         10,
         'axes.labelsize':    11,
         'axes.titlesize':    12,
@@ -63,56 +63,65 @@ def configure_matplotlib_style() -> None:
         'ytick.right':       True,
         'legend.framealpha': 0.9,
         'legend.edgecolor':  '0.8',
-        'figure.dpi':        120,
-        'savefig.dpi':       300,
+        'figure.dpi':        120,     # 屏幕显示
+        'savefig.dpi':       300,     # 论文保存（GMD 要求 ≥300 DPI）
         'savefig.bbox':      'tight',
     })
 
-
 def load_and_preprocess(path: str | Path) -> pd.DataFrame:
+    """
+        加载已对齐的三源数据 CSV，派生所有需要的物理量。
+
+    派生量：
+      - ws_cfd  : CFD 水平风速 = sqrt(u²+v²)
+      - wd_obs/wrf/cfd : 气象风向（北=0°, 顺时针, 风从何方来）
+      - layer   : 高度分层标签（低/中/高）
+      - time_label : 人类可读时次标签
+    """
     df = pd.read_csv(str(path), parse_dates=['datetime'])
 
+    # 1. 派生 CFD 水平风速（原始只有 u_cfd, v_cfd）
     df['ws_cfd'] = np.sqrt(df['u_cfd']**2 + df['v_cfd']**2)
 
+    # 2. 气象风向（arctan2 参数顺序：取反后为"从何方来"）
     df['wd_obs'] = np.degrees(np.arctan2(-df['u_obs'], -df['v_obs'])) % 360
     df['wd_wrf'] = np.degrees(np.arctan2(-df['u_wrf'], -df['v_wrf'])) % 360
     df['wd_cfd'] = np.degrees(np.arctan2(-df['u_cfd'], -df['v_cfd'])) % 360
 
+    # 3. 高度分层
     df['layer'] = pd.cut(df['Height'], bins=HEIGHT_BINS, labels=LAYER_NAMES_EN)
 
+    # 4. 可读时次标签
     df['time_label'] = df['datetime'].astype(str).map(TIME_LABELS)
 
     return df
 
 
 def quality_control(df: pd.DataFrame,
-                    ws_max_obs: float = WS_MAX_OBS,
-                    ws_max_cfd: float = WS_MAX_CFD) -> pd.DataFrame:
-    n0 = len(df)
+                   ws_max_obs: float = WS_MAX_OBS,
+                   ws_max_cfd: float = WS_MAX_CFD) -> pd.DataFrame:
+    """
+    数据质量控制（QC）。
 
+    规则（按优先级）：
+    ① obs NaN → 保留行但排除于统计（LiDAR 信噪比不足的缺测层，属有效缺测）
+    ② ws_obs > ws_max_obs → 仪器异常，标记为无效
+    ③ ws_cfd > ws_max_cfd → OpenFOAM 数值发散（RANS 在偏斜网格局部不收敛），标记整行无效
+
+    注意：不对 WRF 执行额外 QC，WRF 数据本身经过诊断，物理范围合理。
+
+    返回：原始 df 加 3 个布尔掩码列（qc_obs_ok, qc_cfd_ok, qc_ok）。
+    """
+    # CFD 发散标记
     cfd_ok = df['ws_cfd'] <= ws_max_cfd
+    # 观测物理上限（NaN 不触发该规则）
     obs_ok = (df['ws_obs'] <= ws_max_obs) | df['ws_obs'].isna()
 
     df = df.copy()
     df['qc_obs_ok'] = obs_ok
     df['qc_cfd_ok'] = cfd_ok
-    df['qc_ok'] = obs_ok & cfd_ok
+    df['qc_ok'] = obs_ok & cfd_ok   # 行级别总掩码
 
-    n_removed = (~df['qc_ok']).sum()
-    n_nan_obs = df['ws_obs'].isna().sum()
-
-    print(f"[QC] Rows (raw): {n0:,}")
-    print(f"[QC] Rows removed (divergent/outlier): {n_removed:,} ({100*n_removed/n0:.1f}%)")
-    print(f"[QC] LiDAR missing (NaN): {n_nan_obs:,} ({100*n_nan_obs/n0:.1f}%)")
-    print(f"[QC] Usable paired rows (qc_ok & obs not NaN): "
-          f"{(df['qc_ok'] & df['ws_obs'].notna()).sum():,}")
-
-    if n_removed > 0:
-        print("\n[QC Diagnostic] Divergent rows by (time × site):")
-        print(df[~df['qc_ok']].groupby(
-            ['time_label', 'obtid'], observed=True)['ws_cfd']
-              .agg(['count', 'max']).rename(columns={'count': 'N_divergent', 'max': 'ws_cfd_max'})
-              .round(2).to_string())
     return df
 
 
@@ -121,12 +130,14 @@ def _lst_slots_for(day: int, period: str) -> list[pd.Timestamp]:
     """
     返回某 LST 日某时段的 12 个 LST 时间戳。
 
-    period == 'AM' → LST [day 07:00, day 08:00, …, day 18:00]    (12 个)
-    period == 'PM' → LST [day 19:00, …, day 23:00, day+1 00:00, …, day+1 06:00]  (12 个)
+    period == 'daytime' → LST [day 07:00, …, day 18:00]    (12 个)
+    period == 'nighttime' → LST [day 19:00, …, day+1 06:00]  (12 个, 跨日)
     """
-    if period == 'AM':
+    if period == 'daytime':
         return [pd.Timestamp(f"2025-09-{day:02d} {h:02d}:00:00") for h in range(7, 19)]
-    # PM: 跨日
+    if period != 'nighttime':
+        raise ValueError("period must be 'daytime' or 'nighttime'")
+    # nighttime: 跨日
     same = [pd.Timestamp(f"2025-09-{day:02d} {h:02d}:00:00") for h in range(19, 24)]
     nxt = [pd.Timestamp(f"2025-09-{day+1:02d} {h:02d}:00:00") for h in range(0, 7)]
     return same + nxt
@@ -149,7 +160,7 @@ def plot_profiles_with_errorbars(df: pd.DataFrame,
                                  out_dir: Path = OUTPUT_DIR,
                                  tz: str = "lst") -> None:
     """
-    按 LST 日 × {AM, PM} 共 6 组、每组 12 子图(r3c4) 绘制风速复合廓线。
+    按 LST 日 × {daytime, nighttime} 共 6 组、每组 12 子图(r3c4) 绘制风速复合廓线。
     数据仍以 UTC 时刻过滤 (与 CSV 列对齐)；子图标题按 tz 显示 LST 或 UTC。
     x 轴仅表示风速物理量，不在 xlabel/xtick 重复标注时区（避免误读为「LST 风速」）。
     """
@@ -165,7 +176,7 @@ def plot_profiles_with_errorbars(df: pd.DataFrame,
     ]
 
     for day in range(1, 4):
-        for period_name in ('AM', 'PM'):
+        for period_name in ('daytime', 'nighttime'):
             lst_slots = _lst_slots_for(day, period_name)
 
             fig, axes = plt.subplots(3, 4, figsize=(14, 12),
@@ -230,9 +241,10 @@ def plot_profiles_with_errorbars(df: pd.DataFrame,
             axes[0, 3].legend(handles=legend_handles, fontsize=10,
                               loc='upper right', framealpha=0.9)
 
-            period_desc = "07-18 LST" if period_name == 'AM' else "19 LST – next 06 LST"
+            period_desc = "07-18 LST" if period_name == 'daytime' else "19 LST – next 06 LST"
+            period_title = period_name.capitalize()
             fig.suptitle(
-                f'Wind Speed Composite Profiles — LST-grouped 2025-09-{day:02d} {period_name} '
+                f'Wind Speed Composite Profiles — LST-grouped 2025-09-{day:02d} {period_title} '
                 f'({period_desc})',
                 fontsize=15, fontweight='bold')
 
@@ -245,7 +257,7 @@ def plot_profiles_with_errorbars(df: pd.DataFrame,
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Generate Fig4 wind speed composite profiles, grouped by LST day "
-                    "(AM = LST 07–18, PM = LST 19 → next 06).")
+                    "(daytime = LST 07–18, nighttime = LST 19 → next 06).")
     p.add_argument("--tz", choices=["utc", "lst"], default="lst",
                    help="Subplot title time zone only: 'lst' (default) or 'utc'. "
                         "X-axis label is wind speed only (no LST/UTC suffix).")
@@ -258,14 +270,7 @@ def main() -> None:
     configure_matplotlib_style()
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    df_raw = load_and_preprocess(DATA_PATH)
-    print(f"Loaded data: {len(df_raw):,} rows × {df_raw.shape[1]} columns")
-    print(f"Sites: {sorted(df_raw['obtid'].unique())}")
-    print(f"Time labels: {sorted(df_raw['time_label'].dropna().unique())}")
-    print(f"Height range: {df_raw['Height'].min():.1f}–{df_raw['Height'].max():.1f} m")
-
-    df = quality_control(df_raw)
-    print("\nGenerating 6 WS composite figures (LST-grouped)...")
+    df = quality_control(load_and_preprocess(DATA_PATH))
     plot_profiles_with_errorbars(df, OUTPUT_DIR, tz=args.tz)
 
 
