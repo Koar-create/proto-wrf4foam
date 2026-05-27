@@ -38,7 +38,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
-from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter
+from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter, FixedLocator
 from scipy.interpolate import griddata
 
 # ---------------------------------------------------------------------------
@@ -57,6 +57,13 @@ CFD_TOP      = 2000
 QUIVER_GRID  = 20
 QUIVER_SCALE = 40
 HEXBIN_GRID  = 120
+
+# Fixed colorbar ticks for stable PNG size (GIF / time-series export)
+WIND_SPEED_COLORBAR_TICKS = np.array(
+    [0., 2., 4., 6., 8., 10., 12., 14., 16.], dtype=float
+)
+WIND_SPEED_COLORBAR_VMAX = float(WIND_SPEED_COLORBAR_TICKS.max())
+WIND_SPEED_COLORBAR_TICK_FORMAT = '%2.0f'
 
 # Default figure output (repo convention: results/wrf_openfoam/…)
 RESULTS_XZ_DIR = os.path.join("results", "wrf_openfoam", "xz_wrf_cfd")
@@ -250,6 +257,22 @@ def _add_panel_label(ax, label, fontsize=15):
             bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='none', alpha=0.75))
 
 
+def add_wind_speed_colorbar(fig, mappable, ax, label='Wind Speed (m/s)',
+                            ticks=None, tick_format=None):
+    """Add a colorbar with fixed tick positions and label width."""
+    ticks = np.asarray(
+        ticks if ticks is not None else WIND_SPEED_COLORBAR_TICKS,
+        dtype=float,
+    )
+    fmt = tick_format or WIND_SPEED_COLORBAR_TICK_FORMAT
+    cb = fig.colorbar(mappable, ax=ax, label=label, pad=0.02, fraction=0.04)
+    cb.set_ticks(ticks)
+    cb.ax.yaxis.set_major_locator(FixedLocator(ticks))
+    cb.ax.yaxis.set_major_formatter(FormatStrFormatter(fmt))
+    cb.ax.tick_params(labelsize=10)
+    return cb
+
+
 def draw_wrf_panel(ax, data: dict, cfd_top=CFD_TOP,
                    vmax=None, max_height=MAX_HEIGHT,
                    label='(a) WRF (mesoscale boundary)'):
@@ -348,9 +371,8 @@ def compose_figure(wrf_data, cfd_data, case_label: str, output_path: str,
     """Build a 2-panel figure: (a) WRF top, (b) CFD bottom."""
     _apply_global_style()
 
-    wrf_vmax = (float(np.nanpercentile(wrf_data['wind_speed'], 98))
-                if wrf_data else None)
-    cfd_vmax = float(np.nanpercentile(cfd_data['wind_speed'], 98))
+    wrf_vmax = WIND_SPEED_COLORBAR_VMAX if wrf_data else None
+    cfd_vmax = WIND_SPEED_COLORBAR_VMAX
 
     fig = plt.figure(figsize=(12, 11))
     panel_h = 0.34
@@ -361,9 +383,7 @@ def compose_figure(wrf_data, cfd_data, case_label: str, output_path: str,
     if wrf_data is not None:
         qm_wrf = draw_wrf_panel(ax_wrf, wrf_data, vmax=wrf_vmax,
                                 max_height=max_height)
-        cb_wrf = fig.colorbar(qm_wrf, ax=ax_wrf, label='Wind Speed (m/s)',
-                              pad=0.02, fraction=0.04)
-        cb_wrf.ax.tick_params(labelsize=10)
+        add_wind_speed_colorbar(fig, qm_wrf, ax_wrf)
     else:
         ax_wrf.text(0.5, 0.5, 'WRF data unavailable\n(file not found)',
                     ha='center', va='center', transform=ax_wrf.transAxes,
@@ -371,9 +391,7 @@ def compose_figure(wrf_data, cfd_data, case_label: str, output_path: str,
         _add_panel_label(ax_wrf, '(a) WRF (mesoscale boundary)')
 
     hb_cfd = draw_cfd_panel(ax_cfd, cfd_data, vmax=cfd_vmax)
-    cb_cfd = fig.colorbar(hb_cfd, ax=ax_cfd, label='Wind Speed (m/s)',
-                          pad=0.02, fraction=0.04)
-    cb_cfd.ax.tick_params(labelsize=10)
+    add_wind_speed_colorbar(fig, hb_cfd, ax_cfd)
 
     fig.suptitle(
         f'X-Z Vertical Wind Field — WRF vs CFD\n{case_label}',
