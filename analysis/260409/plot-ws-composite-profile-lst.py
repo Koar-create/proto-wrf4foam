@@ -31,10 +31,10 @@ OUTPUT_DIR = REPO_ROOT / "results/ws_composite_profile/260409"
 WS_MAX_OBS  = 30.0   # m/s: 观测物理上限（仪器异常阈值）
 WS_MAX_CFD  = 20.0   # m/s: CFD 上限（>20 视为数值发散）
 
-HEIGHT_BINS = [0, 300, 800, 2100]                          # m：分层边界
+HEIGHT_BINS = [0, 300, 1000, 2100]                          # m：分层边界
 LAYER_NAMES_EN = ["Low (52–300 m)",
-                  "Mid (300–800 m)",
-                  "High (800–2000 m)"]
+                  "Mid (300–1000 m)",
+                  "High (1000–2000 m)"]
 
 # CSV 中可用 UTC 时刻范围 → 用于过滤 LST 跨界到 08-31 / 09-04 的格子
 TIME_LABELS = {f"2025-09-{d:02d} {h:02d}:00:00": f"{d:02d}_{h:02d}00 UTC"
@@ -229,7 +229,7 @@ def plot_profiles_with_errorbars(df: pd.DataFrame,
                 ax.plot(agg_model['mean_cfd'], agg_model['mean_h'],
                         color=COLOR_CFD, lw=2.0, ls='-')
 
-                for h_line in (300, 800):
+                for h_line in (300, 1000):
                     ax.axhline(h_line, color='0.6', lw=0.8, ls=':', zorder=0)
 
                 ax.set_title(tl_disp, fontweight='bold', pad=8)
