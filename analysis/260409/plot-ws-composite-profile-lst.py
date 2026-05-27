@@ -158,7 +158,8 @@ def _format_display_label(lst_ts: pd.Timestamp, tz: str) -> str:
 # ─── 主绘图函数 ─────────────────────────────────────────────────────────────
 def plot_profiles_with_errorbars(df: pd.DataFrame,
                                  out_dir: Path = OUTPUT_DIR,
-                                 tz: str = "lst") -> None:
+                                 tz: str = "lst",
+                                 zmax: float = 1000.0) -> None:
     """
     按 LST 日 × {daytime, nighttime} 共 6 组、每组 12 子图(r3c4) 绘制风速复合廓线。
     数据仍以 UTC 时刻过滤 (与 CSV 列对齐)；子图标题按 tz 显示 LST 或 UTC。
@@ -199,6 +200,8 @@ def plot_profiles_with_errorbars(df: pd.DataFrame,
 
                 if sub.empty:
                     ax.set_title(tl_disp, fontweight='bold', pad=8)
+                    ax.set_xlim(left=0)
+                    ax.set_ylim(0, zmax)
                     continue
 
                 sub['H_bin'] = pd.cut(sub['Height'], bins=height_bins)
@@ -231,7 +234,7 @@ def plot_profiles_with_errorbars(df: pd.DataFrame,
 
                 ax.set_title(tl_disp, fontweight='bold', pad=8)
                 ax.set_xlim(left=0)
-                ax.set_ylim(0, 1000)
+                ax.set_ylim(0, zmax)
 
                 if ax in axes[-1, :]:
                     ax.set_xlabel(r'Wind Speed (m s$^{-1}$)', fontsize=11)
@@ -248,7 +251,7 @@ def plot_profiles_with_errorbars(df: pd.DataFrame,
                 f'({period_desc})',
                 fontsize=15, fontweight='bold')
 
-            save_path = out_dir / f"fig4_ws_composite_lstgrp_09{day:02d}_{period_name}_tz-{tz}.png"
+            save_path = out_dir / f"fig4_ws_composite_lstgrp_09{day:02d}_{period_name}_z{int(zmax)}m_tz-{tz}.png"
             fig.savefig(save_path, dpi=300)
             plt.close(fig)
             print(f"Saved: {save_path}")
@@ -261,6 +264,8 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--tz", choices=["utc", "lst"], default="lst",
                    help="Subplot title time zone only: 'lst' (default) or 'utc'. "
                         "X-axis label is wind speed only (no LST/UTC suffix).")
+    p.add_argument("--zmax", type=float, default=1000.0,
+                   help="Upper limit of y-axis (height, m). Default: 1000.")
     return p.parse_args()
 
 
@@ -271,7 +276,7 @@ def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     df = quality_control(load_and_preprocess(DATA_PATH))
-    plot_profiles_with_errorbars(df, OUTPUT_DIR, tz=args.tz)
+    plot_profiles_with_errorbars(df, OUTPUT_DIR, tz=args.tz, zmax=args.zmax)
 
 
 if __name__ == "__main__":
