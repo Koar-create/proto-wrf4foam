@@ -12,10 +12,10 @@ DATA_PATH = REPO_ROOT / "data/260409/processed/merged_lidar_simulation_final.csv
 WS_MAX_OBS  = 30.0   # m/s: 观测物理上限（仪器异常阈值）
 WS_MAX_CFD  = 20.0   # m/s: CFD 上限（>20 视为数值发散）
 
-HEIGHT_BINS = [0, 300, 800, 2100]                          # m：分层边界
+HEIGHT_BINS = [0, 300, 1000, 2100]                          # m：分层边界
 LAYER_NAMES_EN = ["Low (52–300 m)",
-                  "Mid (300–800 m)",
-                  "High (800–2000 m)"]
+                  "Mid (300–1000 m)",
+                  "High (1000–2000 m)"]
 
 '''
 TIME_LABELS = {
