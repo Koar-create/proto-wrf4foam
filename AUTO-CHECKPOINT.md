@@ -13,6 +13,24 @@
   - `python analysis/260514-sep02-daytime-cfd-diagnosis/scripts/profiles_sep02_daytime_composite.py --out-dir analysis/260514-sep02-daytime-cfd-diagnosis/results --utc-hours 3 4 5 6`
   - 空 manifest 运行 `parse_simplefoam_residuals.py` 预期退出码 1 并提示 `No valid case paths in manifest.`
 
+### 设计并实现入流扰动层（WRF→OpenFOAM，写出 *_cartesian_perturbed.nc）
+- **目标**：在不运行 CFD 的前提下，提供一个可回溯、物理可解释的“入流扰动层”，用于缓解现阶段 CFD 风速系统性偏低（k-ε 过耗散 + mapped-inlet 动量损失）的问题。
+- **实现**：
+  - 新增 `util/perturb_OF_inlet_data.py`
+  - 支持旋钮：
+    - A：log-law 比值对 (U,V) 近地层再充气（保持风向，z>zmax 不动）
+    - B：按稳定度给 `TKE_PBL` 施加湍强下限（只抬不压）
+    - C：可选写出 `eps_override` + `mixingLength_override`（Blackadar 混合长度）
+    - D：可选 LLJ nose boost（默认关闭）
+  - 输出：在原 `*_cartesian.nc` 旁写 `*_perturbed.nc`（默认文件名），并保留 `U_raw/V_raw/WS_raw/TKE_PBL_raw` 以便回归对比。
+- **下一步**：为让 C 旋钮真正影响 `boundaryData/epsilon`，需要在 `util/construct_OF_boundary_arrays.py` 加一段可选读取 `eps_override` 的分支（保持向后兼容）。
+
+### 冒烟验证（仅 NC 读写，不跑 CFD）
+- **说明**：`util/construct_OF_boundary_arrays.py` 当前以 Linux `HOME` + 含 `:` 的文件名拼接输入 NC 路径，在 Windows 上无法直接喂入自定义文件路径做端到端运行（文件名包含冒号也无法落盘）。因此本次 smoke 采用“可编译 + 可被 xarray 正常读取 + `eps_override` 变量存在且可切片访问”的验证口径。
+- **执行（本机）**：
+  - `python -m py_compile util/perturb_OF_inlet_data.py util/construct_OF_boundary_arrays.py`
+  - 用合成的小型 `*_cartesian.nc` 运行 `util/perturb_OF_inlet_data.py` 生成 `*_perturbed.nc`，并确认 `eps_override` 可被 `ds.isel(...).eps_override` 访问。
+
 ## 2026-05-12
 
 ### `Research_Status_202605.md` + 约束文档瘦身（WRF 叙述 / checkMesh 细表外移）

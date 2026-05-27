@@ -240,8 +240,11 @@ for patch_name, cfg in boundaries.items():
             # 引发 k-epsilon 生成-耗散失衡，k 单调积累直至发散。
             # 解决：L 取 kappa*z 与 CFD 代表性高度（10m）中的较大值。
             L_CFD_min = 10.0  # m，对应 CFD 近地面单元的代表性高度
-            mixing_length = np.clip(kappa * z, L_CFD_min, 100.0)
-            eps = (Cmu**0.75) * (k**1.5) / mixing_length
+            if "eps_override" in ds_slice:
+                eps = float(ds_slice.eps_override.values[i_z, i_o])
+            else:
+                mixing_length = np.clip(kappa * z, L_CFD_min, 100.0)
+                eps = (Cmu**0.75) * (k**1.5) / mixing_length
             eps_vals.append(max(eps, 1e-8))
 
 
