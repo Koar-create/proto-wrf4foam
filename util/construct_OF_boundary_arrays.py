@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import argparse
 import os
 import re
 import sys
@@ -11,16 +12,71 @@ HOME = os.environ.get('HOME')
 
 project_path = f"{HOME}/WRF-OpenFOAM-Coupling/W_myExp03"
 
-if len(sys.argv) != 2:
-    print(f"Error: Missing input date argument.")
-    print(f"Usage: python {sys.argv[0]} <mm-dd_HH%3AMM>")
-    print(f"Example: python {sys.argv[0]} \"09-01_00:00\"")
-    sys.exit(1)
 
-input_date = sys.argv[1]
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description=(
+            "从 WRF auxhist2 笛卡尔插值 NC 生成 OpenFOAM constant/boundaryData，"
+            "并在当前算例目录更新 0/ 下的 U、k、epsilon、nut 初始场。"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  cd /path/to/openfoam/case
+  python util/construct_OF_boundary_arrays.py "09-01_00:00"
+  python util/construct_OF_boundary_arrays.py 09-03_15:00 --perturbed
+  python util/construct_OF_boundary_arrays.py --input-nc /path/to/foo_cartesian_perturbed.nc
 
-# --- 1. 读取已经处理好的拉伸网格 NC 文件 ---
-input_nc = f"{project_path}/auxhist2/auxhist2_d03_2025-{input_date}:00_1h-rolling_cartesian.nc"
+输入 NC（由插值 / 扰动脚本预先生成）:
+  默认: $HOME/WRF-OpenFOAM-Coupling/W_myExp03/auxhist2/
+        auxhist2_d03_2025-<MM-DD_HH:MM>:00_1h-rolling_cartesian.nc
+  --perturbed: 同上路径，但读取 *_cartesian_perturbed.nc（perturb_OF_inlet_data.py 产物）
+
+输出:
+  ./boundaryData/{west,east,south,north}/points
+  ./boundaryData/{west,east,south,north}/0/{U,k,epsilon,T}
+  ./0/{U,k,epsilon,nut}  （按域平均替换 internalField / *Inlet）
+
+注意:
+  请在 OpenFOAM 算例根目录下运行；垂直方向截断至 2100 m。
+""",
+    )
+    parser.add_argument(
+        "input_date",
+        nargs="?",
+        metavar="MM-DD_HH:MM",
+        help='WRF 时刻标签，如 "09-01_00:00"（与 --input-nc 二选一）',
+    )
+    parser.add_argument(
+        "--input-nc",
+        metavar="PATH",
+        help="显式指定输入 NetCDF（可为 *_cartesian.nc 或 *_cartesian_perturbed.nc）",
+    )
+    parser.add_argument(
+        "--perturbed",
+        action="store_true",
+        help="读取 perturb_OF_inlet_data.py 生成的 *_cartesian_perturbed.nc（需配合 input_date）",
+    )
+    args = parser.parse_args()
+    if not args.input_nc and not args.input_date:
+        parser.error("请提供 input_date，或使用 --input-nc 指定输入文件。")
+    if args.input_nc and args.perturbed:
+        parser.error("--input-nc 与 --perturbed 不能同时使用。")
+    return args
+
+
+def resolve_input_nc(args):
+    if args.input_nc:
+        return os.path.abspath(os.path.normpath(args.input_nc))
+    stem = (
+        f"{project_path}/auxhist2/"
+        f"auxhist2_d03_2025-{args.input_date}:00_1h-rolling_cartesian"
+    )
+    return stem + ("_perturbed.nc" if args.perturbed else ".nc")
+
+
+args = parse_args()
+input_nc = resolve_input_nc(args)
 if not os.path.exists(input_nc):
     print(f"Error: File {input_nc} not found.")
     sys.exit(1)
