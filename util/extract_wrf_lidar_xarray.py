@@ -27,8 +27,8 @@ warnings.filterwarnings("ignore")
 # ─────────────────────────────────────────────────────────────────────────────
 # 处理 Windows 和 Linux 路径兼容性
 PROJECT_ROOT = os.path.join(os.environ.get('HOME'), 'WRF-OpenFOAM-Coupling')
-OUT_DIR = os.path.join(PROJECT_ROOT, "260409")   # 输出目录
-WRF_DATA_DIR = os.path.join(PROJECT_ROOT, "W_myExp03/auxhist2/horiz_raw_z_interp")
+OUT_DIR = os.path.join(PROJECT_ROOT, "data", "260409", "raw", "wrf")
+WRF_DATA_DIR = os.path.join(PROJECT_ROOT, "W_myExp03/auxhist2")
 
 # 读取 LiDAR 站点高度信息
 JSON_PATH = os.path.join(PROJECT_ROOT, "util", "lidar_station_info.json")
@@ -61,11 +61,11 @@ print("="*60)
 # WRF 提取部分（xarray）
 # =============================================================================
 
-target_hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+target_hours = np.arange(24)
 wrf_records = []
 
 # 自动扫描可用日期
-file_pattern = os.path.join(WRF_DATA_DIR, "auxhist2_d03_*-*-*_*:00:00_1h-rolling.nc")
+file_pattern = os.path.join(WRF_DATA_DIR, "auxhist2_d03_*-*-*_*:00:00_1h-rolling_cartesian.nc")
 all_matching_files = glob.glob(file_pattern)
 
 found_dates = set()
@@ -82,7 +82,7 @@ for d_str in target_dates:
     for h in target_hours:
         # 构造文件名，确保小时是两位数，并且冒号编码为 :
         f_h = f"{h:02d}:00:00"
-        fpath = os.path.join(WRF_DATA_DIR, f"auxhist2_d03_{d_str}_{f_h}_1h-rolling.nc")
+        fpath = os.path.join(WRF_DATA_DIR, f"auxhist2_d03_{d_str}_{f_h}_1h-rolling_cartesian.nc")
         
         if not os.path.exists(fpath):
             # 如果某个时次不存在，静默跳过或简单提示
@@ -102,12 +102,14 @@ for d_str in target_dates:
         # ── 使用 xarray 打开 NetCDF 文件 ──────────────────────────────────────────────
         ds = xr.open_dataset(fpath, mask_and_scale=False)
         
-        # ── 提取经纬度网格 ──────────────────────────────────────────────────────────
-        lons = ds["XLONG"].values.squeeze().astype(float)
-        lats = ds["XLAT"].values.squeeze().astype(float)
-        
-        if lons.ndim != 2 or lats.ndim != 2:
-            raise ValueError(f"XLONG/XLAT 必须是 2-D，当前 XLONG={lons.shape}, XLAT={lats.shape}")
+        # ── 提取相对坐标轴（cartesian 产品无 XLONG/XLAT）──────────────────────────
+        x_coords = ds["x_rel"].values.squeeze().astype(float)
+        y_coords = ds["y_rel"].values.squeeze().astype(float)
+
+        if x_coords.ndim != 1 or y_coords.ndim != 1:
+            raise ValueError(
+                f"x_rel/y_rel 必须是 1-D，当前 x_rel={x_coords.shape}, y_rel={y_coords.shape}"
+            )
         
         # ── 提取垂直坐标 z ────────────────────────────────────────────────────────────
         z_arr = ds["z"].values.squeeze().astype(float)      # shape (nz,)
@@ -126,16 +128,16 @@ for d_str in target_dates:
         # ── 逐站点插值 ────────────────────────────────────────────────────────────────
         for _, row in lidar_sites.iterrows():
             obtid = row["obtid"]
-            site_lon = float(row["lon"])
-            site_lat = float(row["lat"])
-            
+            site_x = float(row["x_rel"])
+            site_y = float(row["y_rel"])
+
             # 从 JSON 中获取该站点的探测高度层，并过滤掉 >= 2000 的部分
             raw_levels = np.array(station_info_dict[obtid]["levels"], dtype=float)
             target_z = raw_levels[raw_levels < 2000]
-        
-            # 最近邻：在经纬度平面上找距离最近的格点
-            dist2 = (lons - site_lon) ** 2 + (lats - site_lat) ** 2
-            j, i = np.unravel_index(np.nanargmin(dist2), dist2.shape)
+
+            # 最近邻：在相对坐标轴上找距离最近的格点
+            i = int(np.argmin(np.abs(x_coords - site_x)))
+            j = int(np.argmin(np.abs(y_coords - site_y)))
         
             # 提取该格点的垂直廓线
             col_data = {}
