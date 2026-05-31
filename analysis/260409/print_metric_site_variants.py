@@ -36,7 +36,7 @@ def _sites_in_data(sub: pd.DataFrame) -> list[str]:
     return sorted(sub["obtid"].unique())
 
 
-def print_layer_summary(title: str, grp_df: pd.DataFrame) -> None:
+def print_layer_summary(title: str, grp_df: pd.DataFrame, *, skip_high: bool = False) -> None:
     """与 print_metric.main() 相同列的分层汇总。"""
     print("\n" + "=" * 70)
     print(f"  {title}")
@@ -50,7 +50,7 @@ def print_layer_summary(title: str, grp_df: pd.DataFrame) -> None:
     print(header)
     print("-" * len(header))
 
-    for layer in pm.LAYER_NAMES_EN:
+    for layer in pm.summary_layers(skip_high=skip_high):
         g = grp_df[grp_df["layer"] == layer]
         if len(g) < 5:
             continue
@@ -80,20 +80,20 @@ def _pooled_metrics(grp_df: pd.DataFrame) -> dict[str, float | int] | None:
     }
 
 
-def section_baseline(sub: pd.DataFrame) -> None:
-    print_layer_summary("Layer-aggregated summary - ALL sites (baseline)", sub)
+def section_baseline(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
+    print_layer_summary("Layer-aggregated summary - ALL sites (baseline)", sub, skip_high=skip_high)
 
 
-def section_only_site(sub: pd.DataFrame, sites: list[str]) -> None:
+def section_only_site(sub: pd.DataFrame, sites: list[str], *, skip_high: bool = False) -> None:
     for site in sites:
         g = sub[sub["obtid"] == site]
-        print_layer_summary(f"Only site - {site}", g)
+        print_layer_summary(f"Only site - {site}", g, skip_high=skip_high)
 
 
-def section_exclude_site(sub: pd.DataFrame, sites: list[str]) -> None:
+def section_exclude_site(sub: pd.DataFrame, sites: list[str], *, skip_high: bool = False) -> None:
     for site in sites:
         g = sub[sub["obtid"] != site]
-        print_layer_summary(f"Exclude site (leave-one-out) - drop {site}", g)
+        print_layer_summary(f"Exclude site (leave-one-out) - drop {site}", g, skip_high=skip_high)
 
 
 def section_site_rank(sub: pd.DataFrame, sites: list[str]) -> None:
@@ -177,6 +177,11 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         help="Override CSV path (default: print_metric.DATA_PATH).",
     )
+    p.add_argument(
+        "--no-high",
+        action="store_true",
+        help="Omit the High (1000–2000 m) layer row from summary tables.",
+    )
     return p.parse_args()
 
 
@@ -208,11 +213,11 @@ def main() -> None:
     pd.set_option("display.float_format", "{:.3f}".format)
 
     if "baseline" in sections:
-        section_baseline(sub)
+        section_baseline(sub, skip_high=args.no_high)
     if "only_site" in sections:
-        section_only_site(sub, sites)
+        section_only_site(sub, sites, skip_high=args.no_high)
     if "exclude_site" in sections:
-        section_exclude_site(sub, sites)
+        section_exclude_site(sub, sites, skip_high=args.no_high)
     if "site_rank" in sections:
         section_site_rank(sub, sites)
 

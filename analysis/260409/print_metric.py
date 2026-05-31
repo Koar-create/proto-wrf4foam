@@ -1,3 +1,4 @@
+import argparse
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -16,6 +17,13 @@ HEIGHT_BINS = [0, 300, 1000, 2100]                          # m：分层边界
 LAYER_NAMES_EN = ["Low (52–300 m)",
                   "Mid (300–1000 m)",
                   "High (1000–2000 m)"]
+
+
+def summary_layers(*, skip_high: bool = False) -> list[str]:
+    """Return layer names to include in printed summary tables."""
+    if skip_high:
+        return LAYER_NAMES_EN[:-1]
+    return list(LAYER_NAMES_EN)
 
 '''
 TIME_LABELS = {
@@ -262,7 +270,20 @@ def compute_metrics_table(df: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
+def _parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(
+        description="Print layer-aggregated wind speed metrics (WRF / CFD vs LiDAR)."
+    )
+    p.add_argument(
+        "--no-high",
+        action="store_true",
+        help="Omit the High (1000–2000 m) layer row from the summary table.",
+    )
+    return p.parse_args()
+
+
 def main() -> None:
+    args = _parse_args()
     df_raw = load_and_preprocess(DATA_PATH)
     # print(f"Loaded data: {len(df_raw):,} rows × {df_raw.shape[1]} columns")
     # print(f"Sites: {sorted(df_raw['obtid'].unique())}")
@@ -292,7 +313,7 @@ def main() -> None:
     print(header)
     print("-" * len(header))
 
-    for layer in LAYER_NAMES_EN:
+    for layer in summary_layers(skip_high=args.no_high):
         g = sub_df[sub_df['layer'] == layer]
         if len(g) < 5:
             continue

@@ -66,7 +66,7 @@ def mask_lst_day_pm(lst: pd.Series, day: int) -> pd.Series:
     return same_evening | next_morning
 
 
-def print_layer_summary(title: str, grp_df: pd.DataFrame) -> None:
+def print_layer_summary(title: str, grp_df: pd.DataFrame, *, skip_high: bool = False) -> None:
     """与 print_metric.main() 相同列的分层汇总（全站点混合）。"""
     print("\n" + "=" * 70)
     print(f"  {title}")
@@ -80,7 +80,7 @@ def print_layer_summary(title: str, grp_df: pd.DataFrame) -> None:
     print(header)
     print("-" * len(header))
 
-    for layer in pm.LAYER_NAMES_EN:
+    for layer in pm.summary_layers(skip_high=skip_high):
         g = grp_df[grp_df["layer"] == layer]
         if len(g) < 5:
             continue
@@ -95,18 +95,18 @@ def print_layer_summary(title: str, grp_df: pd.DataFrame) -> None:
         )
 
 
-def section_baseline(sub: pd.DataFrame) -> None:
-    print_layer_summary("Layer-aggregated summary - ALL times (baseline)", sub)
+def section_baseline(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
+    print_layer_summary("Layer-aggregated summary - ALL times (baseline)", sub, skip_high=skip_high)
 
 
-def section_utc_groups(sub: pd.DataFrame) -> None:
+def section_utc_groups(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
     sub_h = _attach_utc_hour(sub)
     for label, hours in UTC_TIME_GROUPS.items():
         g = sub_h[sub_h["utc_hour"].isin(hours)]
-        print_layer_summary(f"UTC subgroup - {label}", g)
+        print_layer_summary(f"UTC subgroup - {label}", g, skip_high=skip_high)
 
 
-def section_lst_periods(sub: pd.DataFrame) -> None:
+def section_lst_periods(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
     sub_l = _attach_lst(sub)
     lst = sub_l["lst"]
     for day in (1, 2, 3):
@@ -118,23 +118,25 @@ def section_lst_periods(sub: pd.DataFrame) -> None:
             print_layer_summary(
                 f"LST-grouped (align fig4-lst) - 2025-09-{day:02d} {period}",
                 g,
+                skip_high=skip_high,
             )
 
 
-def section_by_utc_calendar_day(sub: pd.DataFrame) -> None:
+def section_by_utc_calendar_day(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
     sub = sub.copy()
     sub["utc_date"] = sub["datetime"].dt.strftime("%Y-%m-%d")
     for d in ("2025-09-01", "2025-09-02", "2025-09-03"):
         g = sub[sub["utc_date"] == d]
-        print_layer_summary(f"UTC calendar day - {d}", g)
+        print_layer_summary(f"UTC calendar day - {d}", g, skip_high=skip_high)
 
 
-def section_conservative(sub: pd.DataFrame) -> None:
+def section_conservative(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
     sub_h = _attach_utc_hour(sub)
     g = sub_h[sub_h["utc_hour"].isin(CONSERVATIVE_UTC_HOURS)]
     print_layer_summary(
         "Conservative subset - UTC 00-11 (~ LST 08-19; advice strategy 2 example)",
         g,
+        skip_high=skip_high,
     )
 
 
@@ -163,6 +165,11 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         help="Override CSV path (default: print_metric.DATA_PATH).",
     )
+    p.add_argument(
+        "--no-high",
+        action="store_true",
+        help="Omit the High (1000–2000 m) layer row from summary tables.",
+    )
     return p.parse_args()
 
 
@@ -188,15 +195,15 @@ def main() -> None:
     pd.set_option("display.float_format", "{:.3f}".format)
 
     if "baseline" in sections:
-        section_baseline(sub)
+        section_baseline(sub, skip_high=args.no_high)
     if "utc_groups" in sections:
-        section_utc_groups(sub)
+        section_utc_groups(sub, skip_high=args.no_high)
     if "lst_periods" in sections:
-        section_lst_periods(sub)
+        section_lst_periods(sub, skip_high=args.no_high)
     if "by_utc_day" in sections:
-        section_by_utc_calendar_day(sub)
+        section_by_utc_calendar_day(sub, skip_high=args.no_high)
     if "conservative" in sections:
-        section_conservative(sub)
+        section_conservative(sub, skip_high=args.no_high)
 
 
 if __name__ == "__main__":
