@@ -101,7 +101,7 @@ disable-model-invocation: true
 
 1. 构造 **单行** JSON：对上述字段赋值；字符串内换行与引号必须按 JSON 转义。
 2. 打开 [`docs/reference-candidate/literature-trans-scale-ledger.jsonl`](docs/reference-candidate/literature-trans-scale-ledger.jsonl)，在文件 **末尾** 追加 **一行**（文件末尾原有最后一行则先换行再写新对象行）。
-3. **重复分析策略（日志式，不自动删旧行）**：同一 DOI 可存在多行；新行应在 `content.notes` 或顶层 `notes` 中简短标注 `reanalysis` 或分析动机。若用户明确要求「替换旧记录」，再整文件编辑删除旧行（默认不假设）。
+3. **重复记录冲突**：追加前先检查 ledger 是否已有相同 DOI（或用户指定的唯一键）。若已存在：**保留已有记录，放弃当前落盘任务**（在回复中说明冲突并摘要已有行）。仅当用户明确要求「替换旧记录」时，才整文件编辑删除对应旧行后写入新行。
 4. 回合结束前 **自检**：确认该文件已保存且新增行可被 `Read` 工具读出。
 
 可选：若用户明确要求维护人类可读的 Markdown 副本，再维护 `docs/reference-candidate/literature-trans-scale-ledger.md`；**默认不创建/不更新**该 md。

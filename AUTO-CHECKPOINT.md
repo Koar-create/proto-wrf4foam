@@ -2,6 +2,51 @@
 
 > 本文件由Cursor智能体自动维护，用于记录本仓库内任务执行过程、关键决策与可复现命令。
 
+## 2026-06-02 
+
+### 新建 skill：literature-obs-sim-comparison-analysis
+
+- **路径**：`.cursor/skills/literature-obs-sim-comparison-analysis/`（`SKILL.md` + `reference.md`）
+- **参照**：`.cursor/skills/literature-trans-scale-analysis/` 的工作流与 JSONL 落盘格式
+- **问题树**：
+  - **Q1**：本研究是否有「观测–模拟对比」？
+  - **Q2**（Q1=Yes）：观测空间类型 `single_layer` | `multi_layer` | `wind_tunnel`
+  - **Q3**（Q1=No）：缺乏观测对比时，作者如何论证研究意义
+- **台账**：`docs/reference-candidate/literature-obs-sim-comparison-ledger.jsonl`
+- **文章来源（2026-06-02 更新）**：除 PDF 外，支持 `docs/reference-candidate/marker_out/<stem>/` 目录及其中 `.md`；`source` 可含 `source_format`、`markdown_path`、`marker_out_dir`
+- **调用示例**：
+  ```text
+  根据 @.cursor/skills/literature-obs-sim-comparison-analysis/SKILL.md 分析 @docs/reference-candidate/marker_out/1-s2.0-S0360132318302671-main
+  ```
+
+### Marker → asr-whisperx-gpu128
+
+- **不在 base 安装** cu128 / marker；base 仍为 `torch 2.12.0+cpu`。
+- **asr-whisperx-gpu128** 已具备：`torch 2.8.0+cu128`，RTX 5060 Ti sm_120 冒烟通过。
+- 在该环境 `pip install marker-pdf`（1.10.2 + surya-ocr 0.17.1），**未重装 torch**。
+- `scripts/marker-env.ps1` + `scripts/marker.ps1`；输出 `docs/reference-candidate/marker_out`。
+- 模型缓存仍在 `E:\WRF-OpenFOAM-Coupling\.cache\datalab\models`（`MODEL_CACHE_DIR`）。
+
+#### 使用
+
+```powershell
+cd E:\WRF-OpenFOAM-Coupling
+.\scripts\marker.ps1 "docs\reference-candidate\direction1-rans-cpratio\<paper>.pdf"
+```
+
+或：`conda activate asr-whisperx-gpu128` 后手动 `marker_single`（需自行设置 `MODEL_CACHE_DIR` / 读 `local.env`）。
+
+### OpenDataLoader PDF → asr-whisperx-gpu128
+
+- [opendataloader-pdf](https://github.com/opendataloader-project/opendataloader-pdf)：JVM 本地快速模式（默认不需 GPU）；输出 Markdown/JSON。
+- 环境内：`pip install opendataloader-pdf` + `conda install openjdk=17`（`Library\bin\java.exe`）。
+- 脚本：`scripts/opendataloader-env.ps1`、`scripts/opendataloader.ps1`；输出 `docs/reference-candidate/opendataloader_out/`。
+
+```powershell
+cd E:\WRF-OpenFOAM-Coupling
+.\scripts\opendataloader.ps1 "docs\reference-candidate\<paper>.pdf"
+```
+
 ## 2026-05-14
 
 ### 9 月 2 日白昼 CFD 偏差诊断包（`analysis/260514-sep02-daytime-cfd-diagnosis/`）
@@ -211,3 +256,12 @@
 - **可复现运行**：
   - `python util/plot_wrf_stability_organization_csv.py`
   - 指定路径：`python util/plot_wrf_stability_organization_csv.py --csv "steady_experiments_finer_ABL/WRF Atmospheric Stability Data Organization.csv" --out steady_experiments_finer_ABL/my_plot.png`
+
+## 2026-06-03: 补充关于 LiDAR 观测数据用于 WRF-OpenFOAM 统计检验的文献回顾
+
+- **任务过程**：
+  1. 查阅了用户当前研究的上下文背景 (uilding-model-schematic.md, Global_Constraints.md)，了解到本项目在广州复杂地形上使用 WRF-OpenFOAM 耦合进行微尺度风场模拟，并通过 4 个 LiDAR 站点（覆盖 2km 高度）进行统计验证。
+  2. 检索了 literature-obs-sim-comparison-ledger.jsonl，确认目前库中确实**没有**真正的城市环境微尺度 LiDAR 垂向剖面验证。多数文献依赖单点地表测风塔、风洞实验或海上/风电场的高塔，这也印证了用户研究方向的稀缺性。
+  3. 通过 Web Search 检索了目前学界使用 Doppler Wind LiDAR 验证 CFD/LES 模型的手段（如 Virtual Lidar 技术等）。
+- **任务结果**：
+  总结了 LiDAR 数据在同类研究中的主要应用方式（垂直剖面比对、Virtual Lidar 模块模拟），并为用户提炼了该研究在使用多站点多高度 LiDAR 数据进行 leave-one-out 分析上的创新价值。详见对话回复。

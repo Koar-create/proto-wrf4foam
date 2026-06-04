@@ -19,6 +19,7 @@ geometry_data/
 reference-candidate/
 docs/
 scripts/
+data/Guangzhou_shp_file/
 
 # keep project-level Cursor skills tracked
 !.cursor/
@@ -52,3 +53,7 @@ gazebo_wind_plugin/
 
 # pptx-related?
 node_modules/
+
+# Marker / Surya (datalab) model weights
+.cache/
+local.env
