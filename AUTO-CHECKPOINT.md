@@ -177,6 +177,7 @@ cd E:\WRF-OpenFOAM-Coupling
   - 湍流“发展距离/时间”显著：该案例中高波数能量约需 **1.5 km** 才“填充”，并出现 **overshoot→衰减** 的演化。
   - 近地层失配警示：报告指出 OpenFOAM 域内近地层水平风速随下游距离快速下降，与 WRF-LES 不一致，原因不明——提示耦合链条中“近地层/地表参数化/入口湍流结构”可能是主要误差源。
   - 未来工作方向与可迁移问题：内嵌分辨率、稳定度差异、入流扰动方法、动态 SGS 是否缓解谱 overshoot。
+
 ## 2026-04-29
 
 ### 启动
@@ -256,12 +257,3 @@ cd E:\WRF-OpenFOAM-Coupling
 - **可复现运行**：
   - `python util/plot_wrf_stability_organization_csv.py`
   - 指定路径：`python util/plot_wrf_stability_organization_csv.py --csv "steady_experiments_finer_ABL/WRF Atmospheric Stability Data Organization.csv" --out steady_experiments_finer_ABL/my_plot.png`
-
-## 2026-06-03: 补充关于 LiDAR 观测数据用于 WRF-OpenFOAM 统计检验的文献回顾
-
-- **任务过程**：
-  1. 查阅了用户当前研究的上下文背景 (uilding-model-schematic.md, Global_Constraints.md)，了解到本项目在广州复杂地形上使用 WRF-OpenFOAM 耦合进行微尺度风场模拟，并通过 4 个 LiDAR 站点（覆盖 2km 高度）进行统计验证。
-  2. 检索了 literature-obs-sim-comparison-ledger.jsonl，确认目前库中确实**没有**真正的城市环境微尺度 LiDAR 垂向剖面验证。多数文献依赖单点地表测风塔、风洞实验或海上/风电场的高塔，这也印证了用户研究方向的稀缺性。
-  3. 通过 Web Search 检索了目前学界使用 Doppler Wind LiDAR 验证 CFD/LES 模型的手段（如 Virtual Lidar 技术等）。
-- **任务结果**：
-  总结了 LiDAR 数据在同类研究中的主要应用方式（垂直剖面比对、Virtual Lidar 模块模拟），并为用户提炼了该研究在使用多站点多高度 LiDAR 数据进行 leave-one-out 分析上的创新价值。详见对话回复。

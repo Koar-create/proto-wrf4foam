@@ -20,11 +20,7 @@ reference-candidate/
 docs/
 scripts/
 data/Guangzhou_shp_file/
-
-# keep project-level Cursor skills tracked
-!.cursor/
-!.cursor/skills/
-!.cursor/skills/**
+.cursor/
 
 # large amount of data
 *.png
