@@ -18,10 +18,22 @@ TZ_TAG = "utc"  # 数据筛选与 CSV datetime 列一致（UTC）
 WS_MAX_OBS = 30.0
 WS_MAX_CFD = 20.0
 
+METRIC_START = "2025-09-01 00:00:00"
+METRIC_END = "2025-09-05 23:00:00"
+METRIC_DATETIMES = pd.date_range(METRIC_START, METRIC_END, freq="h")
 TIME_LABELS = {
-    f"2025-09-{d:02d} {h:02d}:00:00": f"{d:02d}_{h:02d}00 UTC"
-    for d in range(1, 4) for h in range(24)
+    dt.strftime("%Y-%m-%d %H:%M:%S"): f"{dt.day:02d}_{dt.strftime('%H00')} UTC"
+    for dt in METRIC_DATETIMES
 }
+
+
+def metric_utc_days() -> list[int]:
+    return sorted({dt.day for dt in METRIC_DATETIMES})
+
+
+def _has_any_hour(day: int, hours: list[int]) -> bool:
+    keys = set(TIME_LABELS)
+    return any(f"2025-09-{day:02d} {h:02d}:00:00" in keys for h in hours)
 
 COLOR_OBS = "#1a1a2e"
 COLOR_WRF = "#e07b39"
@@ -72,15 +84,17 @@ def quality_control(df: pd.DataFrame,
 
 
 def plot_ws_wd_station_profiles(df: pd.DataFrame, out_dir: Path, tz: str = TZ_TAG) -> None:
-    """3 天 × 6 个 4 小时窗口 → 18 张图；每图 4 行 × (2×站点数) 列（WS | WD）。"""
+    """UTC 日历日 × 4 小时窗口；仅生成 CSV 中至少含 1 个时次的窗口。"""
     sites = sorted(df['obtid'].unique())
     n_sites = len(sites)
     height_bins = np.arange(0, 2150, 50)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    for day in range(1, 4):
+    for day in metric_utc_days():
         for h_start in range(0, 24, 4):
             hours = [h_start + i for i in range(4)]
+            if not _has_any_hour(day, hours):
+                continue
             fig, axes = plt.subplots(
                 4, 2 * n_sites,
                 figsize=(2.8 * 2 * n_sites, 3.2 * 4),

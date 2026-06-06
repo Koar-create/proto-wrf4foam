@@ -21,6 +21,8 @@ docs/
 scripts/
 data/Guangzhou_shp_file/
 .cursor/
+results/reference*/
+results/new-visual-advice/
 
 # large amount of data
 *.png

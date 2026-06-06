@@ -32,9 +32,23 @@ TIME_LABELS = {
     "2025-09-03 20:00:00": "2000 UTC"
 }
 '''
-# CSV 中可用 UTC 时刻范围 → 用于过滤 LST 跨界到 08-31 / 09-04 的格子
-TIME_LABELS = {f"2025-09-{d:02d} {h:02d}:00:00": f"{d:02d}_{h:02d}00 UTC"
-               for d in range(1, 4) for h in range(24)}
+# CSV 中可用 UTC 时刻范围 → 用于过滤 LST 跨界到 08-31 / 09-05 23:00+ 的格子
+METRIC_START = "2025-09-01 00:00:00"
+METRIC_END = "2025-09-05 23:00:00"
+METRIC_DATETIMES = pd.date_range(METRIC_START, METRIC_END, freq="h")
+TIME_LABELS = {
+    dt.strftime("%Y-%m-%d %H:%M:%S"): f"{dt.day:02d}_{dt.strftime('%H00')} UTC"
+    for dt in METRIC_DATETIMES
+}
+
+
+def metric_utc_days() -> list[int]:
+    return sorted({dt.day for dt in METRIC_DATETIMES})
+
+
+def _has_any_hour(day: int, hours: list[int]) -> bool:
+    keys = set(TIME_LABELS)
+    return any(f"2025-09-{day:02d} {h:02d}:00:00" in keys for h in hours)
 
 # ─── 色盲友好配色（IBM Color Blind Safe Palette 变体）────────────────────────
 COLOR_OBS = "#1a1a2e"   # 深蓝黑 – LiDAR 观测
@@ -145,7 +159,7 @@ def _format_time_label_for_display(t_raw: str, tz: str) -> str:
 def plot_profiles_with_errorbars(df: pd.DataFrame, out_dir: Path = OUTPUT_DIR, tz: str = "utc", zmax: float = 2000.0) -> None:
     """
     更新版：只可视化 WS 的全站 Composite。
-    分6次生成图表（3天 × 每天2块 UTC 00–11 / 12–23 = 6张图）。
+    分次生成图表（UTC 日历日 × daytime/nighttime 12h 面板；末日仅含可用时次）。
     布局为 3行 × 4列 (涵盖12小时)。
     子图标题为时刻；x 轴仅风速，不在 xtick/xlabel 重复标注时区或时刻。
     """
@@ -160,9 +174,11 @@ def plot_profiles_with_errorbars(df: pd.DataFrame, out_dir: Path = OUTPUT_DIR, t
         Line2D([0], [0], color=COLOR_CFD, lw=2, ls='-', label='OpenFOAM')
     ]
     
-    for day in range(1, 4):
+    for day in metric_utc_days():
         for period_name, h_start in [('daytime', 0), ('nighttime', 12)]:
             hours = [h_start + i for i in range(12)]
+            if not _has_any_hour(day, hours):
+                continue
             
             fig, axes = plt.subplots(3, 4, figsize=(14, 12), sharex=True, sharey=True, 
                                      constrained_layout=True)
