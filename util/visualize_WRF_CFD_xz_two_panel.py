@@ -56,6 +56,7 @@ MAX_HEIGHT   = 2000
 CFD_TOP      = 2000
 QUIVER_GRID  = 20
 QUIVER_SCALE = 40
+QUIVER_KEY_SPEED = 2.5
 HEXBIN_GRID  = 120
 
 # Fixed colorbar ticks for stable PNG size (GIF / time-series export)
@@ -275,7 +276,8 @@ def add_wind_speed_colorbar(fig, mappable, ax, label='Wind Speed (m/s)',
 
 def draw_wrf_panel(ax, data: dict, cfd_top=CFD_TOP,
                    vmax=None, max_height=MAX_HEIGHT,
-                   label='(a) WRF (mesoscale boundary)'):
+                   label='(a) WRF (mesoscale boundary)',
+                   show_vectors=True):
     lon = data['lon']
     height = data['height']
     ws = data['wind_speed']
@@ -289,19 +291,21 @@ def draw_wrf_panel(ax, data: dict, cfd_top=CFD_TOP,
                        vmin=0, vmax=vmax, cmap='viridis',
                        shading='auto', alpha=0.92, rasterized=True)
 
-    ny, nx = lon.shape
-    skip_y = max(1, ny // 15)
-    skip_x = max(1, nx // 15)
+    if show_vectors:
+        ny, nx = lon.shape
+        skip_y = max(1, ny // 15)
+        skip_x = max(1, nx // 15)
 
-    qv = ax.quiver(lon[::skip_y, ::skip_x], height[::skip_y, ::skip_x],
-                   u[::skip_y, ::skip_x], w[::skip_y, ::skip_x],
-                   color='black', alpha=0.82,
-                   scale=QUIVER_SCALE, width=0.003,
-                   headwidth=3.5, headlength=5)
+        qv = ax.quiver(lon[::skip_y, ::skip_x], height[::skip_y, ::skip_x],
+                       u[::skip_y, ::skip_x], w[::skip_y, ::skip_x],
+                       color='black', alpha=0.82,
+                       scale=QUIVER_SCALE, width=0.003,
+                       headwidth=3.5, headlength=5)
 
-    ax.quiverkey(qv, X=0.87, Y=1.02, U=1, label='1 m/s',
-                 labelpos='E', coordinates='axes',
-                 fontproperties={'family': 'serif', 'size': 10, 'weight': 'bold'})
+        ax.quiverkey(qv, X=0.87, Y=1.02, U=QUIVER_KEY_SPEED,
+                     label=f'{QUIVER_KEY_SPEED:g} m/s',
+                     labelpos='E', coordinates='axes',
+                     fontproperties={'family': 'serif', 'size': 10, 'weight': 'bold'})
 
     ax.set_ylim(0, max_height)
 
@@ -324,7 +328,8 @@ def draw_wrf_panel(ax, data: dict, cfd_top=CFD_TOP,
 
 
 def draw_cfd_panel(ax, data: dict, vmax=None,
-                   label='(b) CFD (OpenFOAM)'):
+                   label='(b) CFD (OpenFOAM)',
+                   show_vectors=True):
     x = data['x']
     z = data['z']
     u0 = data['u0']
@@ -340,21 +345,23 @@ def draw_cfd_panel(ax, data: dict, vmax=None,
                    vmin=0, vmax=vmax,
                    alpha=0.88, edgecolors='none', rasterized=True)
 
-    x_g, z_g = np.mgrid[x.min():x.max():complex(0, QUIVER_GRID),
-                         z.min():z.max():complex(0, QUIVER_GRID)]
-    sub = max(1, len(x) // 100_000)
-    gu0 = griddata((x[::sub], z[::sub]), u0[::sub], (x_g, z_g), method='linear')
-    gu2 = griddata((x[::sub], z[::sub]), u2[::sub], (x_g, z_g), method='linear')
+    if show_vectors:
+        x_g, z_g = np.mgrid[x.min():x.max():complex(0, QUIVER_GRID),
+                            z.min():z.max():complex(0, QUIVER_GRID)]
+        sub = max(1, len(x) // 100_000)
+        gu0 = griddata((x[::sub], z[::sub]), u0[::sub], (x_g, z_g), method='linear')
+        gu2 = griddata((x[::sub], z[::sub]), u2[::sub], (x_g, z_g), method='linear')
 
-    qv = ax.quiver(x_g.ravel(), z_g.ravel(), gu0.ravel(), gu2.ravel(),
-                   color='black', alpha=0.82,
-                   scale=QUIVER_SCALE, width=0.002,
-                   headwidth=3.5, headlength=5,
-                   headaxislength=4, minshaft=2)
+        qv = ax.quiver(x_g.ravel(), z_g.ravel(), gu0.ravel(), gu2.ravel(),
+                       color='black', alpha=0.82,
+                       scale=QUIVER_SCALE, width=0.002,
+                       headwidth=3.5, headlength=5,
+                       headaxislength=4, minshaft=2)
 
-    ax.quiverkey(qv, X=0.87, Y=0.975, U=2.5, label='2.5 m/s',
-                 labelpos='E', coordinates='axes',
-                 fontproperties={'family': 'serif', 'size': 10, 'weight': 'bold'})
+        ax.quiverkey(qv, X=0.87, Y=0.975, U=QUIVER_KEY_SPEED,
+                     label=f'{QUIVER_KEY_SPEED:g} m/s',
+                     labelpos='E', coordinates='axes',
+                     fontproperties={'family': 'serif', 'size': 10, 'weight': 'bold'})
 
     ax.set_xlabel('X Coordinate (m)', fontweight='bold')
     ax.set_ylabel('Height (m)', fontweight='bold')

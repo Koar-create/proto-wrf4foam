@@ -26,6 +26,55 @@ import matplotlib.pyplot as plt
 import visualize_WRF_CFD_xz_two_panel as v2p
 
 
+def resolve_existing_wrf_nc_path(wrf_nc_path: str) -> str:
+    """Return an existing WRF path, accepting ':' and Windows '%3A' filenames."""
+    if os.path.exists(wrf_nc_path):
+        return wrf_nc_path
+
+    directory, filename = os.path.split(wrf_nc_path)
+    candidates = []
+    if ":" in filename:
+        candidates.append(os.path.join(directory, filename.replace(":", "%3A")))
+        candidates.append(os.path.join(directory, filename.replace(":", "%3a")))
+    if "%3A" in filename or "%3a" in filename:
+        candidates.append(os.path.join(directory, filename.replace("%3A", ":").replace("%3a", ":")))
+
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            return candidate
+    return wrf_nc_path
+
+
+def wind_speed_color_scale(*datasets):
+    """Choose a compact color scale for this time step instead of the shared 0-16 range."""
+    values = [
+        np.asarray(data["wind_speed"], dtype=float).ravel()
+        for data in datasets
+        if data is not None
+    ]
+    if not values:
+        return v2p.WIND_SPEED_COLORBAR_VMAX, v2p.WIND_SPEED_COLORBAR_TICKS
+
+    finite = np.concatenate(values)
+    finite = finite[np.isfinite(finite)]
+    if finite.size == 0:
+        return v2p.WIND_SPEED_COLORBAR_VMAX, v2p.WIND_SPEED_COLORBAR_TICKS
+
+    data_max = float(np.nanmax(finite))
+    if data_max <= 2:
+        tick_step = 0.5
+    elif data_max <= 6:
+        tick_step = 1.0
+    elif data_max <= 12:
+        tick_step = 2.0
+    else:
+        tick_step = 4.0
+
+    vmax = max(tick_step, np.ceil(data_max / tick_step) * tick_step)
+    ticks = np.arange(0.0, vmax + 0.5 * tick_step, tick_step, dtype=float)
+    return float(vmax), ticks
+
+
 def parse_time_from_csv(csv_path: str):
     """Parse time from ``..._t<time>.csv`` (e.g. ``y-4995m_t10.csv`` → 10)."""
     base = os.path.basename(csv_path)
@@ -49,15 +98,14 @@ def cfd_dir_from_csv(csv_path: str) -> str:
     return parent
 
 
-def default_output_path(cfd_dir: str, time_str: str) -> str:
+def default_output_path(cfd_dir: str, time_str: str, show_vectors=True) -> str:
     cfd_dir = cfd_dir.rstrip(os.sep)
     case = os.path.basename(cfd_dir)
-    batch = os.path.basename(os.path.dirname(cfd_dir)) or "misc"
+    vector_suffix = "" if show_vectors else "_no_vectors"
     return os.path.join(
         v2p._repo_root(),
         v2p.RESULTS_XZ_DIR,
-        batch,
-        f"comparison_xz_wrf_cfd_{case}_t{time_str}.png",
+        f"xz_{case}_t{time_str}{vector_suffix}.png",
     )
 
 
@@ -68,12 +116,14 @@ def format_time_label(time_value) -> str:
 
 
 def compose_figure(wrf_data, cfd_data, case_label: str, output_path: str,
-                   time_value, max_height=v2p.MAX_HEIGHT):
+                   time_value, max_height=v2p.MAX_HEIGHT,
+                   show_vectors=True):
     """2-panel figure with simulation time annotated."""
     v2p._apply_global_style()
 
-    wrf_vmax = v2p.WIND_SPEED_COLORBAR_VMAX if wrf_data else None
-    cfd_vmax = v2p.WIND_SPEED_COLORBAR_VMAX
+    colorbar_vmax, colorbar_ticks = wind_speed_color_scale(wrf_data, cfd_data)
+    wrf_vmax = colorbar_vmax if wrf_data else None
+    cfd_vmax = colorbar_vmax
 
     fig = plt.figure(figsize=(12, 11))
     panel_h = 0.34
@@ -83,16 +133,20 @@ def compose_figure(wrf_data, cfd_data, case_label: str, output_path: str,
 
     if wrf_data is not None:
         qm_wrf = v2p.draw_wrf_panel(ax_wrf, wrf_data, vmax=wrf_vmax,
-                                    max_height=max_height)
-        v2p.add_wind_speed_colorbar(fig, qm_wrf, ax_wrf)
+                                    max_height=max_height,
+                                    show_vectors=show_vectors)
+        v2p.add_wind_speed_colorbar(fig, qm_wrf, ax_wrf,
+                                    ticks=colorbar_ticks, tick_format="%g")
     else:
         ax_wrf.text(0.5, 0.5, "WRF data unavailable\n(file not found)",
                     ha="center", va="center", transform=ax_wrf.transAxes,
                     fontsize=12, color="grey")
         v2p._add_panel_label(ax_wrf, "(a) WRF (mesoscale boundary)")
 
-    hb_cfd = v2p.draw_cfd_panel(ax_cfd, cfd_data, vmax=cfd_vmax)
-    v2p.add_wind_speed_colorbar(fig, hb_cfd, ax_cfd)
+    hb_cfd = v2p.draw_cfd_panel(ax_cfd, cfd_data, vmax=cfd_vmax,
+                                show_vectors=show_vectors)
+    v2p.add_wind_speed_colorbar(fig, hb_cfd, ax_cfd,
+                                ticks=colorbar_ticks, tick_format="%g")
 
     time_label = format_time_label(time_value)
     fig.text(
@@ -126,10 +180,13 @@ def build_parser():
         help="Path to ParaView CSV (e.g. .../postProcessing/y-4995m_t10.csv)",
     )
     p.add_argument("--output", default=None,
-                   help="Output PNG (default: results/.../comparison_xz_wrf_cfd_<case>_t<time>.png)")
+                   help="Output PNG (default: results/.../xz_<case>_t<time>[_no_vectors].png)")
     p.add_argument("--wrf-nc", default=None, help="Override WRF NetCDF path")
     p.add_argument("--no-wrf", action="store_true",
                    help="Skip WRF panel even if the file is available")
+    p.add_argument("--no-vector", "--no-vectors", dest="show_vectors",
+                   action="store_false", default=True,
+                   help="Hide quiver vectors and write '_no_vectors' into the default filename")
     p.add_argument("--lat", type=float, default=v2p.TARGET_LAT)
     p.add_argument("--lon", type=float, default=v2p.TARGET_LON)
     p.add_argument("--lat-tol", type=float, default=v2p.LAT_TOL)
@@ -151,8 +208,10 @@ def main():
     wrf_nc_path, _, wrf_time = v2p.infer_paths(cfd_dir)
     if args.wrf_nc:
         wrf_nc_path = args.wrf_nc
+    wrf_nc_path = resolve_existing_wrf_nc_path(wrf_nc_path)
 
-    output_path = args.output or default_output_path(cfd_dir, time_str)
+    output_path = args.output or default_output_path(
+        cfd_dir, time_str, show_vectors=args.show_vectors)
 
     print("=" * 64)
     print("  WRF–CFD X-Z Comparison at time step")
@@ -192,6 +251,7 @@ def main():
         output_path=output_path,
         time_value=time_value,
         max_height=args.max_height,
+        show_vectors=args.show_vectors,
     )
 
 
