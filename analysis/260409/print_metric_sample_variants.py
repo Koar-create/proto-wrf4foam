@@ -109,7 +109,7 @@ def section_utc_groups(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
 def section_lst_periods(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
     sub_l = _attach_lst(sub)
     lst = sub_l["lst"]
-    for day in (1, 2, 3):
+    for day in pm.metric_lst_days():
         for period, mask in (
             ("AM (LST 07-18)", mask_lst_day_am(lst, day)),
             ("PM (LST 19 - next day 06)", mask_lst_day_pm(lst, day)),
@@ -125,7 +125,7 @@ def section_lst_periods(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
 def section_by_utc_calendar_day(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
     sub = sub.copy()
     sub["utc_date"] = sub["datetime"].dt.strftime("%Y-%m-%d")
-    for d in ("2025-09-01", "2025-09-02", "2025-09-03"):
+    for d in pm.metric_utc_dates():
         g = sub[sub["utc_date"] == d]
         print_layer_summary(f"UTC calendar day - {d}", g, skip_high=skip_high)
 
@@ -189,6 +189,11 @@ def main() -> None:
     df_raw = pm.load_and_preprocess(path)
     df = pm.quality_control(df_raw)
     sub = _base_subset(df)
+
+    print(
+        f"[Config] Time range: {pm.METRIC_START} .. {pm.METRIC_END}  "
+        f"(N rows after QC: {len(sub):,})"
+    )
 
     pd.set_option("display.max_columns", 20)
     pd.set_option("display.width", 160)

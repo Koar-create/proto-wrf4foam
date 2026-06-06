@@ -8,7 +8,9 @@ from pathlib import Path
 
 # ─── 路径与阈值配置（避免 Hardcoding）────────────────────────────────────────
 REPO_ROOT = Path(__file__).resolve().parents[2]
+ANALYSIS_DIR = Path(__file__).resolve().parent
 DATA_PATH = REPO_ROOT / "data/260409/processed/merged_lidar_simulation_final.csv"   # 已处理数据
+LAYER_SUMMARY_CSV = ANALYSIS_DIR / "layer_metrics_summary.csv"
 
 WS_MAX_OBS  = 30.0   # m/s: 观测物理上限（仪器异常阈值）
 WS_MAX_CFD  = 20.0   # m/s: CFD 上限（>20 视为数值发散）
@@ -25,6 +27,11 @@ def summary_layers(*, skip_high: bool = False) -> list[str]:
         return LAYER_NAMES_EN[:-1]
     return list(LAYER_NAMES_EN)
 
+# 与 merge_lidar_data.py 一致：CFD control 覆盖到 2025-09-05 10:00 UTC。
+METRIC_START = "2025-09-01 00:00:00"
+METRIC_END = "2025-09-05 23:00:00"
+METRIC_DATETIMES = pd.date_range(METRIC_START, METRIC_END, freq="h")
+
 '''
 TIME_LABELS = {
     "2025-09-03 00:00:00": "0000 UTC",
@@ -35,8 +42,18 @@ TIME_LABELS = {
     "2025-09-03 20:00:00": "2000 UTC"
 }
 '''
-TIME_LABELS = {f"2025-09-{d:02d} {h:02d}:00:00": f"{d:02d}_{h:02d}00 UTC"
-               for d in range(1, 4) for h in range(24)}
+TIME_LABELS = {
+    dt.strftime("%Y-%m-%d %H:%M:%S"): f"{dt.day:02d}_{dt.strftime('%H00')} UTC"
+    for dt in METRIC_DATETIMES
+}
+
+
+def metric_utc_dates() -> list[str]:
+    return sorted({dt.strftime("%Y-%m-%d") for dt in METRIC_DATETIMES})
+
+
+def metric_lst_days() -> list[int]:
+    return sorted({(dt + pd.Timedelta(hours=8)).day for dt in METRIC_DATETIMES})
 
 # ─── 色盲友好配色（IBM Color Blind Safe Palette 变体）────────────────────────
 COLOR_OBS = "#1a1a2e"   # 深蓝黑 – LiDAR 观测
@@ -270,6 +287,31 @@ def compute_metrics_table(df: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
+def compute_layer_summary(df: pd.DataFrame, *, skip_high: bool = False) -> pd.DataFrame:
+    """全站点、全时次按高度层聚合的风速指标汇总表。"""
+    sub_df = df[df['qc_ok'] & df['ws_obs'].notna()].copy()
+    rows: list[dict] = []
+
+    for layer in summary_layers(skip_high=skip_high):
+        g = sub_df[sub_df['layer'] == layer]
+        if len(g) < 5:
+            continue
+        o, w, c = g['ws_obs'].values, g['ws_wrf'].values, g['ws_cfd'].values
+        rows.append({
+            'Layer': layer,
+            'N': len(g),
+            'WRF_MBE': round(mean_bias_error(w, o), 3),
+            'WRF_RMSE': round(rmse(w, o), 3),
+            'WRF_IoA': round(index_of_agreement(w, o), 3),
+            'CFD_MBE': round(mean_bias_error(c, o), 3),
+            'CFD_RMSE': round(rmse(c, o), 3),
+            'CFD_IoA': round(index_of_agreement(c, o), 3),
+            'SS': round(skill_score(c, o, w), 3),
+        })
+
+    return pd.DataFrame(rows)
+
+
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Print layer-aggregated wind speed metrics (WRF / CFD vs LiDAR)."
@@ -301,30 +343,30 @@ def main() -> None:
     # print(f"\nMetrics table: {len(metrics)} rows (Site × Time × Layer)")
     # print(metrics.to_string(index=False))
 
+    layer_summary = compute_layer_summary(df, skip_high=args.no_high)
+    layer_summary.to_csv(LAYER_SUMMARY_CSV, index=False)
+    print(f"\n[CSV] Layer summary written to: {LAYER_SUMMARY_CSV}")
+
     # ─── 分层聚合汇总（全站点、全时次）────────────────────────────────────────
     print("\n" + "=" * 70)
     print("  Layer-aggregated summary (all sites + all times)")
     print("=" * 70)
 
-    sub_df = df[df['qc_ok'] & df['ws_obs'].notna()].copy()
     print("\n-- All times --")
     header = f"{'Layer':<22} {'N':>5}  {'WRF_MBE':>8} {'WRF_RMSE':>9} "
     header += f"{'WRF_IoA':>8}  {'CFD_MBE':>8} {'CFD_RMSE':>9} {'CFD_IoA':>8}  {'SS':>7}"
     print(header)
     print("-" * len(header))
 
-    for layer in summary_layers(skip_high=args.no_high):
-        g = sub_df[sub_df['layer'] == layer]
-        if len(g) < 5:
-            continue
-        o, w, c = g['ws_obs'].values, g['ws_wrf'].values, g['ws_cfd'].values
-        row = (f"{layer:<22} {len(g):>5}  "
-               f"{mean_bias_error(w, o):>+8.3f} {rmse(w, o):>9.3f} "
-               f"{index_of_agreement(w, o):>8.3f}  "
-               f"{mean_bias_error(c, o):>+8.3f} {rmse(c, o):>9.3f} "
-               f"{index_of_agreement(c, o):>8.3f}  "
-               f"{skill_score(c, o, w):>+7.3f}")
-        print(row)
+    for _, row in layer_summary.iterrows():
+        print(
+            f"{row['Layer']:<22} {int(row['N']):>5}  "
+            f"{row['WRF_MBE']:>+8.3f} {row['WRF_RMSE']:>9.3f} "
+            f"{row['WRF_IoA']:>8.3f}  "
+            f"{row['CFD_MBE']:>+8.3f} {row['CFD_RMSE']:>9.3f} "
+            f"{row['CFD_IoA']:>8.3f}  "
+            f"{row['SS']:>+7.3f}"
+        )
 
 
 if __name__ == "__main__":

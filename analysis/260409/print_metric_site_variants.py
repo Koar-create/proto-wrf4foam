@@ -206,7 +206,10 @@ def main() -> None:
     else:
         sites = all_sites
 
-    print(f"[Config] Sites in analysis: {', '.join(sites)}  (N rows after QC: {len(sub):,})")
+    print(
+        f"[Config] Time range: {pm.METRIC_START} .. {pm.METRIC_END}  "
+        f"| Sites: {', '.join(sites)}  (N rows after QC: {len(sub):,})"
+    )
 
     pd.set_option("display.max_columns", 20)
     pd.set_option("display.width", 160)
