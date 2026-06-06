@@ -11,7 +11,7 @@ import pandas as pd
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[1]
+    return Path(__file__).resolve().parents[2]
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,17 +44,13 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-# 目标时次（与历史脚本一致：三天逐小时）
-target_times = [
-    f"{date} {hr:02d}:00:00"
-    for date in ["2025-09-01", "2025-09-02", "2025-09-03"]
-    for hr in range(24)
-]
+# 目标时次：CFD control 目前覆盖到 2025-09-05 23:00。
+target_datetimes = pd.date_range("2025-09-01 00:00:00", "2025-09-05 23:00:00", freq="h")
+target_times = target_datetimes.strftime("%Y-%m-%d %H:%M:%S").tolist()
 
 cfd_files = [
-    f"CFD_lidar_simulation_{date}_{hr:02d}00_two_boundaries_as_outlet.csv"
-    for date in ["20250901", "20250902", "20250903"]
-    for hr in range(24)
+    f"CFD_lidar_simulation_{dt.strftime('%Y%m%d_%H00')}_two_boundaries_as_outlet.csv"
+    for dt in target_datetimes
 ]
 
 
@@ -109,6 +105,8 @@ def load_and_preprocess(
     ].rename(columns={"U": "u_obs", "V": "v_obs", "WindSpd": "ws_obs"})
     merged = pd.merge(merged, df_lidar_sub, on=["datetime", "obtid", "layer_idx"], how="inner")
 
+    merged["ws_cfd"] = (merged["u_cfd"] ** 2 + merged["v_cfd"] ** 2) ** 0.5
+
     final_columns = [
         "datetime",
         "obtid",
@@ -124,6 +122,7 @@ def load_and_preprocess(
         "u_cfd",
         "v_cfd",
         "w_cfd",
+        "ws_cfd",
     ]
     final_df = merged[final_columns].copy()
 
