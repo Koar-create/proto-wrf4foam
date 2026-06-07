@@ -228,6 +228,34 @@ for dt_str, case_dir, last_ts, status in exps:
         # uniform 场（极少情况）
         U_arr = np.tile(U_arr, (len(cell_coords), 1))
 
+    # ── 读取标量场 k 和 epsilon ─────────────────────────
+    def read_scalar_field(field_name):
+        ffile = os.path.join(case_dir, last_ts, field_name)
+        if not os.path.exists(ffile):
+            return np.zeros(len(cell_coords))
+        with open(ffile, "r", errors="replace") as f:
+            content = f.read()
+        m_scalar = re.search(
+            r"internalField\s+nonuniform\s+List<scalar>\s*\n\s*(\d+)\s*\n\s*\((.*?)\)\s*;",
+            content, re.DOTALL
+        )
+        if not m_scalar:
+            m_uni = re.search(
+                r"internalField\s+uniform\s+([-\d.eE+]+)", content
+            )
+            if m_uni:
+                val = float(m_uni.group(1))
+                return np.full(len(cell_coords), val)
+            else:
+                return np.zeros(len(cell_coords))
+        else:
+            raw = m_scalar.group(2).strip()
+            vals = raw.split()
+            return np.array([float(v) for v in vals])
+            
+    k_arr = read_scalar_field("k")
+    eps_arr = read_scalar_field("epsilon")
+
     # ── 逐站点提取（原 cfd_extract_site_from_field 函数展开）─────────────────
     for _, row in lidar_sites.iterrows():
         obtid       = row["obtid"]
@@ -265,6 +293,8 @@ for dt_str, case_dir, last_ts, status in exps:
         U_sel = U_arr[mask, 0]
         V_sel = U_arr[mask, 1]
         W_sel = U_arr[mask, 2]
+        k_sel = k_arr[mask]
+        eps_sel = eps_arr[mask]
 
         # 反距离加权（IDW）
         dist_sel = dist_h[mask]
@@ -277,13 +307,17 @@ for dt_str, case_dir, last_ts, status in exps:
         z_bin_centres = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
         # ── weighted_bin 内联（原内联函数，保持逻辑不变）─────────────────────
-        # 对变量 U_sel 进行分 bin 加权平均
+        # 对变量进行分 bin 加权平均
         num_u = np.zeros(len(z_bin_centres))
         den_u = np.zeros(len(z_bin_centres))
         num_v = np.zeros(len(z_bin_centres))
         den_v = np.zeros(len(z_bin_centres))
         num_w = np.zeros(len(z_bin_centres))
         den_w = np.zeros(len(z_bin_centres))
+        num_k = np.zeros(len(z_bin_centres))
+        den_k = np.zeros(len(z_bin_centres))
+        num_eps = np.zeros(len(z_bin_centres))
+        den_eps = np.zeros(len(z_bin_centres))
 
         for i_bin, zb in enumerate(z_bin_centres):
             in_bin = (z_sel >= bin_edges[i_bin]) & (z_sel < bin_edges[i_bin + 1])
@@ -296,17 +330,25 @@ for dt_str, case_dir, last_ts, status in exps:
             den_v[i_bin] = w_bin.sum()
             num_w[i_bin] = (w_bin * W_sel[in_bin]).sum()
             den_w[i_bin] = w_bin.sum()
+            num_k[i_bin] = (w_bin * k_sel[in_bin]).sum()
+            den_k[i_bin] = w_bin.sum()
+            num_eps[i_bin] = (w_bin * eps_sel[in_bin]).sum()
+            den_eps[i_bin] = w_bin.sum()
 
         valid_u = den_u > 0
         valid_v = den_v > 0
         valid_w = den_w > 0
+        valid_k = den_k > 0
+        valid_eps = den_eps > 0
 
-        # 取三分量共同有效的 bin（保证 z_prof 一致）
-        valid = valid_u & valid_v & valid_w
+        # 取分量共同有效的 bin（保证 z_prof 一致）
+        valid = valid_u & valid_v & valid_w & valid_k & valid_eps
         z_prof = z_bin_centres[valid]
         U_prof = num_u[valid] / den_u[valid]
         V_prof = num_v[valid] / den_v[valid]
         W_prof = num_w[valid] / den_w[valid]
+        k_prof = num_k[valid] / den_k[valid]
+        eps_prof = num_eps[valid] / den_eps[valid]
         # ── weighted_bin 内联结束 ─────────────────────────────────────────────
 
         if len(z_prof) < 2:
@@ -316,6 +358,8 @@ for dt_str, case_dir, last_ts, status in exps:
             U_prof = U_sel[order]
             V_prof = V_sel[order]
             W_prof = W_sel[order]
+            k_prof = k_sel[order]
+            eps_prof = eps_sel[order]
 
         # 去重（同一 z 值）
         _, ui   = np.unique(z_prof, return_index=True)
@@ -323,6 +367,8 @@ for dt_str, case_dir, last_ts, status in exps:
         U_prof  = U_prof[ui]
         V_prof  = V_prof[ui]
         W_prof  = W_prof[ui]
+        k_prof  = k_prof[ui]
+        eps_prof = eps_prof[ui]
 
         # ── safe_interp 内联（原内联函数，保持逻辑不变）──────────────────────
         f_u = interp1d(z_prof, U_prof, kind="linear", bounds_error=False,
@@ -331,11 +377,17 @@ for dt_str, case_dir, last_ts, status in exps:
                        fill_value=(V_prof[0], V_prof[-1]))
         f_w = interp1d(z_prof, W_prof, kind="linear", bounds_error=False,
                        fill_value=(W_prof[0], W_prof[-1]))
+        f_k = interp1d(z_prof, k_prof, kind="linear", bounds_error=False,
+                       fill_value=(k_prof[0], k_prof[-1]))
+        f_eps = interp1d(z_prof, eps_prof, kind="linear", bounds_error=False,
+                         fill_value=(eps_prof[0], eps_prof[-1]))
 
         u_out  = f_u(probe_heights)
         v_out  = f_v(probe_heights)
         w_out  = f_w(probe_heights)
         ws_out = np.sqrt(u_out**2 + v_out**2)
+        k_out  = f_k(probe_heights)
+        eps_out= f_eps(probe_heights)
         # ── safe_interp 内联结束 ──────────────────────────────────────────────
 
         # 逐高度层构建记录
@@ -355,6 +407,8 @@ for dt_str, case_dir, last_ts, status in exps:
                 "V_cfd":         v_out[i_idx],
                 "W_cfd":         w_out[i_idx],
                 "WS_cfd":        ws_out[i_idx],
+                "k_cfd":         k_out[i_idx],
+                "eps_cfd":       eps_out[i_idx],
             }
             cfd_records.append(rec)
     # ── cfd_extract_site_from_field 逻辑结束 ──────────────────────────────────
@@ -375,7 +429,7 @@ if not df_cfd_lidar.empty:
 
     # ── xarray 整合验证（xarray 风格统一）────────────────────────────────────
     # 将数值列转为 xarray.Dataset，方便后续扩展（如添加坐标属性、NetCDF 输出等）
-    numeric_cols = ["z_probe", "U_cfd", "V_cfd", "W_cfd", "WS_cfd"]
+    numeric_cols = ["z_probe", "U_cfd", "V_cfd", "W_cfd", "WS_cfd", "k_cfd", "eps_cfd"]
     ds_cfd = xr.Dataset.from_dataframe(df_cfd_lidar[numeric_cols])
     # 仅做验证打印，最终仍以 CSV 格式保存
     print(f"\n  xarray Dataset 概览: {dict(ds_cfd.dims)}")

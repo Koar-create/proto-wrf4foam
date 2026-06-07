@@ -53,6 +53,8 @@ cfd_files = [
     for dt in target_datetimes
 ]
 
+EXCLUDED_OBTIDS = {"GAW105"}
+
 
 def load_and_preprocess(
     cfd_dir: Path,
@@ -79,6 +81,9 @@ def load_and_preprocess(
         cfd_list.append(tmp)
     df_cfd = pd.concat(cfd_list, ignore_index=True)
 
+    for df in (df_wrf, df_lidar, df_cfd):
+        df.drop(df[df["obtid"].isin(EXCLUDED_OBTIDS)].index, inplace=True)
+
     print("Step 3: Aligning vertical layers by index...")
     for df in (df_wrf, df_cfd, df_lidar):
         h_col = "z_probe" if "z_probe" in df.columns else "Height"
@@ -96,7 +101,7 @@ def load_and_preprocess(
     )
 
     df_cfd_sub = df_cfd[
-        ["datetime", "obtid", "layer_idx", "U_cfd", "V_cfd", "W_cfd"]
+        ["datetime", "obtid", "layer_idx", "U_cfd", "V_cfd", "W_cfd", "k_cfd", "eps_cfd"]
     ].rename(columns={"U_cfd": "u_cfd", "V_cfd": "v_cfd", "W_cfd": "w_cfd"})
     merged = pd.merge(df_wrf, df_cfd_sub, on=["datetime", "obtid", "layer_idx"], how="inner")
 
@@ -119,10 +124,14 @@ def load_and_preprocess(
         "u_wrf",
         "v_wrf",
         "ws_wrf",
+        "k_wrf",
+        "eps_wrf",
         "u_cfd",
         "v_cfd",
         "w_cfd",
         "ws_cfd",
+        "k_cfd",
+        "eps_cfd",
     ]
     final_df = merged[final_columns].copy()
 
