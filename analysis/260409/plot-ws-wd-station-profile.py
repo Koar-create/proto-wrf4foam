@@ -96,7 +96,7 @@ def plot_ws_wd_station_profiles(df: pd.DataFrame, out_dir: Path, tz: str = TZ_TA
             if not _has_any_hour(day, hours):
                 continue
             fig, axes = plt.subplots(
-                4, 2 * n_sites,
+                3, 2 * n_sites,
                 figsize=(2.8 * 2 * n_sites, 3.2 * 4),
                 constrained_layout=True,
             )
@@ -142,7 +142,7 @@ def plot_ws_wd_station_profiles(df: pd.DataFrame, out_dir: Path, tz: str = TZ_TA
                     )
                     ax_ws.plot(agg['ws_wrf'], agg['Height'], color=COLOR_WRF, lw=1.5, ls='--')
                     ax_ws.plot(agg['ws_cfd'], agg['Height'], color=COLOR_CFD, lw=1.8, ls='-')
-                    ax_ws.set_ylim(0, 2100)
+                    ax_ws.set_ylim(0, 1000)
                     ax_ws.set_xlim(left=0)
                     ax_ws.set_title(
                         f"{site} | {tl}" if i_h == 0 else tl,
@@ -162,7 +162,7 @@ def plot_ws_wd_station_profiles(df: pd.DataFrame, out_dir: Path, tz: str = TZ_TA
                     ax_wd.plot(agg['wd_obs'], agg['Height'], 'o', ms=2.5, color=COLOR_OBS, alpha=0.9, label='LiDAR')
                     ax_wd.plot(agg['wd_wrf'], agg['Height'], color=COLOR_WRF, lw=1.5, ls='--', label='WRF')
                     ax_wd.plot(agg['wd_cfd'], agg['Height'], color=COLOR_CFD, lw=1.8, ls='-', label='OpenFOAM')
-                    ax_wd.set_ylim(0, 2100)
+                    ax_wd.set_ylim(0, 1000)
                     ax_wd.set_xlim(0, 360)
                     ax_wd.set_xticks([0, 90, 180, 270, 360])
                     if i_h == 3:

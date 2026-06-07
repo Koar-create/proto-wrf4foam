@@ -133,7 +133,7 @@ def plot_ws_wd_composite_profile(
     out_dir: Path,
     *,
     tz: str = "utc",
-    zmax: float = 2000.0,
+    zmax: float = 1000.0,
 ) -> Path:
     tz = tz.lower()
     if tz not in {"utc", "lst"}:
@@ -229,8 +229,8 @@ def _parse_args() -> argparse.Namespace:
     )
     p.add_argument("--tz", choices=["utc", "lst"], default="utc",
                    help="Title time zone: utc (default) or lst (UTC+8).")
-    p.add_argument("--zmax", type=float, default=2000.0,
-                   help="Upper limit of y-axis (height, m). Default: 2000.")
+    p.add_argument("--zmax", type=float, default=1000.0,
+                   help="Upper limit of y-axis (height, m). Default: 1000.")
     p.add_argument("--out-dir", type=Path, default=OUTPUT_DIR,
                    help=f"Output directory. Default: {OUTPUT_DIR}")
     return p.parse_args()
