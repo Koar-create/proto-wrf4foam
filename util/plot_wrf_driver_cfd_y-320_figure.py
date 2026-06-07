@@ -30,7 +30,7 @@ Data provenance:
         field fed to OpenFOAM, shown in panels (a) and (c).
 
     steady_experiments_finer_ABL/20250901_0000_two_boundaries_as_outlet/
-    postProcessing/y-4995m_t5000.csv
+    postProcessing/y-320m_t5000.csv
         From util/export_y_slice_at_time_as_csv.py. A ParaView batch script
         loads the steady OpenFOAM case, converts cell data to point data,
         slices a y-normal plane at y = -4995 m, resamples it onto a regular
@@ -56,7 +56,8 @@ import pandas as pd
 import xarray as xr
 from matplotlib.colors import Normalize
 from pyproj import Proj
-
+from matplotlib.collections import PolyCollection
+import sys
 
 DEFAULT_RAW_WRF = (
     "W_myExp03/auxhist2/tmp/"
@@ -68,17 +69,18 @@ DEFAULT_DRIVER = (
 )
 DEFAULT_CFD_CSV = (
     "steady_experiments_finer_ABL/20250901_0000_two_boundaries_as_outlet/"
-    "postProcessing/y-4995m_t5000.csv"
+    "postProcessing/y-320m_t5000.csv"
 )
 DEFAULT_OUTPUT = (
     "results/wrf_openfoam/wrf_driver_cfd_boundary_figure/"
-    "fig5_like_20250901_0000_south_u.png"
+    "fig5_like_20250901_0000_y-320m_u.png"
 )
+DEFAULT_BUILDINGS_STL = "constant/triSurface/buildings.stl"
 
 LON0 = 113.32
 LAT0 = 23.115
-TARGET_Y_DRIVER = -5000.0
-TARGET_Y_CFD = -4995.0
+TARGET_Y_DRIVER = -320.0
+TARGET_Y_CFD = -320.0
 MAX_HEIGHT = 2000.0
 X_MIN = -2500.0
 X_MAX = 2500.0
@@ -114,7 +116,7 @@ def resolve_path(path: str | os.PathLike[str]) -> Path:
     if not p.is_absolute():
         p = repo_root() / p
     # Avoid Path.resolve() here: on Windows it may collapse filenames that look
-    # like 8.3 aliases, e.g. y-4995m_t5000.csv -> y-4995m.csv.
+    # like 8.3 aliases, e.g. y-320m_t5000.csv -> y-4995m.csv.
     p = p.absolute()
     if p.exists():
         return p
@@ -325,52 +327,35 @@ def robust_norm(*arrays: np.ndarray) -> Normalize:
     return Normalize(vmin=float(vmin), vmax=float(vmax))
 
 
-def configure_style(three_panel: bool = False) -> None:
-    if three_panel:
-        plt.rcParams.update({
-            "font.family": "DejaVu Serif",
-            "font.size": 22,
-            "axes.labelsize": 26,
-            "axes.titlesize": 28,
-            "xtick.labelsize": 22,
-            "ytick.labelsize": 22,
-            "axes.titleweight": "bold",
-            "axes.grid": True,
-            "grid.alpha": 0.22,
-            "grid.linestyle": "--",
-            "xtick.direction": "in",
-            "ytick.direction": "in",
-            "figure.dpi": 120,
-            "savefig.dpi": 300,
-        })
-    else:
-        plt.rcParams.update({
-            "font.family": "DejaVu Serif",
-            "font.size": 10,
-            "axes.labelsize": 11,
-            "axes.titlesize": 11,
-            "axes.titleweight": "bold",
-            "axes.grid": True,
-            "grid.alpha": 0.22,
-            "grid.linestyle": "--",
-            "xtick.direction": "in",
-            "ytick.direction": "in",
-            "figure.dpi": 120,
-            "savefig.dpi": 300,
-        })
+def configure_style() -> None:
+    plt.rcParams.update({
+        "font.family": "DejaVu Serif",
+        "font.size": 22,
+        "axes.labelsize": 26,
+        "axes.titlesize": 28,
+        "xtick.labelsize": 22,
+        "ytick.labelsize": 22,
+        "axes.titleweight": "bold",
+        "axes.grid": True,
+        "grid.alpha": 0.22,
+        "grid.linestyle": "--",
+        "xtick.direction": "in",
+        "ytick.direction": "in",
+        "figure.dpi": 120,
+        "savefig.dpi": 300,
+    })
 
 
-def add_panel_label(ax: plt.Axes, label: str, show: bool, info: str | None = None, three_panel: bool = False) -> None:
+def add_panel_label(ax: plt.Axes, label: str, show: bool, info: str | None = None) -> None:
     if not show:
         return
     text = label if not info else f"{label} {info}"
-    fontsize = 24 if three_panel else 10
     ax.text(
         0.02, 0.98, text,
         transform=ax.transAxes,
         ha="left",
         va="top",
-        fontsize=fontsize,
+        fontsize=24,
         fontweight="bold",
         bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="none", alpha=0.75),
     )
@@ -405,8 +390,7 @@ def draw_grid_section(
     cmap: str,
     panel_label: str,
     show_titles: bool,
-    three_panel: bool = False,
-):
+) -> None:
     if section.z_is_edges:
         x_centers = np.asarray(section.x[0, :], dtype=float)
         x_edges = cell_edges_1d(x_centers)
@@ -432,7 +416,7 @@ def draw_grid_section(
             rasterized=True,
         )
 
-    add_panel_label(ax, panel_label, show_titles, section.label, three_panel=three_panel)
+    add_panel_label(ax, panel_label, show_titles, section.label)
     ax.set_xlabel("x (m)")
     ax.set_ylabel("Height (m)")
     return qm
@@ -445,7 +429,6 @@ def draw_cfd_section(
     cmap: str,
     panel_label: str,
     show_titles: bool,
-    three_panel: bool = False,
 ):
     hb = ax.hexbin(
         section.x,
@@ -459,7 +442,7 @@ def draw_cfd_section(
         rasterized=True,
         linewidths=0.0,
     )
-    add_panel_label(ax, panel_label, show_titles, section.label, three_panel=three_panel)
+    add_panel_label(ax, panel_label, show_titles, section.label)
     ax.set_xlabel("x (m)")
     ax.set_ylabel("Height (m)")
     return hb
@@ -475,80 +458,54 @@ def make_figure(
     x_max: float,
     cmap: str,
     show_titles: bool,
-    three_panel: bool = False,
+    buildings_stl: Path | None = None,
+    target_y: float = TARGET_Y_CFD,
 ) -> None:
-    configure_style(three_panel)
+    configure_style()
     norm = robust_norm(raw.ws, driver.ws, cfd.ws)
 
-    if three_panel:
-        fig, axes = plt.subplots(
-            3, 1,
-            figsize=(12.0, 16.0),
-            constrained_layout=True,
-        )
-        ax_raw, ax_driver, ax_cfd = axes
+    fig, axes = plt.subplots(
+        3, 1,
+        figsize=(12.0, 16.0),
+        constrained_layout=True,
+    )
+    ax_raw, ax_driver, ax_cfd = axes
 
-        qm_raw = draw_grid_section(ax_raw, raw, norm, cmap, "(a)", show_titles, three_panel)
-        draw_grid_section(ax_driver, driver, norm, cmap, "(b)", show_titles, three_panel)
-        hb_cfd = draw_cfd_section(ax_cfd, cfd, norm, cmap, "(c)", show_titles, three_panel)
+    qm_raw = draw_grid_section(ax_raw, raw, norm, cmap, "(a)", show_titles)
+    draw_grid_section(ax_driver, driver, norm, cmap, "(b)", show_titles)
+    hb_cfd = draw_cfd_section(ax_cfd, cfd, norm, cmap, "(c)", show_titles)
 
-        for ax in [ax_raw, ax_driver, ax_cfd]:
-            ax.set_ylim(0, max_height)
-            ax.set_xlim(x_min, x_max)
-            ax.set_aspect("equal")
+    stl_polys = None
+    if buildings_stl and buildings_stl.exists():
+        sys.path.append(str(repo_root() / "scripts"))
+        from visualize_openfoam_domain import load_stl_triangles
+        stl_tris = load_stl_triangles(buildings_stl)
+        dy = 50.0
+        ymin = stl_tris[:, :, 1].min(axis=1)
+        ymax = stl_tris[:, :, 1].max(axis=1)
+        mask = (ymin <= target_y + dy) & (ymax >= target_y - dy)
+        stl_polys = stl_tris[mask][:, :, [0, 2]]
 
-        cbar = fig.colorbar(
-            hb_cfd if hb_cfd is not None else qm_raw,
-            ax=[ax_raw, ax_driver, ax_cfd],
-            fraction=0.08,
-            pad=0.04,
-            shrink=0.9,
-            aspect=40,
-            extend="both",
-        )
-        cbar.ax.tick_params(labelsize=22)
-        cbar.set_label(WS_LABEL, fontsize=26, labelpad=15)
-        
-    else:
-        raw_prof = profile_from_grid(raw, "Raw WRF")
-        driver_prof = profile_from_grid(driver, DRIVER_LABEL)
-        cfd_prof = profile_from_cfd(cfd, "OpenFOAM")
+    for ax in [ax_raw, ax_driver, ax_cfd]:
+        if stl_polys is not None:
+            ax.add_collection(
+                PolyCollection(stl_polys, facecolor="#3DAA55", edgecolor="none", alpha=0.55, zorder=5)
+            )
+        ax.set_ylim(0, max_height)
+        ax.set_xlim(x_min, x_max)
+        ax.set_aspect("equal")
 
-        fig, axes = plt.subplots(
-            2, 2,
-            figsize=(11.0, 8.2),
-            constrained_layout=True,
-            gridspec_kw={"width_ratios": [1.0, 1.0]},
-        )
-        ax_prof, ax_raw = axes[0]
-        ax_driver, ax_cfd = axes[1]
-
-        ax_prof.plot(raw_prof.ws, raw_prof.z, "ko-", ms=3.0, lw=1.4, label=raw_prof.label)
-        ax_prof.plot(driver_prof.ws, driver_prof.z, color="#1f4ed8", ls="--", lw=1.7,
-                     label=driver_prof.label)
-        ax_prof.plot(cfd_prof.ws, cfd_prof.z, color="#d62728", lw=1.7, label=cfd_prof.label)
-        add_panel_label(ax_prof, "(a)", show_titles, "Boundary-mean profile", three_panel)
-        ax_prof.set_xlabel(WS_LABEL)
-        ax_prof.set_ylabel("Height (m)")
-        ax_prof.set_ylim(0, max_height)
-        ax_prof.legend(loc="lower right", fontsize=8, frameon=True)
-
-        qm_raw = draw_grid_section(ax_raw, raw, norm, cmap, "(b)", show_titles, three_panel)
-        draw_grid_section(ax_driver, driver, norm, cmap, "(c)", show_titles, three_panel)
-        hb_cfd = draw_cfd_section(ax_cfd, cfd, norm, cmap, "(d)", show_titles, three_panel)
-
-        for ax in [ax_raw, ax_driver, ax_cfd]:
-            ax.set_ylim(0, max_height)
-            ax.set_xlim(x_min, x_max)
-
-        cbar = fig.colorbar(
-            hb_cfd if hb_cfd is not None else qm_raw,
-            ax=[ax_raw, ax_driver, ax_cfd],
-            fraction=0.035,
-            pad=0.018,
-            extend="both",
-        )
-        cbar.set_label(WS_LABEL)
+    cbar = fig.colorbar(
+        hb_cfd if hb_cfd is not None else qm_raw,
+        ax=[ax_raw, ax_driver, ax_cfd],
+        fraction=0.08,
+        pad=0.04,
+        shrink=0.9,
+        aspect=40,
+        extend="both",
+    )
+    cbar.ax.tick_params(labelsize=22)
+    cbar.set_label(WS_LABEL, fontsize=26, labelpad=15)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output, dpi=300)
@@ -576,16 +533,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--lat0", type=float, default=LAT0,
                    help="Local Cartesian projection origin latitude")
     p.add_argument("--cmap", default="viridis")
+    p.add_argument("--buildings-stl", default=None, nargs="?", const=DEFAULT_BUILDINGS_STL, 
+                   help="Path to buildings STL. If flag is passed without path, uses default STL.")
     p.add_argument("--title", default=None, help=argparse.SUPPRESS)
     p.add_argument(
         "--no-titles",
         action="store_true",
         help="Hide in-axis panel labels (a)-(d)",
-    )
-    p.add_argument(
-        "--three-panel",
-        action="store_true",
-        help="Draw 3 subplots vertically (excluding mean profile) instead of 2x2 layout",
     )
     return p
 
@@ -595,7 +549,12 @@ def main() -> None:
     raw_wrf = resolve_path(args.raw_wrf)
     driver_nc = resolve_path(args.driver)
     cfd_csv = resolve_path(args.cfd_csv)
-    output = resolve_path(args.output)
+    buildings_stl = resolve_path(args.buildings_stl) if args.buildings_stl else None
+    
+    out_path = Path(args.output)
+    if buildings_stl is not None:
+        out_path = out_path.with_name(f"{out_path.stem}_with_buildings{out_path.suffix}")
+    output = resolve_path(out_path)
 
     for path, label in [(raw_wrf, "raw WRF"), (driver_nc, "driver"), (cfd_csv, "CFD CSV")]:
         if not path.exists():
@@ -643,7 +602,8 @@ def main() -> None:
         x_max=args.x_max,
         cmap=args.cmap,
         show_titles=not args.no_titles,
-        three_panel=args.three_panel,
+        buildings_stl=buildings_stl,
+        target_y=args.target_y,
     )
     print(f"Saved figure: {output}")
 
