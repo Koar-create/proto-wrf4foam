@@ -26,12 +26,8 @@ import print_metric as pm  # noqa: E402
 
 # ─── advice-to-adjust-metric-sample.md 策略一（UTC 小时，datetime 为 UTC）────
 UTC_TIME_GROUPS: dict[str, list[int]] = {
-    "Daytime / Convective (LST 11-17 -> UTC 03-09)": list(range(3, 10)),
-    "Nighttime / LLJ-active (LST 23-04 -> UTC 15-20)": list(range(15, 21)),
-    "Transition (remaining UTC hours)": [
-        h for h in range(24)
-        if h not in set(range(3, 10)) | set(range(15, 21))
-    ],
+    "Daytime (LST 07-18)": [23, *range(0, 11)],
+    "Nighttime (LST 19 - next day 06)": list(range(11, 23)),
 }
 
 # 策略二：保守子集（文中原例 UTC 0–11 ≈ LST 08–19）
@@ -73,8 +69,8 @@ def print_layer_summary(title: str, grp_df: pd.DataFrame, *, skip_high: bool = F
     print("=" * 70)
     print()
     header = (
-        f"{'Layer':<22} {'N':>7}  {'WRF_MBE':>8} {'WRF_RMSE':>9} "
-        f"{'WRF_IoA':>8}  {'CFD_MBE':>8} {'CFD_RMSE':>9} "
+        f"{'Layer':<22} {'N':>7}  {'WRF_MBE':>8} {'CFD_MBE':>8} "
+        f"{'WRF_RMSE':>9} {'CFD_RMSE':>9} {'WRF_IoA':>8} "
         f"{'CFD_IoA':>8}  {'SS':>7}"
     )
     print(header)
@@ -87,10 +83,9 @@ def print_layer_summary(title: str, grp_df: pd.DataFrame, *, skip_high: bool = F
         o, w, c = g["ws_obs"].values, g["ws_wrf"].values, g["ws_cfd"].values
         print(
             f"{layer:<22} {len(g):>7}  "
-            f"{pm.mean_bias_error(w, o):>+8.3f} {pm.rmse(w, o):>9.3f} "
-            f"{pm.index_of_agreement(w, o):>8.3f}  "
-            f"{pm.mean_bias_error(c, o):>+8.3f} {pm.rmse(c, o):>9.3f} "
-            f"{pm.index_of_agreement(c, o):>8.3f}  "
+            f"{pm.mean_bias_error(w, o):>+8.3f} {pm.mean_bias_error(c, o):>+8.3f} "
+            f"{pm.rmse(w, o):>9.3f} {pm.rmse(c, o):>9.3f} "
+            f"{pm.index_of_agreement(w, o):>8.3f} {pm.index_of_agreement(c, o):>8.3f}  "
             f"{pm.skill_score(c, o, w):>+7.3f}"
         )
 
@@ -103,7 +98,7 @@ def section_utc_groups(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
     sub_h = _attach_utc_hour(sub)
     for label, hours in UTC_TIME_GROUPS.items():
         g = sub_h[sub_h["utc_hour"].isin(hours)]
-        print_layer_summary(f"UTC subgroup - {label}", g, skip_high=skip_high)
+        print_layer_summary(label, g, skip_high=skip_high)
 
 
 def section_lst_periods(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
@@ -111,12 +106,12 @@ def section_lst_periods(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
     lst = sub_l["lst"]
     for day in pm.metric_lst_days():
         for period, mask in (
-            ("AM (LST 07-18)", mask_lst_day_am(lst, day)),
-            ("PM (LST 19 - next day 06)", mask_lst_day_pm(lst, day)),
+            ("daytime (LST 07-18)", mask_lst_day_am(lst, day)),
+            ("nighttime (LST 19 - next day 06)", mask_lst_day_pm(lst, day)),
         ):
             g = sub_l[mask]
             print_layer_summary(
-                f"LST-grouped (align fig4-lst) - 2025-09-{day:02d} {period}",
+                f"2025-09-{day:02d} {period}",
                 g,
                 skip_high=skip_high,
             )
@@ -134,7 +129,7 @@ def section_conservative(sub: pd.DataFrame, *, skip_high: bool = False) -> None:
     sub_h = _attach_utc_hour(sub)
     g = sub_h[sub_h["utc_hour"].isin(CONSERVATIVE_UTC_HOURS)]
     print_layer_summary(
-        "Conservative subset - UTC 00-11 (~ LST 08-19; advice strategy 2 example)",
+        "Conservative subset - LST 08-19",
         g,
         skip_high=skip_high,
     )
