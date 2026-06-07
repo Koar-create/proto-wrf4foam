@@ -2,6 +2,7 @@ import zipfile
 import io
 import re
 import sys
+import json
 import argparse
 from pathlib import Path
 
@@ -16,6 +17,14 @@ if sys.platform == "win32":
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[1]
 
+
+# ==========================================
+# 湍流估算常数（与 WRF 提取脚本保持一致）
+# ==========================================
+CMU = 0.09          # k-epsilon 模型常数 C_μ
+KAPPA = 0.41        # von Kármán 常数
+L_MIX_MIN = 10.0    # 混合长度下限 (m)
+L_MIX_MAX = 100.0   # 混合长度上限 (m)
 
 # ==========================================
 # 1. 命令行参数解析
@@ -42,6 +51,11 @@ parser.add_argument(
     help="输出 CSV 目录（默认: data/260409/raw/lidar）",
 )
 args = parser.parse_args()
+
+# 读取 LiDAR 站点高度信息（用于 epsilon 估算中的高度 z）
+_STATION_JSON = _root / "util" / "lidar_station_info.json"
+with open(_STATION_JSON, "r", encoding="utf-8") as _f:
+    _station_info = json.load(_f)
 
 def read_nested_lidar_096(zip_path, target_date_str):
     """
@@ -190,12 +204,25 @@ if args.mode == "mean":
         g = group[['U', 'V', 'VerticalSpd']].copy()
         # Step 1: resample 到规则 1min 网格（缺失分钟 → NaN）
         g_resampled = g.resample('1min').mean()
-        # Step 2: 1h 中心滑动平均
-        g_rolled = (
-            g_resampled
-            .rolling('1h', center=True, min_periods=3)
-            .mean()
-        )
+        
+        # Step 2: 1h 中心滑动平均和方差（用于湍流估算）
+        roller = g_resampled.rolling('1h', center=True, min_periods=3)
+        g_rolled = roller.mean()
+        g_var = roller.var(ddof=1)
+        
+        # 估算 k (TKE) = 0.5 * (var(U) + var(V) + var(W))
+        k_est = 0.5 * (g_var['U'] + g_var['V'] + g_var['VerticalSpd'])
+        # 确保 TKE 不小于一个极小值，避免计算 epsilon 时报错或无物理意义
+        k_est = np.maximum(k_est, 1e-6)
+        
+        # 估算 epsilon
+        mixing_length = np.clip(KAPPA * height, L_MIX_MIN, L_MIX_MAX)
+        eps_est = (CMU**0.75) * (k_est**1.5) / mixing_length
+        eps_est = np.maximum(eps_est, 1e-8)
+        
+        g_rolled['k'] = k_est
+        g_rolled['epsilon'] = eps_est
+        
         g_rolled['obtid']  = obtid
         g_rolled['Height'] = height
         results.append(g_rolled.reset_index())
@@ -214,6 +241,8 @@ if args.mode == "mean":
     out_name = "lidar_1h-rolling.csv"
 else:
     # transient 模式
+    df_lidar_raw['k'] = np.nan
+    df_lidar_raw['epsilon'] = np.nan
     df_final = df_lidar_raw.sort_values(by=['obtid', 'datetime', 'Height']).reset_index(drop=True)
     out_name = "lidar_transient.csv"
 
