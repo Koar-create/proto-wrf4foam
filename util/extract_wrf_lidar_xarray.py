@@ -10,6 +10,8 @@ import sys
 import io
 import json
 import warnings
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -25,13 +27,46 @@ warnings.filterwarnings("ignore")
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIG  ←  根据实际路径修改这里
 # ─────────────────────────────────────────────────────────────────────────────
-# 处理 Windows 和 Linux 路径兼容性
-PROJECT_ROOT = os.path.join(os.environ.get('HOME'), 'WRF-OpenFOAM-Coupling')
-OUT_DIR = os.path.join(PROJECT_ROOT, "data", "260409", "raw", "wrf")
-WRF_DATA_DIR = os.path.join(PROJECT_ROOT, "W_myExp03/auxhist2")
+
+def repo_root() -> Path:
+    """仓库根目录：由脚本位置推断，不依赖 $HOME。"""
+    return Path(__file__).resolve().parents[1]
+
+
+def get_project_root() -> Path:
+    """优先使用环境变量 WRF_OPENFOAM_COUPLING_ROOT，否则回退到 repo_root。"""
+    env_root = os.environ.get("WRF_OPENFOAM_COUPLING_ROOT")
+    if env_root:
+        return Path(env_root)
+    return repo_root()
+
+
+def resolve_existing_nc_path(path: str | os.PathLike[str]) -> str | None:
+    """返回存在的 WRF NetCDF 路径；同时接受 ':' 与 Windows 上的 '%3A' 时间戳文件名。"""
+    p = Path(path)
+    if p.exists():
+        return str(p)
+
+    name = p.name
+    candidates = []
+    if ":" in name:
+        candidates.append(p.with_name(name.replace(":", "%3A")))
+        candidates.append(p.with_name(name.replace(":", "%3a")))
+    if "%3A" in name or "%3a" in name:
+        candidates.append(p.with_name(name.replace("%3A", ":").replace("%3a", ":")))
+
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+    return None
+
+
+PROJECT_ROOT = get_project_root()
+OUT_DIR = PROJECT_ROOT / "data" / "260409" / "raw" / "wrf"
+WRF_DATA_DIR = PROJECT_ROOT / "W_myExp03" / "auxhist2"
 
 # 读取 LiDAR 站点高度信息
-JSON_PATH = os.path.join(PROJECT_ROOT, "util", "lidar_station_info.json")
+JSON_PATH = PROJECT_ROOT / "util" / "lidar_station_info.json"
 with open(JSON_PATH, "r", encoding="utf-8") as f:
     station_info_dict = json.load(f)
 
@@ -51,7 +86,7 @@ lidar_sites = pd.DataFrame({
 # =============================================================================
 # 开始执行：创建输出目录
 # =============================================================================
-os.makedirs(OUT_DIR, exist_ok=True)
+OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 print("\n" + "="*60)
 print("  WRF LiDAR 提取（自动扫描日期，循环处理指定时刻）")
@@ -64,8 +99,8 @@ print("="*60)
 target_hours = np.arange(24)
 wrf_records = []
 
-# 自动扫描可用日期
-file_pattern = os.path.join(WRF_DATA_DIR, "auxhist2_d03_*-*-*_*:00:00_1h-rolling_cartesian.nc")
+# 自动扫描可用日期（通配符兼容 ':' 与 '%3A' 时间戳）
+file_pattern = str(WRF_DATA_DIR / "auxhist2_d03_*-*-*_*_1h-rolling_cartesian.nc")
 all_matching_files = glob.glob(file_pattern)
 
 found_dates = set()
@@ -80,12 +115,13 @@ print(f"  识别到日期范围: {target_dates}")
 
 for d_str in target_dates:
     for h in target_hours:
-        # 构造文件名，确保小时是两位数，并且冒号编码为 :
+        # 构造文件名（优先 ':'，若不存在则尝试 '%3A' 变体）
         f_h = f"{h:02d}:00:00"
-        fpath = os.path.join(WRF_DATA_DIR, f"auxhist2_d03_{d_str}_{f_h}_1h-rolling_cartesian.nc")
-        
-        if not os.path.exists(fpath):
-            # 如果某个时次不存在，静默跳过或简单提示
+        base_name = f"auxhist2_d03_{d_str}_{f_h}_1h-rolling_cartesian.nc"
+        fpath = resolve_existing_nc_path(WRF_DATA_DIR / base_name)
+
+        if fpath is None:
+            # 如果某个时次不存在，静默跳过
             continue
             
         fname = os.path.basename(fpath)
@@ -115,7 +151,7 @@ for d_str in target_dates:
         z_arr = ds["z"].values.squeeze().astype(float)      # shape (nz,)
         
         # ── 提取风场变量 ──────────────────────────────────────────────────────────────
-        varnames = ["U", "V", "W", "WS"]
+        varnames = ["U", "V", "W", "WS", "TKE_PBL"]
         wrf_vars = {}
         for vn in varnames:
             arr = ds[vn].values.squeeze().astype(float)
@@ -154,7 +190,7 @@ for d_str in target_dates:
             h_sorted = h_col[sort_idx]
         
             res = {}
-            for vn in ["U", "V", "W", "WS"]:
+            for vn in ["U", "V", "W", "WS", "TKE_PBL"]:
                 v_col = np.asarray(col_data[vn], dtype=float)
                 v_sorted = v_col[sort_idx]
                 f = interp1d(
@@ -164,6 +200,18 @@ for d_str in target_dates:
                     fill_value=(v_sorted[0], v_sorted[-1])
                 )
                 res[vn] = f(target_z)
+            
+            # 计算 k 和 epsilon
+            k_wrf = np.maximum(res["TKE_PBL"], 1e-6)
+            Cmu = 0.09
+            kappa = 0.41
+            L_CFD_min = 10.0
+            mixing_length = np.clip(kappa * target_z, L_CFD_min, 100.0)
+            eps_wrf = (Cmu**0.75) * (k_wrf**1.5) / mixing_length
+            eps_wrf = np.maximum(eps_wrf, 1e-8)
+            
+            res["k"] = k_wrf
+            res["epsilon"] = eps_wrf
         
             # 逐高度层构建记录
             for i_idx, z in enumerate(target_z):
@@ -179,6 +227,8 @@ for d_str in target_dates:
                     "V_wrf":     res["V"][i_idx],
                     "W_wrf":     res["W"][i_idx],
                     "WS_wrf":    res["WS"][i_idx],
+                    "k_wrf":     res["k"][i_idx],
+                    "eps_wrf":   res["epsilon"][i_idx],
                 }
                 wrf_records.append(rec)
         
@@ -194,7 +244,7 @@ if not df_wrf_lidar.empty:
         ["datetime", "obtid", "z_probe"]
     ).reset_index(drop=True)
 
-out_wrf = os.path.join(OUT_DIR, "WRF_lidar_simulation_1h-rolling.csv")
+out_wrf = OUT_DIR / "WRF_lidar_simulation_1h-rolling.csv"
 df_wrf_lidar.to_csv(out_wrf, index=False)
 print(f"\n  → 已保存: {out_wrf}  shape={df_wrf_lidar.shape}")
 
