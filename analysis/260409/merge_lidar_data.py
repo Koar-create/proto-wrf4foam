@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 
@@ -97,20 +98,27 @@ def load_and_preprocess(
             "V_wrf": "v_wrf",
             "WS_wrf": "ws_wrf",
             "z_probe": "Height",
+            "eps_wrf": "epsilon_wrf",
         }
     )
 
     df_cfd_sub = df_cfd[
         ["datetime", "obtid", "layer_idx", "U_cfd", "V_cfd", "W_cfd", "k_cfd", "eps_cfd"]
-    ].rename(columns={"U_cfd": "u_cfd", "V_cfd": "v_cfd", "W_cfd": "w_cfd"})
+    ].rename(columns={"U_cfd": "u_cfd", "V_cfd": "v_cfd", "W_cfd": "w_cfd", "eps_cfd": "epsilon_cfd"})
     merged = pd.merge(df_wrf, df_cfd_sub, on=["datetime", "obtid", "layer_idx"], how="inner")
 
     df_lidar_sub = df_lidar[
-        ["datetime", "obtid", "layer_idx", "U", "V", "WindSpd"]
-    ].rename(columns={"U": "u_obs", "V": "v_obs", "WindSpd": "ws_obs"})
+        ["datetime", "obtid", "layer_idx", "U", "V", "WindSpd", "k", "epsilon"]
+    ].rename(columns={"U": "u_obs", "V": "v_obs", "WindSpd": "ws_obs", "k": "k_obs", "epsilon": "epsilon_obs"})
     merged = pd.merge(merged, df_lidar_sub, on=["datetime", "obtid", "layer_idx"], how="inner")
 
     merged["ws_cfd"] = (merged["u_cfd"] ** 2 + merged["v_cfd"] ** 2) ** 0.5
+
+    # 气象风向：风的来向，顺时针从正北起算
+    # wd = (270 - atan2d(V, U)) % 360
+    merged["wd_obs"] = (270 - np.degrees(np.arctan2(merged["v_obs"], merged["u_obs"]))) % 360
+    merged["wd_wrf"] = (270 - np.degrees(np.arctan2(merged["v_wrf"], merged["u_wrf"]))) % 360
+    merged["wd_cfd"] = (270 - np.degrees(np.arctan2(merged["v_cfd"], merged["u_cfd"]))) % 360
 
     final_columns = [
         "datetime",
@@ -121,17 +129,22 @@ def load_and_preprocess(
         "u_obs",
         "v_obs",
         "ws_obs",
+        "wd_obs",
+        "k_obs",
+        "epsilon_obs",
         "u_wrf",
         "v_wrf",
         "ws_wrf",
+        "wd_wrf",
         "k_wrf",
-        "eps_wrf",
+        "epsilon_wrf",
         "u_cfd",
         "v_cfd",
         "w_cfd",
         "ws_cfd",
+        "wd_cfd",
         "k_cfd",
-        "eps_cfd",
+        "epsilon_cfd",
     ]
     final_df = merged[final_columns].copy()
 
