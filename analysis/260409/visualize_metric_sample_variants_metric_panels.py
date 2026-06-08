@@ -105,6 +105,7 @@ def build_bar_panel_figure(df) -> plt.Figure:
         frameon=False,
         handlelength=0.8,
         columnspacing=1.4,
+        fontsize=13.0,
     )
     return fig
 
@@ -136,22 +137,22 @@ def build_daily_panel_figure(df, line_mode: str = "delta") -> plt.Figure:
         fig.legend(
             handles=_daily_dumbbell_legend_handles(),
             loc="upper center",
-            bbox_to_anchor=(0.5, 0.87),
+            bbox_to_anchor=(0.5, 0.90),
             ncols=6,
             frameon=False,
             handlelength=1.5,
             columnspacing=1.1,
-            fontsize=8.0,
+            fontsize=13.0,
         )
         fig.legend(
             handles=_daily_delta_line_legend_handles(),
             loc="upper center",
-            bbox_to_anchor=(0.5, 0.43),
+            bbox_to_anchor=(0.5, 0.46),
             ncols=4,
             frameon=False,
             handlelength=1.5,
             columnspacing=1.4,
-            fontsize=8.0,
+            fontsize=13.0,
         )
         return fig
     else:
@@ -166,7 +167,7 @@ def build_daily_panel_figure(df, line_mode: str = "delta") -> plt.Figure:
         frameon=False,
         handlelength=1.5,
         columnspacing=1.1,
-        fontsize=8.0,
+        fontsize=13.0,
     )
     return fig
 

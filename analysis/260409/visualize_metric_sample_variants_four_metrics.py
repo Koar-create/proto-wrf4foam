@@ -35,10 +35,10 @@ class MetricSpec:
 
 
 METRICS = [
-    MetricSpec("rmse", "Root mean square error", r"m s$^{-1}$", "rmse"),
-    MetricSpec("mbe", "Mean bias error", r"m s$^{-1}$", "mbe", zero_line=True),
-    MetricSpec("ioa", "Index of agreement", "IoA", "ioa", ylim=(0.0, 1.0)),
-    MetricSpec("ss", "Skill score", "Skill score", "ss", zero_line=True, ylim=(-0.9, 0.9)),
+    MetricSpec("rmse", "Root Mean Square Error", r"m s$^{-1}$", "rmse"),
+    MetricSpec("mbe", "Mean Bias Error", r"m s$^{-1}$", "mbe", zero_line=True),
+    MetricSpec("ioa", "Index of Agreement", "IoA", "ioa", ylim=(0.0, 1.0)),
+    MetricSpec("ss", "Skill Score", "Skill Score", "ss", zero_line=True, ylim=(-0.9, 0.9)),
 ]
 
 
@@ -46,9 +46,9 @@ def configure_matplotlib_style() -> None:
     plt.rcParams.update(
         {
             "font.family": "DejaVu Serif",
-            "font.size": 10,
-            "axes.labelsize": 10,
-            "axes.titlesize": 10,
+            "font.size": 13,
+            "axes.labelsize": 14,
+            "axes.titlesize": 15,
             "axes.titleweight": "bold",
             "axes.linewidth": 0.8,
             "axes.grid": True,
@@ -176,7 +176,7 @@ def annotate_axis_ylabel(ax: plt.Axes, ylabel: str) -> None:
         transform=ax.transAxes,
         ha="right",
         va="bottom",
-        fontsize=8.0,
+        fontsize=12.0,
         color="0.25",
         bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.72, "pad": 1.5},
     )

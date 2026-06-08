@@ -126,6 +126,15 @@ _arrow_codes = [
 ]
 _ARROW = MPath(_arrow_verts, _arrow_codes)
 
+_MONTH_ABBR = (
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sept", "Oct", "Nov", "Dec",
+)
+
+
+def _format_date_label(ts: pd.Timestamp) -> str:
+    return f"{_MONTH_ABBR[ts.month - 1]} {ts.day:02d}"
+
 # ---------- 绘图核心函数 ----------
 def plot_multi_time_grid_all_sites(df: pd.DataFrame, sites: list[str], start_dt: str) -> Path:
     start = pd.Timestamp(start_dt)
@@ -228,6 +237,13 @@ def plot_multi_time_grid_all_sites(df: pd.DataFrame, sites: list[str], start_dt:
 
             if col == 0:
                 ax.set_ylabel(f"{site}\nHeight (m)", fontsize=32, fontweight="bold")
+
+    start_lst = start + pd.Timedelta(hours=8)
+    fig.text(
+        0.02, 0.98, _format_date_label(start_lst),
+        ha="left", va="top", fontsize=32, fontweight="bold",
+        transform=fig.transFigure,
+    )
 
     # 统一图例
     if legend_handles:
