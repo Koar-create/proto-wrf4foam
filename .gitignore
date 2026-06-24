@@ -10,7 +10,9 @@ __pycache__/
 Archived/
 archive/
 .vscode/
+.cache/
 .cursor/
+node_modules/
 constant/
 notebook-scripts/
 WRF-UCM/
@@ -19,17 +21,16 @@ geometry_data/
 reference-candidate/
 docs/
 scripts/
-
-# keep project-level Cursor skills tracked
-!.cursor/
-!.cursor/skills/
-!.cursor/skills/**
+results/reference-*/
+results/new-visual-advice/
+data/Guangzhou_shp_file/
 
 # large amount of data
 *.png
 *.jpg
 *.csv
 *.h5
+*.h5.tmp
 *.ipynb
 *.npy
 *.zip
@@ -43,6 +44,7 @@ lidar_station_info.json
 _task2_report.json
 platform_classification.json
 archive_last_run.sh
+local.env
 
 *.vti
 *.npz
@@ -55,4 +57,3 @@ README*.md
 *.stl
 
 # ?
-node_modules/
