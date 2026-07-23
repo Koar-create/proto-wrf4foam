@@ -7,10 +7,88 @@ import sys
 import numpy as np
 import xarray as xr
 
-# 引入环境配置
-HOME = os.environ.get('HOME')
+# ---------------------------------------------------------------------------
+# PATH HELPERS（与 visualize_WRF_CFD_*_two_panel 一致的 myExp 切换）
+# ---------------------------------------------------------------------------
 
-project_path = f"{HOME}/WRF-OpenFOAM-Coupling/W_myExp03"
+def _repo_root() -> str:
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+_REPO_ROOT = _repo_root()
+WRF_AUXHIST_EXP03 = os.path.join(_REPO_ROOT, "W_myExp03", "auxhist2")
+WRF_AUXHIST_EXP05 = os.path.join(_REPO_ROOT, "W_myExp05", "auxhist2")
+# Dates on/after this calendar day use W_myExp05; earlier dates use W_myExp03
+WRF_EXP05_START = (2025, 9, 7)
+DEFAULT_WRF_YEAR = 2025
+NC_STEM_TEMPLATE = "auxhist2_d03_{wrf_iso}_1h-rolling_cartesian"
+
+
+def wrf_auxhist_dir_for_time(wrf_iso: str) -> str:
+    """
+    Pick auxhist2 root from WRF timestamp ``YYYY-MM-DD_HH:MM:00``.
+
+    ``W_myExp03`` for dates before 2025-09-07; ``W_myExp05`` from 09-07 onward.
+    """
+    m = re.match(r"(\d{4})-(\d{2})-(\d{2})_", wrf_iso)
+    if not m:
+        return WRF_AUXHIST_EXP03
+    ymd = tuple(int(x) for x in m.groups())
+    return WRF_AUXHIST_EXP05 if ymd >= WRF_EXP05_START else WRF_AUXHIST_EXP03
+
+
+def parse_input_date_to_wrf_iso(input_date: str, year: int = DEFAULT_WRF_YEAR) -> str:
+    """
+    Normalize CLI date tags to WRF ISO ``YYYY-MM-DD_HH:MM:00``.
+
+    Accepts:
+      - ``09-01_00:00`` / ``09-01_00:00:00``
+      - ``2025-09-01_00:00`` / ``2025-09-01_00:00:00``
+      - ``20250901_0000``
+    """
+    s = input_date.strip()
+    m = re.fullmatch(
+        r"(?:(\d{4})-)?(\d{2})-(\d{2})_(\d{2}):(\d{2})(?::(\d{2}))?",
+        s,
+    )
+    if m:
+        yr = int(m.group(1) or year)
+        mo, dy, hh, mm = (int(m.group(i)) for i in range(2, 6))
+        ss = int(m.group(6) or 0)
+        return f"{yr:04d}-{mo:02d}-{dy:02d}_{hh:02d}:{mm:02d}:{ss:02d}"
+
+    m = re.fullmatch(r"(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})", s)
+    if m:
+        yr, mo, dy, hh, mm = (int(x) for x in m.groups())
+        return f"{yr:04d}-{mo:02d}-{dy:02d}_{hh:02d}:{mm:02d}:00"
+
+    raise ValueError(
+        f"无法解析时刻标签: {input_date!r}。"
+        "期望如 09-01_00:00、2025-09-01_00:00:00 或 20250901_0000。"
+    )
+
+
+def auxhist_dir_for_exp(wrf_exp: str | None, wrf_iso: str) -> str:
+    """Resolve auxhist2 dir from optional --wrf-exp override or date rule."""
+    if not wrf_exp:
+        return wrf_auxhist_dir_for_time(wrf_iso)
+    key = wrf_exp.strip().lower().replace("_", "")
+    if key in ("03", "3", "myexp03", "wmyexp03"):
+        return WRF_AUXHIST_EXP03
+    if key in ("05", "5", "myexp05", "wmyexp05"):
+        return WRF_AUXHIST_EXP05
+    # Treat as directory name or absolute/relative path under repo
+    if os.path.isabs(wrf_exp):
+        return wrf_exp
+    cand = os.path.join(_REPO_ROOT, wrf_exp, "auxhist2")
+    if os.path.isdir(cand):
+        return cand
+    cand2 = os.path.join(_REPO_ROOT, wrf_exp)
+    if os.path.isdir(cand2):
+        return cand2
+    raise ValueError(
+        f"未知 --wrf-exp={wrf_exp!r}；可用 03/05、W_myExp03/W_myExp05，或 auxhist2 目录路径。"
+    )
 
 
 def parse_args():
@@ -25,12 +103,16 @@ def parse_args():
   cd /path/to/openfoam/case
   python util/construct_OF_boundary_arrays.py "09-01_00:00"
   python util/construct_OF_boundary_arrays.py 09-03_15:00 --perturbed
+  python util/construct_OF_boundary_arrays.py 09-07_12:00 --wrf-exp 05
   python util/construct_OF_boundary_arrays.py --input-nc /path/to/foo_cartesian_perturbed.nc
 
 输入 NC（由插值 / 扰动脚本预先生成）:
-  默认: $HOME/WRF-OpenFOAM-Coupling/W_myExp03/auxhist2/
-        auxhist2_d03_2025-<MM-DD_HH:MM>:00_1h-rolling_cartesian.nc
+  默认按时刻自动选择实验目录（与 visualize_WRF_CFD_*_two_panel 一致）:
+    W_myExp03/auxhist2/  （日期 < 2025-09-07）
+    W_myExp05/auxhist2/  （日期 ≥ 2025-09-07）
+  文件名: auxhist2_d03_<YYYY-MM-DD_HH:MM:00>_1h-rolling_cartesian.nc
   --perturbed: 同上路径，但读取 *_cartesian_perturbed.nc（perturb_OF_inlet_data.py 产物）
+  --wrf-exp: 强制指定 03/05（或 W_myExp0x / 目录路径），覆盖日期规则
 
 输出:
   ./boundaryData/{west,east,south,north}/points
@@ -57,29 +139,68 @@ def parse_args():
         action="store_true",
         help="读取 perturb_OF_inlet_data.py 生成的 *_cartesian_perturbed.nc（需配合 input_date）",
     )
+    parser.add_argument(
+        "--wrf-exp",
+        default=None,
+        metavar="03|05|DIR",
+        help=(
+            "强制 WRF 实验目录（03/05 或 W_myExp0x）；"
+            f"默认按日期自动切换（≥{WRF_EXP05_START[0]}-{WRF_EXP05_START[1]:02d}-"
+            f"{WRF_EXP05_START[2]:02d} → W_myExp05）"
+        ),
+    )
+    parser.add_argument(
+        "--year",
+        type=int,
+        default=DEFAULT_WRF_YEAR,
+        help=f"当 input_date 无年份时使用的年份（默认 {DEFAULT_WRF_YEAR}）",
+    )
     args = parser.parse_args()
     if not args.input_nc and not args.input_date:
         parser.error("请提供 input_date，或使用 --input-nc 指定输入文件。")
     if args.input_nc and args.perturbed:
         parser.error("--input-nc 与 --perturbed 不能同时使用。")
+    if args.input_nc and args.wrf_exp:
+        parser.error("--input-nc 与 --wrf-exp 不能同时使用（路径已显式指定）。")
     return args
 
 
 def resolve_input_nc(args):
     if args.input_nc:
-        return os.path.abspath(os.path.normpath(args.input_nc))
-    stem = (
-        f"{project_path}/auxhist2/"
-        f"auxhist2_d03_2025-{args.input_date}:00_1h-rolling_cartesian"
-    )
-    return stem + ("_perturbed.nc" if args.perturbed else ".nc")
+        return os.path.abspath(os.path.normpath(args.input_nc)), None
+
+    try:
+        wrf_iso = parse_input_date_to_wrf_iso(args.input_date, year=args.year)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        aux_dir = auxhist_dir_for_exp(args.wrf_exp, wrf_iso)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    suffix = "_perturbed.nc" if args.perturbed else ".nc"
+    path = os.path.join(aux_dir, NC_STEM_TEMPLATE.format(wrf_iso=wrf_iso) + suffix)
+    # URL-encoded colon fallback (some older dumps use %3A)
+    if not os.path.exists(path):
+        enc = wrf_iso.replace(":", "%3A")
+        alt = os.path.join(aux_dir, NC_STEM_TEMPLATE.format(wrf_iso=enc) + suffix)
+        if os.path.exists(alt):
+            path = alt
+    return path, wrf_iso
 
 
 args = parse_args()
-input_nc = resolve_input_nc(args)
+input_nc, wrf_iso = resolve_input_nc(args)
 if not os.path.exists(input_nc):
     print(f"Error: File {input_nc} not found.")
     sys.exit(1)
+if wrf_iso is not None:
+    exp_tag = "W_myExp05" if "W_myExp05" in input_nc else "W_myExp03"
+    print(f"Resolved input: {input_nc}")
+    print(f"  wrf_iso={wrf_iso}  exp={exp_tag}")
 ds = xr.open_dataset(input_nc)
 
 # --- 新增：定义截断高度，并进行全局高度截断 ---

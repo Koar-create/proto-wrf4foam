@@ -136,8 +136,8 @@ def read_nested_lidar_096(zip_path, target_date_str):
 # ==========================================
 # 主执行流程：遍历6个站点，合并 DataFrame
 # ==========================================
-stations = ['GAW103', 'GAW104', 'GAW105', 'GAW111']  # ['GAW102', 'GAW103', 'GAW104', 'GAW105', 'GAW110', 'GAW111']
-target_dates = ["2025/09/01", "2025/09/02", "2025/09/03", "2025/09/04", "2025/09/05", "2025/09/06"]
+stations = ['GAW103', 'GAW104', 'GAW111']  # ['GAW102', 'GAW103', 'GAW104', 'GAW105', 'GAW110', 'GAW111']
+target_dates = [f"2025/09/{d:02d}" for d in range(1, 14)]  # 09-01 ~ 09-13
 
 all_data = []
 
