@@ -1,22 +1,22 @@
 """
-WRF–CFD X-Z Vertical Wind Field Comparison (2-panel)
-====================================================
-Produces a publication-quality 2-panel figure:
+WRF–CFD X-Y Horizontal Wind Field Comparison (2-panel)
+======================================================
+Produces a publication-quality 2-panel figure at a fixed height:
 
     ┌────────────────────────────────────────┐
-    │  (a) WRF (mesoscale boundary)          │
+    │  (a) WRF (mesoscale) @ H m             │
     ├────────────────────────────────────────┤
-    │  (b) CFD (OpenFOAM)                    │
+    │  (b) CFD (OpenFOAM) @ H m              │
     └────────────────────────────────────────┘
 
 Usage
 -----
-    python visualize_WRF_CFD_xz_two_panel.py  /path/to/CFD_run_directory
+    python visualize_WRF_CFD_xy_two_panel.py  /path/to/CFD_run_directory --height 100
 
 Example
 -------
-    python visualize_WRF_CFD_xz_two_panel.py \\
-        steady_experiments_finer_ABL/20250903_1200_two_boundaries_as_outlet
+    python visualize_WRF_CFD_xy_two_panel.py \\
+        steady_experiments_finer_ABL/20250901_0000_two_boundaries_as_outlet --height 100
 
 Path inference
 --------------
@@ -24,8 +24,8 @@ Given CFD path ``<root>/<YYYYMMDD_HHMM>_<tag>`` the script resolves:
 
 * WRF nc  →  ``W_myExp03|05/auxhist2/tmp/auxhist2_d03_<YYYY-MM-DD_HH:MM:00>_tmp.nc``
   (``W_myExp03`` for dates ≤ 09-06; ``W_myExp05`` for ≥ 09-07)
-* CFD CSV →  ``<cfd_dir>/postProcessing/y800m.csv``
-* PNG out →  ``results/wrf_openfoam/xz_wrf_cfd/<experiment_batch>/xz_wrf_cfd_<YYYYMMDD_HHMM>.png``
+* CFD CSV →  ``<cfd_dir>/postProcessing/<height>m.csv``
+* PNG out →  ``results/wrf_openfoam/xy_wrf_cfd/<experiment_batch>/xy_wrf_cfd_<YYYYMMDD_HHMM>_<height>m.png``
 
 Override with ``--wrf-nc``, ``--cfd-csv``, or ``--output``.
 """
@@ -45,29 +45,26 @@ from scipy.interpolate import griddata
 # ---------------------------------------------------------------------------
 # CONSTANTS / DEFAULTS
 # ---------------------------------------------------------------------------
-WRF_ROOT_EXP03  = os.path.join("W_myExp03", "auxhist2", "tmp")
-WRF_ROOT_EXP05  = os.path.join("W_myExp05", "auxhist2", "tmp")
+WRF_ROOT_EXP03   = os.path.join("W_myExp03", "auxhist2", "tmp")
+WRF_ROOT_EXP05   = os.path.join("W_myExp05", "auxhist2", "tmp")
 # Dates on/after this calendar day use W_myExp05; earlier dates use W_myExp03
-WRF_EXP05_START = (2025, 9, 7)
-WRF_NC_TEMPLATE = "auxhist2_d03_{wrf_time}_tmp.nc"
-CSV_RELPATH     = os.path.join("postProcessing", "y800m.csv")
+WRF_EXP05_START  = (2025, 9, 7)
+WRF_NC_TEMPLATE  = "auxhist2_d03_{wrf_time}_tmp.nc"
+DEFAULT_HEIGHT   = 100
 
-TARGET_LAT   = 23.1211944444
-TARGET_LON   = 113.321102778
-LAT_TOL      = 0.004
-LON_TOL      = 0.0225000225
-MAX_HEIGHT   = 2000
-CFD_TOP      = 2000
-QUIVER_GRID  = 20
-QUIVER_SCALE = 40
-QUIVER_KEY_SPEED = 2.5
-HEXBIN_GRID  = 120
+TARGET_LAT       = 23.1211944444
+TARGET_LON       = 113.321102778
+LAT_TOL          = 0.05
+LON_TOL          = 0.05
 
-# Colorbar defaults (ticks derived from data vmax for each figure)
+QUIVER_GRID_CFD  = 9           # sparse CFD vectors
+QUIVER_SCALE     = 15          # shared WRF/CFD scale — same U → same arrow length
+QUIVER_KEY_SPEED = 1.0
+QUIVER_WIDTH     = 0.006
+HEXBIN_GRID      = 120
+
 WIND_SPEED_COLORBAR_TICK_FORMAT = '%g'
-
-# Default figure output (repo convention: results/wrf_openfoam/…)
-RESULTS_XZ_DIR = os.path.join("results", "wrf_openfoam", "xz_wrf_cfd")
+RESULTS_XY_DIR   = os.path.join("results", "wrf_openfoam", "xy_wrf_cfd")
 
 
 def _nice_vmax(v: float) -> float:
@@ -84,6 +81,7 @@ def wind_speed_colorbar_ticks(vmax: float) -> np.ndarray:
     ticks = np.arange(0.0, vmax + 0.5 * step, step)
     return ticks[ticks <= vmax + 1e-9]
 
+
 # ---------------------------------------------------------------------------
 # PATH HELPERS
 # ---------------------------------------------------------------------------
@@ -92,12 +90,9 @@ def _repo_root() -> str:
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def default_output_path(cfd_dir: str) -> str:
+def default_output_path(cfd_dir: str, height: int) -> str:
     """
-    ``results/wrf_openfoam/xz_wrf_cfd/<experiment_batch>/xz_wrf_cfd_<YYYYMMDD_HHMM>.png``
-
-  *experiment_batch* is the parent folder of the CFD case directory
-  (e.g. ``steady_experiments_finer_ABL``).
+    ``results/wrf_openfoam/xy_wrf_cfd/<experiment_batch>/xy_wrf_cfd_<YYYYMMDD_HHMM>_<height>m.png``
     """
     cfd_dir = cfd_dir.rstrip(os.sep)
     case = os.path.basename(cfd_dir)
@@ -105,8 +100,8 @@ def default_output_path(cfd_dir: str) -> str:
     m = re.match(r"(\d{8}_\d{4})", case)
     stamp = m.group(1) if m else case
     return os.path.join(
-        _repo_root(), RESULTS_XZ_DIR, batch,
-        f"xz_wrf_cfd_{stamp}.png",
+        _repo_root(), RESULTS_XY_DIR, batch,
+        f"xy_wrf_cfd_{stamp}_{height}m.png",
     )
 
 
@@ -135,11 +130,12 @@ def wrf_root_for_time(wrf_time: str) -> str:
     return WRF_ROOT_EXP05 if ymd >= WRF_EXP05_START else WRF_ROOT_EXP03
 
 
-def infer_paths(cfd_dir: str):
+def infer_paths(cfd_dir: str, height: int):
     wrf_time = parse_timestamp_from_cfd_dir(cfd_dir)
     nc_filename = WRF_NC_TEMPLATE.format(wrf_time=wrf_time)
     wrf_nc_path = os.path.join(wrf_root_for_time(wrf_time), nc_filename)
-    cfd_csv = os.path.join(cfd_dir, CSV_RELPATH)
+    csv_relpath = os.path.join("postProcessing", f"{height}m.csv")
+    cfd_csv = os.path.join(cfd_dir, csv_relpath)
     return wrf_nc_path, cfd_csv, wrf_time
 
 
@@ -155,10 +151,10 @@ def _destagger_np(arr: np.ndarray, axis: int) -> np.ndarray:
     return 0.5 * (arr[tuple(slc_lo)] + arr[tuple(slc_hi)])
 
 
-def extract_wrf_xz(nc_path: str,
+def extract_wrf_xy(nc_path: str, target_height: float,
                    target_lat=TARGET_LAT, target_lon=TARGET_LON,
-                   lat_tol=LAT_TOL, lon_tol=LON_TOL,
-                   max_height=MAX_HEIGHT):
+                   lat_tol=LAT_TOL, lon_tol=LON_TOL):
+    """Extract an X-Y horizontal plane from a WRF file at *target_height* (m)."""
     if not os.path.exists(nc_path):
         raise FileNotFoundError(f"WRF file not found: {nc_path}")
 
@@ -169,70 +165,64 @@ def extract_wrf_xz(nc_path: str,
         v = ds[name]
         return v.values[0] if 'Time' in v.dims else v.values
 
+    ph = get_val('PH')
+    phb = get_val('PHB')
+    z_stag = (ph + phb) / 9.81
+    z = _destagger_np(z_stag, axis=0)
+
+    u_stag = get_val('U')
+    u = _destagger_np(u_stag, axis=2)
+
+    v_stag = get_val('V')
+    v = _destagger_np(v_stag, axis=1)
+
     lats = get_val('XLAT')
+    lons = get_val('XLONG')
     if lats.ndim == 3:
         lats = lats[0]
-    lat_1d = np.mean(lats, axis=1)
-    sn_idx = int(np.argmin(np.abs(lat_1d - target_lat)))
-    actual_lat = float(lat_1d[sn_idx])
-    print(f"  Nearest south_north row: index={sn_idx}, lat={actual_lat:.6f} deg N")
-
-    lons = get_val('XLONG')
     if lons.ndim == 3:
         lons = lons[0]
-    lon_1d = lons[sn_idx, :]
-    we_mask = (target_lon - lon_tol <= lon_1d) & (lon_1d <= target_lon + lon_tol)
-    we_idx = np.where(we_mask)[0]
 
-    if len(we_idx) < 2:
-        print(f"  [!] Only {len(we_idx)} column(s) within lon_tol={lon_tol:.4f} deg. "
-              "Falling back to full west_east extent.")
-        we_slice = slice(None)
+    lat_mask = (lats >= target_lat - lat_tol) & (lats <= target_lat + lat_tol)
+    lon_mask = (lons >= target_lon - lon_tol) & (lons <= target_lon + lon_tol)
+    combined_mask = lat_mask & lon_mask
+
+    rows = np.any(combined_mask, axis=1)
+    cols = np.any(combined_mask, axis=0)
+    if not np.any(rows) or not np.any(cols):
+        print("  [!] Target area outside WRF domain. Using full domain.")
+        i_min, i_max = 0, lats.shape[0]
+        j_min, j_max = 0, lats.shape[1]
     else:
-        we_slice = slice(int(we_idx[0]), int(we_idx[-1]) + 1)
+        i_min, i_max = np.where(rows)[0][[0, -1]]
+        j_min, j_max = np.where(cols)[0][[0, -1]]
+        i_max += 1
+        j_max += 1
 
-    PH_all = get_val('PH')
-    PHB_all = get_val('PHB')
-    PH_sn = PH_all[:, sn_idx, :]
-    PHB_sn = PHB_all[:, sn_idx, :]
+    z_crop = z[:, i_min:i_max, j_min:j_max]
+    u_crop = u[:, i_min:i_max, j_min:j_max]
+    v_crop = v[:, i_min:i_max, j_min:j_max]
+    lat_crop = lats[i_min:i_max, j_min:j_max]
+    lon_crop = lons[i_min:i_max, j_min:j_max]
 
-    U_all = get_val('U')
-    U_sn = U_all[:, sn_idx, :]
+    ny, nx = lat_crop.shape
+    u_interp = np.zeros((ny, nx))
+    v_interp = np.zeros((ny, nx))
 
-    V_all = get_val('V')
-    V_sn = V_all[:, sn_idx, :]
-    V_sn1 = V_all[:, sn_idx + 1, :]
+    for i in range(ny):
+        for j in range(nx):
+            u_interp[i, j] = np.interp(target_height, z_crop[:, i, j], u_crop[:, i, j])
+            v_interp[i, j] = np.interp(target_height, z_crop[:, i, j], v_crop[:, i, j])
 
-    W_all = get_val('W')
-    W_sn = W_all[:, sn_idx, :]
-
+    ws_interp = np.sqrt(u_interp**2 + v_interp**2)
     ds.close()
 
-    H_sn = _destagger_np((PH_sn + PHB_sn) / 9.81, axis=0)
-    U_dest = _destagger_np(U_sn, axis=1)
-    V_dest = 0.5 * (V_sn + V_sn1)
-    W_dest = _destagger_np(W_sn, axis=0)
-    WS = np.sqrt(U_dest**2 + V_dest**2)
+    print(f"  Extracted plane @ {target_height:g} m: shape={ws_interp.shape}, "
+          f"WS=[{np.nanmin(ws_interp):.2f}, {np.nanmax(ws_interp):.2f}] m/s")
 
-    H_xz = H_sn[:, we_slice]
-    WS_xz = WS[:, we_slice]
-    U_xz = U_dest[:, we_slice]
-    W_xz = W_dest[:, we_slice]
-    lon_xz = lon_1d[we_slice]
-
-    nan_mask = H_xz > max_height
-    WS_xz[nan_mask] = np.nan
-    U_xz[nan_mask] = np.nan
-    W_xz[nan_mask] = np.nan
-
-    lon_2d = np.broadcast_to(lon_xz[np.newaxis, :], H_xz.shape).copy()
-
-    print(f"  Extracted slice: shape={H_xz.shape}, "
-          f"lon=[{np.nanmin(lon_xz):.5f}, {np.nanmax(lon_xz):.5f}] deg E, "
-          f"H=[{np.nanmin(H_xz):.0f}, {np.nanmax(H_xz):.0f}] m, "
-          f"WS=[{np.nanmin(WS_xz):.2f}, {np.nanmax(WS_xz):.2f}] m/s")
-
-    return dict(lon=lon_2d, height=H_xz, wind_speed=WS_xz, U=U_xz, W=W_xz)
+    return dict(lon=lon_crop, lat=lat_crop,
+                u=u_interp, v=v_interp,
+                wind_speed=ws_interp)
 
 
 # ---------------------------------------------------------------------------
@@ -245,16 +235,16 @@ def load_cfd_csv(csv_path: str):
 
     chunks = []
     for chunk in pd.read_csv(csv_path, chunksize=100_000):
-        req = ['Coords:0', 'Coords:2', 'U:0', 'U:2']
+        req = ['Coords:0', 'Coords:1', 'U:0', 'U:1']
         if any(c not in chunk.columns for c in req):
             raise KeyError(f"Missing columns in {csv_path}. Expected: {req}")
         chunks.append(chunk[req].astype(float))
 
     df = pd.concat(chunks, ignore_index=True)
     u0 = df['U:0'].values
-    u2 = df['U:2'].values
-    return dict(x=df['Coords:0'].values, z=df['Coords:2'].values,
-                u0=u0, u2=u2, wind_speed=np.sqrt(u0**2 + u2**2))
+    u1 = df['U:1'].values
+    return dict(x=df['Coords:0'].values, y=df['Coords:1'].values,
+                u0=u0, u1=u1, wind_speed=np.sqrt(u0**2 + u1**2))
 
 
 # ---------------------------------------------------------------------------
@@ -290,10 +280,6 @@ def _add_panel_label(ax, label, fontsize=15):
 
 def add_wind_speed_colorbar(fig, mappable, ax=None, label='Wind Speed (m/s)',
                             ticks=None, tick_format=None, cax=None):
-    """Add a colorbar with neat tick positions derived from the mappable clim.
-
-    Prefer *cax* for an explicitly placed shared colorbar; otherwise attach to *ax*.
-    """
     _, vmax = mappable.get_clim()
     ticks = np.asarray(
         ticks if ticks is not None else wind_speed_colorbar_ticks(vmax),
@@ -311,103 +297,121 @@ def add_wind_speed_colorbar(fig, mappable, ax=None, label='Wind Speed (m/s)',
     return cb
 
 
-def draw_wrf_panel(ax, data: dict, cfd_top=CFD_TOP,
-                   vmax=None, max_height=MAX_HEIGHT,
+def _quiver_key_speed(vmax: float) -> float:
+    """Pick a readable reference arrow length from the colorbar ceiling."""
+    if vmax <= 2:
+        return 1.0
+    if vmax <= 5:
+        return 2.0
+    return 4.0
+
+
+def draw_wrf_panel(ax, data: dict, vmax=None,
                    label='(a) WRF (mesoscale boundary)',
-                   show_vectors=True):
+                   show_vectors=True, quiver_key_speed=None):
     lon = data['lon']
-    height = data['height']
+    lat = data['lat']
     ws = data['wind_speed']
-    u = data['U']
-    w = data['W']
+    u = data['u']
+    v = data['v']
 
     if vmax is None:
         vmax = np.nanpercentile(ws, 98)
+    key_u = quiver_key_speed if quiver_key_speed is not None else _quiver_key_speed(vmax)
 
-    qm = ax.pcolormesh(lon, height, ws,
+    qm = ax.pcolormesh(lon, lat, ws,
                        vmin=0, vmax=vmax, cmap='viridis',
-                       shading='auto', alpha=0.92, rasterized=True)
+                       shading='auto', alpha=0.85, rasterized=True)
 
     if show_vectors:
         ny, nx = lon.shape
-        skip_y = max(1, ny // 15)
-        skip_x = max(1, nx // 15)
+        skip_y = max(1, ny // 12)
+        skip_x = max(1, nx // 12)
 
-        qv = ax.quiver(lon[::skip_y, ::skip_x], height[::skip_y, ::skip_x],
-                       u[::skip_y, ::skip_x], w[::skip_y, ::skip_x],
-                       color='black', alpha=0.82,
-                       scale=QUIVER_SCALE, width=0.003,
-                       headwidth=3.5, headlength=5)
+        qv = ax.quiver(lon[::skip_y, ::skip_x], lat[::skip_y, ::skip_x],
+                       u[::skip_y, ::skip_x], v[::skip_y, ::skip_x],
+                       color='black', alpha=0.95,
+                       scale=QUIVER_SCALE, width=QUIVER_WIDTH,
+                       headwidth=4, headlength=5, headaxislength=4,
+                       minshaft=1.5, zorder=5)
 
-        ax.quiverkey(qv, X=0.87, Y=1.02, U=QUIVER_KEY_SPEED,
-                     label=f'{QUIVER_KEY_SPEED:g} m/s',
+        ax.quiverkey(qv, X=0.82, Y=1.035, U=key_u,
+                     label=f'{key_u:g} m/s',
                      labelpos='E', coordinates='axes',
                      fontproperties={'family': 'serif', 'size': 10, 'weight': 'bold'})
 
-    ax.set_ylim(0, max_height)
+    lon_min, lon_max = float(np.nanmin(lon)), float(np.nanmax(lon))
+    lat_min, lat_max = float(np.nanmin(lat)), float(np.nanmax(lat))
+    # Pad the shorter axis so the box is square in data units (avoids
+    # adjustable='datalim' silently rewriting limits).
+    dx, dy = lon_max - lon_min, lat_max - lat_min
+    side = max(dx, dy)
+    lon_c, lat_c = 0.5 * (lon_min + lon_max), 0.5 * (lat_min + lat_max)
+    ax.set_xlim(lon_c - 0.5 * side, lon_c + 0.5 * side)
+    ax.set_ylim(lat_c - 0.5 * side, lat_c + 0.5 * side)
+    ax.margins(0)
 
-    h_max = np.nanmax(height)
-    if cfd_top <= h_max:
-        ax.axhline(cfd_top, color='black', ls=':', lw=1.6, alpha=0.75)
-        ax.text(np.nanmean(lon), cfd_top + 35,
-                f'CFD top ({cfd_top} m)',
-                color='black', fontsize=10, ha='center', va='bottom', alpha=0.85)
-
-    ax.set_xlabel('Longitude (°E)', fontweight='bold', labelpad=10)
-    ax.set_ylabel('Height (m)', fontweight='bold')
-    # Show full longitude (e.g. 113.321), not offset/scientific notation
+    ax.set_xlabel('Longitude (°E)', fontweight='bold')
+    ax.set_ylabel('Latitude (°N)', fontweight='bold')
     ax.xaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
     ax.grid(True, alpha=0.25, ls='--', lw=0.5)
     ax.xaxis.set_minor_locator(AutoMinorLocator())
     ax.yaxis.set_minor_locator(AutoMinorLocator())
+    ax.set_aspect('equal', adjustable='datalim')
     _add_panel_label(ax, label)
     return qm
 
 
 def draw_cfd_panel(ax, data: dict, vmax=None,
                    label='(b) CFD (OpenFOAM)',
-                   show_vectors=True):
+                   show_vectors=True, quiver_key_speed=None):
     x = data['x']
-    z = data['z']
+    y = data['y']
     u0 = data['u0']
-    u2 = data['u2']
+    u1 = data['u1']
     ws = data['wind_speed']
 
     if vmax is None:
         vmax = np.nanpercentile(ws, 98)
+    key_u = quiver_key_speed if quiver_key_speed is not None else _quiver_key_speed(vmax)
 
-    hb = ax.hexbin(x, z, C=ws,
+    hb = ax.hexbin(x, y, C=ws,
                    gridsize=HEXBIN_GRID, cmap='viridis',
                    reduce_C_function=np.mean,
                    vmin=0, vmax=vmax,
-                   alpha=0.88, edgecolors='none', rasterized=True)
+                   alpha=0.85, edgecolors='none', rasterized=True)
 
     if show_vectors:
-        x_g, z_g = np.mgrid[x.min():x.max():complex(0, QUIVER_GRID),
-                            z.min():z.max():complex(0, QUIVER_GRID)]
+        x_g, y_g = np.mgrid[x.min():x.max():complex(0, QUIVER_GRID_CFD),
+                            y.min():y.max():complex(0, QUIVER_GRID_CFD)]
         sub = max(1, len(x) // 100_000)
-        gu0 = griddata((x[::sub], z[::sub]), u0[::sub], (x_g, z_g), method='linear')
-        gu2 = griddata((x[::sub], z[::sub]), u2[::sub], (x_g, z_g), method='linear')
+        gu0 = griddata((x[::sub], y[::sub]), u0[::sub], (x_g, y_g), method='linear')
+        gu1 = griddata((x[::sub], y[::sub]), u1[::sub], (x_g, y_g), method='linear')
 
-        qv = ax.quiver(x_g.ravel(), z_g.ravel(), gu0.ravel(), gu2.ravel(),
-                       color='black', alpha=0.82,
-                       scale=QUIVER_SCALE, width=0.002,
-                       headwidth=3.5, headlength=5,
-                       headaxislength=4, minshaft=2)
+        qv = ax.quiver(x_g.ravel(), y_g.ravel(), gu0.ravel(), gu1.ravel(),
+                       color='black', alpha=0.95,
+                       scale=QUIVER_SCALE, width=QUIVER_WIDTH,
+                       headwidth=4, headlength=5, headaxislength=4,
+                       minshaft=1.5, zorder=5)
 
-        ax.quiverkey(qv, X=0.87, Y=1.02, U=QUIVER_KEY_SPEED,
-                     label=f'{QUIVER_KEY_SPEED:g} m/s',
+        ax.quiverkey(qv, X=0.82, Y=1.035, U=key_u,
+                     label=f'{key_u:g} m/s',
                      labelpos='E', coordinates='axes',
                      fontproperties={'family': 'serif', 'size': 10, 'weight': 'bold'})
 
-    # Tight limits — no margin padding around the CFD domain
-    ax.set_xlim(float(np.nanmin(x)), float(np.nanmax(x)))
-    ax.set_ylim(float(np.nanmin(z)), float(np.nanmax(z)))
+    x_min, x_max = float(np.nanmin(x)), float(np.nanmax(x))
+    y_min, y_max = float(np.nanmin(y)), float(np.nanmax(y))
+    dx, dy = x_max - x_min, y_max - y_min
+    side = max(dx, dy)
+    xc, yc = 0.5 * (x_min + x_max), 0.5 * (y_min + y_max)
+    ax.set_xlim(xc - 0.5 * side, xc + 0.5 * side)
+    ax.set_ylim(yc - 0.5 * side, yc + 0.5 * side)
     ax.margins(0)
 
     ax.set_xlabel('X Coordinate (m)', fontweight='bold')
-    ax.set_ylabel('Height (m)', fontweight='bold')
-    ax.set_aspect('auto')
+    ax.set_ylabel('Y Coordinate (m)', fontweight='bold')
+    ax.set_aspect('equal', adjustable='datalim')
     ax.grid(True, alpha=0.25, ls='--', lw=0.5)
     ax.xaxis.set_minor_locator(AutoMinorLocator())
     ax.yaxis.set_minor_locator(AutoMinorLocator())
@@ -415,57 +419,80 @@ def draw_cfd_panel(ax, data: dict, vmax=None,
     return hb
 
 
+def short_case_label(case: str) -> str:
+    """Keep only YYYYMMDD_HHMM; drop tags like ``two_boundaries_as_outlet``."""
+    m = re.match(r"(\d{8}_\d{4})", case)
+    return m.group(1) if m else case
+
+
 def compose_figure(wrf_data, cfd_data, case_label: str, output_path: str,
-                   max_height=MAX_HEIGHT):
+                   height: float):
     """Build a 2-panel figure: (a) WRF top, (b) CFD bottom."""
     _apply_global_style()
 
-    # Shared vmax from data (98th percentile), rounded up — avoids washing out
-    # calm cases that a fixed 0–16 scale would compress into one end of viridis.
     cfd_p98 = float(np.nanpercentile(cfd_data['wind_speed'], 98))
     wrf_p98 = (
         float(np.nanpercentile(wrf_data['wind_speed'], 98))
         if wrf_data is not None else cfd_p98
     )
     shared_vmax = _nice_vmax(max(cfd_p98, wrf_p98))
+    key_u = _quiver_key_speed(shared_vmax)
 
-    fig = plt.figure(figsize=(12, 11))
-    panel_h = 0.34
-    gap = 0.10          # vertical space between panels (WRF xlabel + margin)
-    panel_bottom = 0.10
-    panel_left = 0.12
-    panel_w = 0.68      # leave room for shared colorbar on the right
+    # Narrow canvas; allocate identical *square* axes boxes (no horizontal stretch).
+    fig_w, fig_h = 6.5, 10.2
+    fig = plt.figure(figsize=(fig_w, fig_h))
+    panel_h = 0.40
+    gap = 0.060
+    panel_bottom = 0.055
+    panel_w = panel_h * fig_h / fig_w
+    panel_left = 0.17
+    wrf_bottom = panel_bottom + panel_h + gap
+
     ax_cfd = fig.add_axes([panel_left, panel_bottom, panel_w, panel_h])
-    ax_wrf = fig.add_axes([panel_left, panel_bottom + panel_h + gap, panel_w, panel_h])
+    ax_wrf = fig.add_axes([panel_left, wrf_bottom, panel_w, panel_h])
 
-    # Shared colorbar: right of both panels, spanning CFD bottom → WRF top
-    cbar_h = 2 * panel_h + gap
-    cax = fig.add_axes([0.84, panel_bottom, 0.025, cbar_h])
+    cbar_left = panel_left + panel_w + 0.04
+    cax = fig.add_axes([cbar_left, panel_bottom, 0.04, 2 * panel_h + gap])
+
+    wrf_label = f'(a) WRF (mesoscale) @ {height:g} m'
+    cfd_label = f'(b) CFD (OpenFOAM) @ {height:g} m'
 
     mappable = None
     if wrf_data is not None:
-        mappable = draw_wrf_panel(ax_wrf, wrf_data, vmax=shared_vmax,
-                                  max_height=max_height)
+        mappable = draw_wrf_panel(
+            ax_wrf, wrf_data, vmax=shared_vmax, label=wrf_label,
+            quiver_key_speed=key_u,
+        )
     else:
         ax_wrf.text(0.5, 0.5, 'WRF data unavailable\n(file not found)',
                     ha='center', va='center', transform=ax_wrf.transAxes,
                     fontsize=12, color='grey')
-        _add_panel_label(ax_wrf, '(a) WRF (mesoscale boundary)')
+        _add_panel_label(ax_wrf, wrf_label)
 
-    hb_cfd = draw_cfd_panel(ax_cfd, cfd_data, vmax=shared_vmax)
+    hb_cfd = draw_cfd_panel(
+        ax_cfd, cfd_data, vmax=shared_vmax, label=cfd_label,
+        quiver_key_speed=key_u,
+    )
     if mappable is None:
         mappable = hb_cfd
     add_wind_speed_colorbar(fig, mappable, cax=cax)
 
+    # Lock identical square boxes (limits already square → datalim won't resize)
+    ax_wrf.set_position([panel_left, wrf_bottom, panel_w, panel_h])
+    ax_cfd.set_position([panel_left, panel_bottom, panel_w, panel_h])
+    cax.set_position([cbar_left, panel_bottom, 0.04, 2 * panel_h + gap])
+
+    stamp = short_case_label(case_label)
     fig.suptitle(
-        f'X-Z Vertical Wind Field — WRF vs CFD\n{case_label}',
-        fontsize=14, fontweight='bold', y=0.97,
+        f'X-Y Horizontal Wind Field — WRF vs CFD\n{stamp} @ {height:g} m',
+        fontsize=12, fontweight='bold', y=0.975,
     )
 
     out_dir = os.path.dirname(output_path)
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
-    plt.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0.10)
+    # Do not use bbox_inches='tight' — it re-crops panels to unequal widths
+    plt.savefig(output_path, dpi=300)
     print(f"\nDONE: Figure saved -> {output_path}  (300 DPI)\n")
     plt.close(fig)
 
@@ -476,25 +503,25 @@ def compose_figure(wrf_data, cfd_data, case_label: str, output_path: str,
 
 def build_parser():
     p = argparse.ArgumentParser(
-        description='WRF–CFD X-Z wind field 2-panel comparison figure',
+        description='WRF–CFD X-Y wind field 2-panel comparison figure',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
     p.add_argument('cfd_dir',
                    help='Path to the CFD run directory')
+    p.add_argument('--height', type=int, default=DEFAULT_HEIGHT,
+                   help=f'Horizontal slice height in m (default: {DEFAULT_HEIGHT})')
     p.add_argument('--wrf-nc', default=None,
                    help='Override auto-detected WRF NetCDF file path')
     p.add_argument('--cfd-csv', default=None,
                    help='Override auto-detected CFD CSV path')
     p.add_argument('--output', default=None,
-                   help='Output PNG path (default: results/wrf_openfoam/xz_wrf_cfd/'
-                        '<experiment_batch>/xz_wrf_cfd_<YYYYMMDD_HHMM>.png)')
+                   help='Output PNG path (default: results/wrf_openfoam/xy_wrf_cfd/'
+                        '<experiment_batch>/xy_wrf_cfd_<YYYYMMDD_HHMM>_<height>m.png)')
     p.add_argument('--lat', type=float, default=TARGET_LAT)
     p.add_argument('--lon', type=float, default=TARGET_LON)
     p.add_argument('--lat-tol', type=float, default=LAT_TOL)
     p.add_argument('--lon-tol', type=float, default=LON_TOL)
-    p.add_argument('--max-height', type=float, default=MAX_HEIGHT)
-    p.add_argument('--cfd-top', type=float, default=CFD_TOP)
     p.add_argument('--no-wrf', action='store_true',
                    help='Skip WRF panel even if the file is available')
     return p
@@ -504,19 +531,22 @@ def main():
     args = build_parser().parse_args()
     cfd_dir = args.cfd_dir.rstrip('/')
 
-    wrf_nc_path, cfd_csv, wrf_time = infer_paths(cfd_dir)
+    wrf_nc_path, cfd_csv, wrf_time = infer_paths(cfd_dir, args.height)
     if args.wrf_nc:
         wrf_nc_path = args.wrf_nc
     if args.cfd_csv:
         cfd_csv = args.cfd_csv
 
     basename = os.path.basename(cfd_dir)
-    output_path = args.output or default_output_path(cfd_dir)
+    output_path = args.output or default_output_path(cfd_dir, args.height)
+    wrf_exp = "W_myExp05" if "W_myExp05" in wrf_nc_path else "W_myExp03"
 
     print("=" * 64)
-    print("  WRF–CFD X-Z Comparison (2-panel)")
+    print("  WRF–CFD X-Y Comparison (2-panel)")
     print("=" * 64)
+    print(f"  Height       : {args.height} m")
     print(f"  CFD CSV      : {cfd_csv}")
+    print(f"  WRF source   : {wrf_exp}  (≥09-07 → Exp05, else Exp03)")
     print(f"  WRF nc file  : {wrf_nc_path}")
     print(f"  Output       : {output_path}")
     print("=" * 64)
@@ -529,11 +559,10 @@ def main():
                 "WRF panel will show a placeholder. Use --wrf-nc to override.")
         else:
             print(f"\n[1/2] Loading WRF data ...  ({wrf_time})")
-            wrf_data = extract_wrf_xz(
-                wrf_nc_path,
+            wrf_data = extract_wrf_xy(
+                wrf_nc_path, args.height,
                 target_lat=args.lat, target_lon=args.lon,
                 lat_tol=args.lat_tol, lon_tol=args.lon_tol,
-                max_height=args.max_height,
             )
             print(f"      Wind speed range: "
                   f"[{np.nanmin(wrf_data['wind_speed']):.2f}, "
@@ -550,7 +579,7 @@ def main():
         wrf_data, cfd_data,
         case_label=basename,
         output_path=output_path,
-        max_height=args.max_height,
+        height=args.height,
     )
 
 
