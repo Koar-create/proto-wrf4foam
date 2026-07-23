@@ -188,7 +188,9 @@ def set_symmetric_delta_ylim(ax: plt.Axes) -> None:
     ax.set_ylim(-half_range * 1.08, half_range * 1.08)
 
 
-def plot_daily_dumbbell_lines(ax: plt.Axes, df: pd.DataFrame, spec: MetricSpec) -> None:
+def plot_daily_dumbbell_lines(
+    ax: plt.Axes, df: pd.DataFrame, spec: MetricSpec, *, connect_markers: bool = True
+) -> None:
     days = [pd.Timestamp(d) for d in sorted(df["sample_date"].dropna().unique())]
     x = np.arange(len(days))
     offsets = {
@@ -209,14 +211,15 @@ def plot_daily_dumbbell_lines(ax: plt.Axes, df: pd.DataFrame, spec: MetricSpec) 
                 nighttime = sub.loc[(day, "nighttime"), f"{model}_{spec.key}"]
                 color = model_colors[model]
                 alpha = layer_alpha[layer]
-                ax.plot(
-                    [xpos, xpos],
-                    [daytime, nighttime],
-                    color=color,
-                    alpha=alpha,
-                    lw=1.2,
-                    solid_capstyle="round",
-                )
+                if connect_markers:
+                    ax.plot(
+                        [xpos, xpos],
+                        [daytime, nighttime],
+                        color=color,
+                        alpha=alpha,
+                        lw=1.2,
+                        solid_capstyle="round",
+                    )
                 ax.scatter(
                     xpos,
                     daytime,
@@ -269,9 +272,11 @@ def plot_daily_dumbbell_lines(ax: plt.Axes, df: pd.DataFrame, spec: MetricSpec) 
     )
 
 
-def plot_daily_delta_lines(ax: plt.Axes, df: pd.DataFrame, spec: MetricSpec) -> None:
+def plot_daily_delta_lines(
+    ax: plt.Axes, df: pd.DataFrame, spec: MetricSpec, *, show_dumbbell_connectors: bool = True
+) -> None:
     if spec.key in {"rmse", "mbe"}:
-        plot_daily_dumbbell_lines(ax, df, spec)
+        plot_daily_dumbbell_lines(ax, df, spec, connect_markers=show_dumbbell_connectors)
         return
 
     days = [pd.Timestamp(d) for d in sorted(df["sample_date"].dropna().unique())]
@@ -370,9 +375,16 @@ def plot_daily_raw_lines(ax: plt.Axes, df: pd.DataFrame, spec: MetricSpec) -> No
     )
 
 
-def plot_daily_lines(ax: plt.Axes, df: pd.DataFrame, spec: MetricSpec, line_mode: str = "delta") -> None:
+def plot_daily_lines(
+    ax: plt.Axes,
+    df: pd.DataFrame,
+    spec: MetricSpec,
+    line_mode: str = "delta",
+    *,
+    show_dumbbell_connectors: bool = True,
+) -> None:
     if line_mode == "delta":
-        plot_daily_delta_lines(ax, df, spec)
+        plot_daily_delta_lines(ax, df, spec, show_dumbbell_connectors=show_dumbbell_connectors)
     elif line_mode == "raw":
         plot_daily_raw_lines(ax, df, spec)
     else:

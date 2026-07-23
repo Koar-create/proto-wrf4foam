@@ -127,7 +127,13 @@ def build_daily_panel_figure(df, line_mode: str = "delta") -> plt.Figure:
     )
 
     for ax, spec, panel_label in zip(axes.ravel(), METRICS, PANEL_LABELS):
-        plot_daily_lines(ax, daily, spec, line_mode=line_mode)
+        plot_daily_lines(
+            ax,
+            daily,
+            spec,
+            line_mode=line_mode,
+            show_dumbbell_connectors=line_mode != "delta",
+        )
         _remove_axis_legend(ax)
         if line_mode == "delta" and spec.key in {"ioa", "ss"}:
             _shade_negative_y(ax)
