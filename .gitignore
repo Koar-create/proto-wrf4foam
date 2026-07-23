@@ -20,6 +20,8 @@ reference-candidate/
 docs/
 scripts/
 data/Guangzhou_shp_file/
+data/wind_lut_timeseries/
+data/synthetic_wind/
 .cursor/
 results/reference*/
 results/new-visual-advice/
@@ -27,6 +29,8 @@ results/new-visual-advice/
 # large amount of data
 *.png
 *.jpg
+*.gif
+*.svg
 *.csv
 *.h5
 *.ipynb
@@ -36,6 +40,7 @@ results/new-visual-advice/
 *.json
 *.txt
 *.stl
+*tmp.py
 surrogate_dataset/inflow/*.json
 analysis/*/*.md
 
