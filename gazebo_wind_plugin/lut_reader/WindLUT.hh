@@ -10,8 +10,8 @@ struct WindLUT {
   std::array<double, 3> spacing{1.0, 1.0, 1.0};
   std::array<int, 3> dims{0, 0, 0};  // {Nx, Ny, Nz}
 
-  // Flattened arrays in x-fastest order (VTK ImageData point order):
-  // linear_index = (ix * Ny + iy) * Nz + iz
+  // Flattened arrays in x-fastest order (standard VTK ImageData point order):
+  // linear_index = ix + Nx * (iy + Ny * iz)
   std::vector<float> U;                 // size = Nx*Ny*Nz*3 (u,v,w)
   std::vector<std::uint8_t> valid_mask; // size = Nx*Ny*Nz (0/1). Optional.
   std::vector<std::uint8_t> inside_building; // size = Nx*Ny*Nz (0/1). Optional.
@@ -34,10 +34,39 @@ struct WindLUT {
 
 private:
   inline int idx(int ix, int iy, int iz) const {
-    return (ix * dims[1] + iy) * dims[2] + iz;
+    return ix + dims[0] * (iy + dims[1] * iz);
   }
   inline int idx4(int ix, int iy, int iz, int c) const {
     return idx(ix, iy, iz) * 3 + c;
   }
 };
 
+/// Time-varying LUT: shared geometry/masks + per-frame U arrays loaded from a manifest JSON.
+struct WindLUTSeries {
+  std::array<double, 3> origin{0.0, 0.0, 0.0};
+  std::array<double, 3> spacing{1.0, 1.0, 1.0};
+  std::array<int, 3> dims{0, 0, 0};
+
+  std::vector<std::uint8_t> valid_mask;
+  std::vector<std::uint8_t> inside_building;
+  std::vector<std::vector<float>> frames_U;
+
+  double dt_s{1.0};
+  int n_frames{0};
+  bool loop{true};
+
+  bool loadFromManifest(const std::string& manifest_path, std::string* err);
+
+  /// Spatial trilinear query on frame `frame_index`, then linear blend between adjacent frames at time t (s).
+  std::array<float, 3> query(double x, double y, double z, double t) const;
+
+  bool snapHotspotNearestOutdoor(double x_in, double y_in, double z_in, double max_radius_m,
+                                 double min_wind_fallback, double* out_x, double* out_y, double* out_z) const;
+
+private:
+  std::array<float, 3> queryFrame(int frame_index, double x, double y, double z) const;
+  bool cellIsOutdoor(int ix, int iy, int iz) const;
+  inline int idx(int ix, int iy, int iz) const {
+    return ix + dims[0] * (iy + dims[1] * iz);
+  }
+};

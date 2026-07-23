@@ -44,9 +44,9 @@
           </mesh>
         </geometry>
         <material>
-          <ambient>0.7 0.7 0.7 0.55</ambient>
-          <diffuse>0.7 0.7 0.7 0.55</diffuse>
-          <specular>0.1 0.1 0.1 0.2</specular>
+          <ambient>0.7 0.7 0.7 1.0</ambient>
+          <diffuse>0.7 0.7 0.7 1.0</diffuse>
+          <specular>0.1 0.1 0.1 1.0</specular>
           <emissive>0 0 0 0</emissive>
         </material>
         <cast_shadows>false</cast_shadows>

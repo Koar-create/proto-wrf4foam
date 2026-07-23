@@ -100,3 +100,16 @@ target_link_libraries(RotorSpinPlugin
   ${GAZEBO_LIBRARIES}
 )
 
+add_library(QuadrotorDynamicsPlugin SHARED
+  QuadrotorDynamicsPlugin.cc
+)
+
+target_include_directories(QuadrotorDynamicsPlugin PRIVATE
+  ${GAZEBO_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(QuadrotorDynamicsPlugin
+  ${GAZEBO_LIBRARIES}
+)
+

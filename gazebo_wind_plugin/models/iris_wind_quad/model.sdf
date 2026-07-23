@@ -82,8 +82,14 @@
     </link>
 
     <plugin name="wind_field" filename="libWindFieldPlugin.so">
+      <!-- Static single-frame LUT (legacy demo): -->
       <lut_json>/home/jeezen/wrf_openfoam_coupling_cache/wind_lut/20250903_1400/wind_lut.json</lut_json>
       <lut_vti>/home/jeezen/wrf_openfoam_coupling_cache/wind_lut/20250903_1400/wind_lut.vti</lut_vti>
+      <!-- Time-varying synthetic wind (uncomment and comment out lut_json/lut_vti above):
+      <lut_manifest>/home/jeezen/wrf_openfoam_coupling_cache/wind_lut_timeseries/20250903_1400/wind_lut_timeseries.json</lut_manifest>
+      <time_scale>1</time_scale>
+      <time_loop>true</time_loop>
+      -->
       <link_name>base_link</link_name>
       <rho>1.225</rho>
       <C_D>1.0</C_D>

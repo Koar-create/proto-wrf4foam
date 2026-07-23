@@ -1,0 +1,239 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="iris_wind_quad_timeseries">
+    <static>false</static>
+
+    <link name="base_link">
+      <pose>0 0 0 0 0 0</pose>
+
+      <inertial>
+        <mass>1.5</mass>
+        <inertia>
+          <ixx>0.029125</ixx>
+          <iyy>0.029125</iyy>
+          <izz>0.055225</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+
+      <velocity_decay>
+        <angular>0.22</angular>
+      </velocity_decay>
+
+      <collision name="collision">
+        <geometry>
+          <box><size>0.47 0.47 0.11</size></box>
+        </geometry>
+      </collision>
+
+      <visual name="body_visual">
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://iris_wind_quad/meshes/iris.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/DarkGrey</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
+      </visual>
+
+    </link>
+
+    <!-- Each rotor is its own link (no collision) on a revolute Z joint.
+         QuadrotorDynamicsPlugin drives joint motors and applies thrust at each arm. -->
+    <link name="prop_0">
+      <pose>0.13 -0.22 0.023 0 0 0</pose>
+      <inertial>
+        <mass>0.005</mass>
+        <inertia>
+          <ixx>1.0e-5</ixx>
+          <iyy>1.0e-5</iyy>
+          <izz>2.0e-5</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+      <visual name="prop_0_visual">
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://iris_wind_quad/meshes/iris_prop_ccw.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name="prop_0_joint" type="revolute">
+      <parent>base_link</parent>
+      <child>prop_0</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit><lower>-1e16</lower><upper>1e16</upper></limit>
+        <dynamics><damping>0.0001</damping></dynamics>
+      </axis>
+    </joint>
+
+    <link name="prop_1">
+      <pose>-0.13 0.20 0.023 0 0 0</pose>
+      <inertial>
+        <mass>0.005</mass>
+        <inertia>
+          <ixx>1.0e-5</ixx>
+          <iyy>1.0e-5</iyy>
+          <izz>2.0e-5</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+      <visual name="prop_1_visual">
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://iris_wind_quad/meshes/iris_prop_ccw.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name="prop_1_joint" type="revolute">
+      <parent>base_link</parent>
+      <child>prop_1</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit><lower>-1e16</lower><upper>1e16</upper></limit>
+        <dynamics><damping>0.0001</damping></dynamics>
+      </axis>
+    </joint>
+
+    <link name="prop_2">
+      <pose>0.13 0.22 0.023 0 0 0</pose>
+      <inertial>
+        <mass>0.005</mass>
+        <inertia>
+          <ixx>1.0e-5</ixx>
+          <iyy>1.0e-5</iyy>
+          <izz>2.0e-5</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+      <visual name="prop_2_visual">
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://iris_wind_quad/meshes/iris_prop_cw.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name="prop_2_joint" type="revolute">
+      <parent>base_link</parent>
+      <child>prop_2</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit><lower>-1e16</lower><upper>1e16</upper></limit>
+        <dynamics><damping>0.0001</damping></dynamics>
+      </axis>
+    </joint>
+
+    <link name="prop_3">
+      <pose>-0.13 -0.20 0.023 0 0 0</pose>
+      <inertial>
+        <mass>0.005</mass>
+        <inertia>
+          <ixx>1.0e-5</ixx>
+          <iyy>1.0e-5</iyy>
+          <izz>2.0e-5</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+      <visual name="prop_3_visual">
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://iris_wind_quad/meshes/iris_prop_cw.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name="prop_3_joint" type="revolute">
+      <parent>base_link</parent>
+      <child>prop_3</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit><lower>-1e16</lower><upper>1e16</upper></limit>
+        <dynamics><damping>0.0001</damping></dynamics>
+      </axis>
+    </joint>
+
+    <plugin name="wind_field" filename="libWindFieldPlugin.so">
+      <lut_manifest>/home/jeezen/wrf_openfoam_coupling_cache/wind_lut_timeseries/20250903_1200_center-266/wind_lut_timeseries.json</lut_manifest>
+      <time_scale>1</time_scale>
+      <time_loop>true</time_loop>
+      <hotspot_x>-266.6</hotspot_x>
+      <hotspot_y>-459.1</hotspot_y>
+      <hotspot_z>50</hotspot_z>
+      <link_name>base_link</link_name>
+      <rho>1.225</rho>
+      <C_D>1.0</C_D>
+      <area>0.04</area>
+      <enable_wind_torque>true</enable_wind_torque>
+      <wind_torque_arm_z>0.12</wind_torque_arm_z>
+      <wind_torque_arm_x>0.02</wind_torque_arm_x>
+      <world_to_lut_offset_x>0</world_to_lut_offset_x>
+      <world_to_lut_offset_y>0</world_to_lut_offset_y>
+      <world_to_lut_offset_z>0</world_to_lut_offset_z>
+      <log_every_n>100</log_every_n>
+    </plugin>
+
+    <plugin name="quadrotor_dynamics" filename="libQuadrotorDynamicsPlugin.so">
+      <link_name>base_link</link_name>
+      <target_x>-280</target_x>
+      <target_y>-400</target_y>
+      <target_z>50</target_z>
+      <enable_xy>true</enable_xy>
+      <kp>6</kp>
+      <ki>0.08</ki>
+      <kd>3.5</kd>
+      <kp_z>7</kp_z>
+      <ki_z>0.08</ki_z>
+      <kd_z>4</kd_z>
+      <att_kp>8</att_kp>
+      <att_kd>1.2</att_kd>
+      <yaw_kp>2</yaw_kp>
+      <yaw_kd>0.4</yaw_kd>
+      <max_tilt_rad>0.55</max_tilt_rad>
+      <k_f>5.5e-4</k_f>
+      <k_m>8.8e-6</k_m>
+      <motor_tau>0.08</motor_tau>
+      <max_omega>520</max_omega>
+      <max_thrust_per_motor>12</max_thrust_per_motor>
+      <joint_motor_fmax>0.5</joint_motor_fmax>
+      <rotor><joint>prop_0_joint</joint><x>0.13</x><y>-0.22</y><z>0.023</z><spin_dir>1</spin_dir></rotor>
+      <rotor><joint>prop_1_joint</joint><x>-0.13</x><y>0.20</y><z>0.023</z><spin_dir>1</spin_dir></rotor>
+      <rotor><joint>prop_2_joint</joint><x>0.13</x><y>0.22</y><z>0.023</z><spin_dir>-1</spin_dir></rotor>
+      <rotor><joint>prop_3_joint</joint><x>-0.13</x><y>-0.20</y><z>0.023</z><spin_dir>-1</spin_dir></rotor>
+      <log_every_n>250</log_every_n>
+    </plugin>
+
+    <plugin name="trail_marker" filename="libTrailMarkerPlugin.so">
+      <link_name>base_link</link_name>
+      <sample_period>0.75</sample_period>
+      <marker_radius>0.009</marker_radius>
+      <max_points>60</max_points>
+      <color_r>1.0</color_r>
+      <color_g>0.3</color_g>
+      <color_b>0.1</color_b>
+      <color_a>0.55</color_a>
+    </plugin>
+  </model>
+</sdf>

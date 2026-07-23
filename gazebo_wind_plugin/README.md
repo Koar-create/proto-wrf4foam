@@ -34,6 +34,7 @@ Artifacts (shared libraries):
 | `libTrailMarkerPlugin.so` | `TrailMarkerPlugin.cc` |
 | `libContactWatcherPlugin.so` | `ContactWatcherPlugin.cc` |
 | `libRotorSpinPlugin.so` | `RotorSpinPlugin.cc` |
+| `libQuadrotorDynamicsPlugin.so` | `QuadrotorDynamicsPlugin.cc` |
 
 Point Gazebo at the build output, for example:
 
@@ -52,13 +53,13 @@ Alternatively, install or copy the `.so` files into a directory already on `GAZE
    - **`valid_mask`** or **`vtkValidPointMask`** — zero means invalid for interpolation contributions.
    - **`inside_building`** — non-zero marks indoor / non-outdoor cells when present.
 
-Grid indexing follows VTK point order (x fastest): `index = (ix * Ny + iy) * Nz + iz`. `query(x,y,z)` performs trilinear interpolation in LUT coordinates (meters), with out-of-range returning `(0,0,0)`. Invalid corners contribute as zero wind.
+Grid indexing follows VTK point order (x fastest): `index = ix + Nx * (iy + Ny * iz)`. `query(x,y,z)` performs trilinear interpolation in LUT coordinates (meters), with out-of-range returning `(0,0,0)`. Invalid corners contribute as zero wind.
 
 Hotspot logging in `WindFieldPlugin` can optionally call `snapHotspotNearestOutdoor` so a probe point that lands inside a masked column is moved in **XY** on the same **z** slice to the nearest outdoor cell (or, without a building mask, to a cell with `|U| ≥` a fallback threshold).
 
 ## Plugins and SDF parameters
 
-Register names: `WindFieldPlugin`, `HoverPidPlugin`, `InspectionPathControllerPlugin`, `TrailMarkerPlugin`, `ContactWatcherPlugin`, `RotorSpinPlugin` (see `GZ_REGISTER_MODEL_PLUGIN` in each `.cc` file).
+Register names: `WindFieldPlugin`, `HoverPidPlugin`, `InspectionPathControllerPlugin`, `TrailMarkerPlugin`, `ContactWatcherPlugin`, `RotorSpinPlugin`, `QuadrotorDynamicsPlugin` (see `GZ_REGISTER_MODEL_PLUGIN` in each `.cc` file).
 
 ### WindFieldPlugin (`libWindFieldPlugin.so`)
 
@@ -161,6 +162,44 @@ World-frame **waypoint queue** with the same translational PID + optional attitu
 | `publish_disable_topic` | string | `~/hover_pid/disable` | Gazebo transport topic for the one-shot disable message. |
 | `log_every_n` | int | `50` | Periodic contact summary cadence in sensor updates. |
 
+### QuadrotorDynamicsPlugin (`libQuadrotorDynamicsPlugin.so`)
+
+Physically consistent demo flight for time-series wind demos. Replaces world-frame `HoverPidPlugin` + cosmetic `RotorSpinPlugin` on `iris_wind_quad_timeseries`.
+
+Each step:
+
+1. World-frame position PID produces desired acceleration (with gravity compensation in Z).
+2. Desired thrust vector aligns with that acceleration; roll/pitch setpoints are derived from thrust tilt (not world +Z magic force).
+3. Attitude PD produces roll/pitch/yaw torques.
+4. X-configuration motor mixing inverts `τ_roll = Σ(y_i T_i)`, `τ_pitch = Σ(−x_i T_i)`, `τ_yaw = (k_m/k_f) Σ(spin_dir_i T_i)`.
+5. Motor speeds follow first-order dynamics `ω̇ ≈ (ω_cmd − ω)/motor_tau` with `T_i = k_f ω_i²`.
+6. Thrust is applied at each rotor arm along body **+Z**; yaw reaction torque `k_m ω²` is summed on the body. Joint motors drive visible prop spin at the same `ω`.
+
+At large roll/pitch, thrust no longer points upward → the vehicle loses altitude instead of “sky-hook” hovering. Wind from `WindFieldPlugin` disturbs the body; the controller must tilt into the wind.
+
+| Element | Type | Default | Description |
+| --- | --- | --- | --- |
+| `link_name` | string | `base_link` | Controlled link. |
+| `target_x` / `y` / `z` | double | `-280` / `-400` / `50` | Hover setpoint (m). |
+| `kp` / `ki` / `kd` | double | `6` / `0.08` / `3.5` | XY position PID. |
+| `kp_z` / `ki_z` / `kd_z` | double | same as XY | Z position PID. |
+| `enable_xy` | bool | `true` | Enable XY position hold. |
+| `att_kp` / `att_kd` | double | `8` / `1.2` | Roll/pitch attitude PD. |
+| `yaw_kp` / `yaw_kd` | double | `2` / `0.4` | Yaw hold (world yaw ≈ 0). |
+| `max_tilt_rad` | double | `0.55` | Max commanded thrust tilt (~31°). |
+| `k_f` | double | `5.5e-4` | Thrust coefficient: `T = k_f ω²` (N·s²/rad²). |
+| `k_m` | double | `8.8e-6` | Yaw moment coefficient per motor. |
+| `motor_tau` | double | `0.08` | Motor speed time constant (s). |
+| `max_omega` | double | `520` | Motor speed limit (rad/s). |
+| `max_thrust_per_motor` | double | `12` | Per-motor thrust clamp (N). |
+| `joint_motor_fmax` | double | `0.5` | Visual joint motor torque cap (N·m). |
+| `<rotor><joint>` | string | *(required)* | Revolute joint name. |
+| `<rotor><x>` / `y` / `z` | double | `0` / `0` / `0.023` | Rotor arm in body frame (m). |
+| `<rotor><spin_dir>` | int | `1` | `+1` CCW, `−1` CW (yaw reaction sign). |
+| `disable_topic` | string | empty | Optional crash disable topic. |
+| `crash_zero_thrust` | bool | `true` | Zero motor thrust when disabled. |
+| `log_every_n` | int | `250` | Periodic `gzmsg`: error, thrust, roll/pitch, ω₀. |
+
 ### RotorSpinPlugin (`libRotorSpinPlugin.so`)
 
 `ModelPlugin` that drives **revolute** joints with the ODE joint motor (`SetParam("fmax")`, `SetParam("vel")`) so propeller **visual** meshes spin at a target angular rate (rad/s). This is **cosmetic**: it does not replace `HoverPidPlugin` / `WindFieldPlugin` forces. Put each rotor on its own lightweight link (no collision) connected to `base_link` with `<joint type="revolute"><axis><xyz>0 0 1</xyz>…`.
@@ -198,6 +237,7 @@ Samples link pose every `sample_period` seconds and spawns a **static** sphere m
 | `CMakeLists.txt` | Build definition for the three plugins. |
 | `WindFieldPlugin.cc` | Wind LUT sampling + drag force/torque model plugin. |
 | `HoverPidPlugin.{hh,cc}` | Demo hover / drift PID model plugin. |
+| `QuadrotorDynamicsPlugin.{hh,cc}` | Body-frame quadrotor thrust + attitude control for timeseries demo. |
 | `TrailMarkerPlugin.{hh,cc}` | Visual trail spheres via factory transport. |
 | `lut_reader/WindLUT.{hh,cc}` | JSON + VTI load, masks, trilinear `query`, outdoor snap. |
 | `worlds/` | Example worlds: `guangzhou_wind.world`, `guangzhou_wind_hires_demo.world`, RBM-4 `guangzhou_demo_pt1_crash.world`, `guangzhou_demo_pt2_hover.world`. |
@@ -207,6 +247,7 @@ Samples link pose every `sample_period` seconds and spawns a **static** sphere m
 ### `models/` overview
 
 - **`iris_wind_quad`** — Standard-scale quad visual + collision; `WindFieldPlugin`, `HoverPidPlugin`, `TrailMarkerPlugin` (LUT paths in SDF are examples under `~/wrf_openfoam_coupling_cache/...`).
+- **`iris_wind_quad_timeseries`** — Time-varying LUT manifest demo; `WindFieldPlugin` + **`QuadrotorDynamicsPlugin`** (body-frame rotor thrust, attitude PD, motor mixing) + `TrailMarkerPlugin`; four `prop_*` links with joint spin synced to physics motor speeds.
 - **`iris_wind_quad_hires_demo`** — 10× scaled mesh/collision for visibility; wind torque (`wind_torque_arm_z=0.3`), link angular `velocity_decay`, attitude recovery, timed XY drift; hires LUT paths in SDF.
 - **`iris_wind_quad_hires_pt1_crash`** / **`iris_wind_quad_hires_pt2_hover`** — Thin wrappers: same meshes via `model://iris_wind_quad_hires_demo/meshes/...`, shared `InspectionPathControllerPlugin` loop (pt2 adds barrier); four `prop_*` links + revolute joints + `RotorSpinPlugin` for **visible** high-speed rotors (spool-down on `~/hover_pid/disable` after crash in pt1).
 - **`demo_building_collision`** — Optional static convex-hull collision model (regenerated by `build_demo_collision_model.py`); can include a translucent debug visual. RBM-4 pt1/pt2 worlds use `guangzhou_buildings` mesh collision instead.

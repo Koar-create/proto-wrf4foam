@@ -27,6 +27,7 @@ public:
       return;
     }
 
+    const std::string manifest_path = sdf->Get<std::string>("lut_manifest", "").first;
     const std::string json_path = sdf->Get<std::string>("lut_json", "").first;
     const std::string vti_path = sdf->Get<std::string>("lut_vti", "").first;
     link_name_ = sdf->Get<std::string>("link_name", "base_link").first;
@@ -54,29 +55,43 @@ public:
     hotspot_snap_max_radius_m_ = sdf->Get<double>("hotspot_snap_max_radius_m", 120.0).first;
     hotspot_snap_min_wind_ = sdf->Get<double>("hotspot_snap_min_wind", 0.05).first;
 
-    // Optional demo-only biases (m/s) added to the LUT sample; default 0 keeps legacy behaviour.
     wind_bias_x_ = sdf->Get<double>("wind_bias_x", 0.0).first;
     wind_bias_y_ = sdf->Get<double>("wind_bias_y", 0.0).first;
     wind_bias_z_ = sdf->Get<double>("wind_bias_z", 0.0).first;
-    // Scales the final drag force/torque magnitude (quadratic-drag path); default 1.
     force_scale_ = sdf->Get<double>("force_scale", 1.0).first;
+
+    time_scale_ = sdf->Get<double>("time_scale", 1.0).first;
+    time_loop_override_ = sdf->HasElement("time_loop");
+    time_loop_ = sdf->Get<bool>("time_loop", true).first;
 
     disable_topic_ = sdf->Get<std::string>("disable_topic", std::string()).first;
 
-    if (json_path.empty() || vti_path.empty()) {
-      gzerr << "[WindFieldPlugin] Missing <lut_json> or <lut_vti> in SDF\n";
-      return;
-    }
-
     std::string err;
-    if (!lut_.loadFromJsonAndVti(json_path, vti_path, &err)) {
-      gzerr << "[WindFieldPlugin] LUT load failed: " << err << "\n";
-      return;
+    if (!manifest_path.empty()) {
+      use_series_ = true;
+      if (!series_.loadFromManifest(manifest_path, &err)) {
+        gzerr << "[WindFieldPlugin] LUT series load failed: " << err << "\n";
+        return;
+      }
+      if (time_loop_override_) series_.loop = time_loop_;
+      gzmsg << "[WindFieldPlugin] LUT series loaded: dims=(" << series_.dims[0] << "," << series_.dims[1] << ","
+            << series_.dims[2] << ") origin=(" << series_.origin[0] << "," << series_.origin[1] << ","
+            << series_.origin[2] << ") spacing=(" << series_.spacing[0] << "," << series_.spacing[1] << ","
+            << series_.spacing[2] << ") frames=" << series_.n_frames << " dt=" << series_.dt_s
+            << " loop=" << (series_.loop ? 1 : 0) << "\n";
+    } else {
+      if (json_path.empty() || vti_path.empty()) {
+        gzerr << "[WindFieldPlugin] Missing <lut_manifest> or (<lut_json> and <lut_vti>) in SDF\n";
+        return;
+      }
+      if (!lut_.loadFromJsonAndVti(json_path, vti_path, &err)) {
+        gzerr << "[WindFieldPlugin] LUT load failed: " << err << "\n";
+        return;
+      }
+      gzmsg << "[WindFieldPlugin] LUT loaded: dims=(" << lut_.dims[0] << "," << lut_.dims[1] << "," << lut_.dims[2]
+            << ") origin=(" << lut_.origin[0] << "," << lut_.origin[1] << "," << lut_.origin[2] << ") spacing=("
+            << lut_.spacing[0] << "," << lut_.spacing[1] << "," << lut_.spacing[2] << ")\n";
     }
-
-    gzmsg << "[WindFieldPlugin] LUT loaded: dims=(" << lut_.dims[0] << "," << lut_.dims[1] << "," << lut_.dims[2]
-          << ") origin=(" << lut_.origin[0] << "," << lut_.origin[1] << "," << lut_.origin[2] << ") spacing=("
-          << lut_.spacing[0] << "," << lut_.spacing[1] << "," << lut_.spacing[2] << ")\n";
 
     {
       double hx = hotspot_x_;
@@ -86,8 +101,12 @@ public:
         double sx = hx;
         double sy = hy;
         double sz = hz;
-        if (lut_.snapHotspotNearestOutdoor(hx, hy, hz, hotspot_snap_max_radius_m_, hotspot_snap_min_wind_, &sx, &sy,
-                                           &sz)) {
+        const bool snapped = use_series_
+                                 ? series_.snapHotspotNearestOutdoor(hx, hy, hz, hotspot_snap_max_radius_m_,
+                                                                     hotspot_snap_min_wind_, &sx, &sy, &sz)
+                                 : lut_.snapHotspotNearestOutdoor(hx, hy, hz, hotspot_snap_max_radius_m_,
+                                                                  hotspot_snap_min_wind_, &sx, &sy, &sz);
+        if (snapped) {
           const double moved = std::hypot(sx - hx, sy - hy) + std::fabs(sz - hz);
           if (moved > 1.0e-3) {
             gzmsg << "[WindFieldPlugin] hotspot_snap_outdoor: (" << hx << "," << hy << "," << hz << ") -> (" << sx
@@ -101,11 +120,11 @@ public:
                  << " m; using raw hotspot\n";
         }
       }
-      const auto hv = lut_.query(hx, hy, hz);
+      const auto hv = use_series_ ? series_.query(hx, hy, hz, 0.0) : lut_.query(hx, hy, hz);
       const double u_mag = std::sqrt(static_cast<double>(hv[0]) * hv[0] + static_cast<double>(hv[1]) * hv[1] +
                                      static_cast<double>(hv[2]) * hv[2]);
       gzmsg << "[WindFieldPlugin] hotspot_check LUT(" << hx << "," << hy << "," << hz << ") wind=(" << hv[0] << ","
-            << hv[1] << "," << hv[2]             << ") |U|=" << u_mag << " m/s\n";
+            << hv[1] << "," << hv[2] << ") |U|=" << u_mag << " m/s\n";
     }
 
     if (!disable_topic_.empty()) {
@@ -137,7 +156,14 @@ public:
     const double y = pose.Pos().Y() + offset_y_;
     const double z = pose.Pos().Z() + offset_z_;
 
-    const auto uvw = lut_.query(x, y, z);
+    std::array<float, 3> uvw{};
+    if (use_series_) {
+      const double t_lut = (world_ ? world_->SimTime().Double() : 0.0) * time_scale_;
+      uvw = series_.query(x, y, z, t_lut);
+    } else {
+      uvw = lut_.query(x, y, z);
+    }
+
     const double u_wind = uvw[0] + wind_bias_x_;
     const double v_wind = uvw[1] + wind_bias_y_;
     const double w_wind = uvw[2] + wind_bias_z_;
@@ -155,10 +181,6 @@ public:
     link->AddForce(force);
 
     if (enable_wind_torque_) {
-      // r × F where r = (arm_x, arm_y, arm_z) is an effective drag-center offset
-      // from the body CG. arm_z excites roll/pitch (legacy behaviour); arm_x/arm_y
-      // also let horizontal wind force generate yaw torque (τ_z = arm_x*fy - arm_y*fx),
-      // giving 6-DOF buffeting instead of yaw-locked drift.
       ignition::math::Vector3d moment_arm(wind_torque_arm_x_, wind_torque_arm_y_, wind_torque_arm_z_);
       ignition::math::Vector3d torque = moment_arm.Cross(force);
       link->AddTorque(torque);
@@ -179,7 +201,9 @@ private:
   physics::WorldPtr world_;
   event::ConnectionPtr update_conn_;
 
+  bool use_series_{false};
   WindLUT lut_;
+  WindLUTSeries series_;
   std::string link_name_;
 
   double rho_{1.225};
@@ -210,6 +234,10 @@ private:
   double wind_bias_z_{0.0};
   double force_scale_{1.0};
 
+  double time_scale_{1.0};
+  bool time_loop_override_{false};
+  bool time_loop_{true};
+
   std::string disable_topic_;
   transport::NodePtr node_;
   transport::SubscriberPtr disable_sub_;
@@ -219,4 +247,3 @@ private:
 GZ_REGISTER_MODEL_PLUGIN(WindFieldPlugin)
 
 }  // namespace gazebo
-

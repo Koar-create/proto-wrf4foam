@@ -24,7 +24,9 @@ scripts/
 results/reference-*/
 results/new-visual-advice/
 data/Guangzhou_shp_file/
-
+data/synthetic_wind/
+results/synthetic_wind/
+analysis/26*/
 # large amount of data
 *.png
 *.jpg
