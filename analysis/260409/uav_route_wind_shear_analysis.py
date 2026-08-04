@@ -995,6 +995,8 @@ def plot_route_overview(
 ) -> None:
     """Top-down map of routes on SHP building footprints (height-coloured)."""
     configure_matplotlib_style()
+    # Lock one face for every text artist (avoids bold/regular fallback mismatch)
+    font_family = "Times New Roman"
     ox, oy = origin_utm49n(origin_lon, origin_lat)
     rings, heights = load_building_footprints_local(Path(shp_path), (ox, oy), clip_xy)
 
@@ -1003,6 +1005,7 @@ def plot_route_overview(
     # Cool open-space ground so warm building fills read clearly
     ax.set_facecolor("#e6ebf0")
 
+    cbar = None
     if len(rings) == 0:
         print("[SHP] WARNING: no footprints in view; drawing routes only", flush=True)
     else:
@@ -1031,10 +1034,23 @@ def plot_route_overview(
         )
         ax.add_collection(coll)
         cbar = fig.colorbar(coll, ax=ax, fraction=0.046, pad=0.02)
-        cbar.set_label("Building height (m)")
-        cbar.ax.tick_params(labelsize=9)
+        cbar.set_label("Building height (m)", fontsize=20, fontfamily=font_family)
+        cbar.ax.tick_params(labelsize=16)
+        for tick in cbar.ax.get_yticklabels():
+            tick.set_fontfamily(font_family)
 
     route_colors = {"Route1_open_river": "#0D47A1", "Route2_urban_canyon": "#B71C1C"}
+    # Text offsets: Route 1 (E–W) label above; Route 2 (N–S) label to the right
+    endpoint_ann = {
+        "Route1_open_river": {
+            "start": {"xytext": (0, 22), "ha": "center", "va": "bottom"},
+            "end": {"xytext": (0, 22), "ha": "center", "va": "bottom"},
+        },
+        "Route2_urban_canyon": {
+            "start": {"xytext": (22, 0), "ha": "left", "va": "center"},
+            "end": {"xytext": (22, 0), "ha": "left", "va": "center"},
+        },
+    }
     for rname, df in route_dfs.items():
         color = route_colors.get(rname, "k")
         ax.plot(
@@ -1046,25 +1062,73 @@ def plot_route_overview(
             label=ROUTE_SPECS[rname]["label"],
             zorder=3,
         )
-        ax.scatter(
-            df["x"].iloc[0],
-            df["y"].iloc[0],
-            c="k",
-            s=40,
-            zorder=4,
-            edgecolors="white",
-            linewidths=0.7,
+        x0, y0 = float(df["x"].iloc[0]), float(df["y"].iloc[0])
+        x1, y1 = float(df["x"].iloc[-1]), float(df["y"].iloc[-1])
+        for x, y in ((x0, y0), (x1, y1)):
+            ax.scatter(
+                x,
+                y,
+                c="k",
+                s=40,
+                zorder=4,
+                edgecolors="white",
+                linewidths=0.7,
+            )
+        ann = endpoint_ann.get(
+            rname,
+            {
+                "start": {"xytext": (0, 22), "ha": "center", "va": "bottom"},
+                "end": {"xytext": (0, 22), "ha": "center", "va": "bottom"},
+            },
         )
+        for label, (x, y), key in (
+            ("Start", (x0, y0), "start"),
+            ("End", (x1, y1), "end"),
+        ):
+            sty = ann[key]
+            ax.annotate(
+                label,
+                xy=(x, y),
+                xytext=sty["xytext"],
+                textcoords="offset points",
+                color=color,
+                fontsize=16,
+                fontfamily=font_family,
+                fontweight="bold",
+                ha=sty["ha"],
+                va=sty["va"],
+                zorder=5,
+            )
 
     ax.set_xlim(-clip_xy, clip_xy)
     ax.set_ylim(-clip_xy, clip_xy)
     ax.set_aspect("equal")
-    ax.set_xlabel("x (m)")
-    ax.set_ylabel("y (m)")
-    ax.set_title("UAV route overview with building footprints")
+    ax.set_xlabel("x (m)", fontsize=20, fontfamily=font_family)
+    ax.set_ylabel("y (m)", fontsize=20, fontfamily=font_family)
+    ax.tick_params(axis="both", labelsize=18)
+    for tick in ax.get_xticklabels() + ax.get_yticklabels():
+        tick.set_fontfamily(font_family)
+    ax.set_title(
+        "UAV route overview with building footprints",
+        fontsize=18,
+        fontfamily=font_family,
+        fontweight="bold",
+    )
     ax.grid(True, color="0.45", alpha=0.22, linestyle=":", linewidth=0.7)
-    ax.legend(loc="upper left", fontsize=9, framealpha=0.92)
+    ax.legend(
+        loc="upper left",
+        fontsize=16,
+        framealpha=0.92,
+        prop={"family": font_family, "size": 16},
+    )
     fig.tight_layout()
+    # Re-assert family after layout (tick labels can be rebuilt)
+    for tick in ax.get_xticklabels() + ax.get_yticklabels():
+        tick.set_fontfamily(font_family)
+    if cbar is not None:
+        cbar.ax.yaxis.label.set_fontfamily(font_family)
+        for tick in cbar.ax.get_yticklabels():
+            tick.set_fontfamily(font_family)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, facecolor=fig.get_facecolor())
     plt.close(fig)
