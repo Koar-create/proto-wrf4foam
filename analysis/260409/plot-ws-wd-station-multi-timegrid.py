@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-多站点多时段风速/风向垂直剖面网格可视化脚本（3行 x 6列）。
-用于展示连续6个小时的三个站点的廓线变化。
-图例统一放置在图的最上方。
-风向箭头被放大并优化显示，字体显著增大，确保在演示文稿中清晰可见。
+多站点多时段风速/风向垂直剖面网格可视化脚本（站点 × 6 小时）。
+默认：分别输出风速折线网格与风向折线网格（同布局）；可选 --show-wd-arrows
+在风速图右侧叠加风向箭头。子图默认行优先标号 (a)–(r)。图例置于图顶。
 """
 
 import argparse
@@ -15,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 from matplotlib.path import Path as MPath
 from matplotlib.markers import MarkerStyle
+from matplotlib.ticker import MultipleLocator
 import numpy as np
 import pandas as pd
 
@@ -135,117 +135,106 @@ _MONTH_ABBR = (
 def _format_date_label(ts: pd.Timestamp) -> str:
     return f"{_MONTH_ABBR[ts.month - 1]} {ts.day:02d}"
 
+
+def _panel_letter(row: int, col: int, ncols: int = 6) -> str:
+    """行优先子图标号：a, b, ...（3×6 → a–r）。"""
+    return chr(ord("a") + row * ncols + col)
+
+
+def _add_panel_label(ax, row: int, col: int, ncols: int = 6) -> None:
+    ax.text(
+        0.04, 0.97, f"({_panel_letter(row, col, ncols)})",
+        transform=ax.transAxes, ha="left", va="top",
+        fontsize=20, fontweight="bold", zorder=10,
+    )
+
+
+def _ws_data_xmax(agg: pd.DataFrame) -> float:
+    vals = np.concatenate([
+        agg["ws_obs"].to_numpy(dtype=float),
+        agg["ws_wrf"].to_numpy(dtype=float),
+        agg["ws_cfd"].to_numpy(dtype=float),
+    ])
+    finite = vals[np.isfinite(vals)]
+    return float(np.nanmax(finite)) if finite.size else 1.0
+
+
+def _ws_tick_step(xmax: float) -> float:
+    if xmax <= 8:
+        return 1.0
+    if xmax <= 16:
+        return 2.0
+    return 5.0
+
+
+def _nice_ws_axis(data_xmax: float) -> tuple[float, float]:
+    """按数据上取整 xmax，返回 (xmax, tick_step)，刻度为 1/2/5 等规整步长。"""
+    x = max(float(data_xmax), 1e-3) * 1.05
+    if x <= 8:
+        xmax = max(float(np.ceil(x)), 1.0)
+    elif x <= 16:
+        xmax = float(np.ceil(x / 2.0) * 2.0)
+    else:
+        xmax = float(np.ceil(x / 5.0) * 5.0)
+    return xmax, _ws_tick_step(xmax)
+
+
+# 全图各有数据子图的 nice xmax，若 max/min <= 该比值则统一为最大值（3 与 4 统一；4 与 10 保持独立）
+_XMAX_UNIFY_RATIO = 1.5
+
+
+def _resolve_shared_ws_xmax(nice_xmaxs: list[float]) -> float | None:
+    if not nice_xmaxs:
+        return None
+    lo, hi = min(nice_xmaxs), max(nice_xmaxs)
+    if hi <= lo * _XMAX_UNIFY_RATIO:
+        return hi
+    return None
+
+
+def _apply_ws_xlim(
+    ax,
+    data_xmax: float,
+    *,
+    show_wd_arrows: bool,
+    agg: pd.DataFrame,
+    row: int,
+    forced_xmax: float | None = None,
+) -> None:
+    if show_wd_arrows:
+        max_ws = max(forced_xmax if forced_xmax is not None else data_xmax, 10.0)
+        _draw_wd_arrows(ax, agg, row, max_ws)
+    else:
+        if forced_xmax is not None:
+            xmax, step = forced_xmax, _ws_tick_step(forced_xmax)
+        else:
+            xmax, step = _nice_ws_axis(data_xmax)
+        ax.set_xlim(0, xmax)
+        ax.xaxis.set_major_locator(MultipleLocator(step))
+
+
 # ---------- 绘图核心函数 ----------
-def plot_multi_time_grid_all_sites(df: pd.DataFrame, sites: list[str], start_dt: str) -> Path:
+def _prepare_grid_window(start_dt: str) -> tuple[pd.Timestamp, pd.DatetimeIndex]:
     start = pd.Timestamp(start_dt)
     end = start + pd.Timedelta(hours=5)  # 包含起点的 6 个小时
     times = pd.date_range(start, end, freq="h")
+    return start, times
 
-    fig, axes = plt.subplots(len(sites), 6, figsize=(32, 18), sharex=False, sharey=True)
-    fig.subplots_adjust(hspace=0.3, wspace=0.15, top=0.90, bottom=0.08)
 
-    legend_handles = []
-    legend_labels = []
-
-    for row, site in enumerate(sites):
-        for col, cur_dt in enumerate(times):
-            ax = axes[row, col]
-
-            cur_lst = cur_dt + pd.Timedelta(hours=8)
-            if row == 0:
-                ax.set_title(cur_lst.strftime("%H:%M LST"), fontsize=22, fontweight="bold", loc="left")
-
-            tl_utc = TIME_LABELS.get(cur_dt.strftime("%Y-%m-%d %H:%M:%S"))
-            if tl_utc is None:
-                ax.text(0.5, 0.5, "Out of bounds", ha="center", va="center", transform=ax.transAxes, fontsize=18)
-                continue
-
-            sub = df[(df["obtid"] == site) & (df["time_label"] == tl_utc) & df["qc_ok"]].copy()
-            agg = _aggregate_station_profile(sub) if not sub.empty else pd.DataFrame()
-
-            if not agg.empty:
-                agg = agg[(agg["mean_h"] >= 0) & (agg["mean_h"] <= ZMAX)].copy()
-
-            if not agg.empty:
-                l1, = ax.plot(agg["ws_obs"], agg["mean_h"], color=COLOR_OBS, lw=2.5, marker="o", ms=6.0, label="LiDAR")
-                l2, = ax.plot(agg["ws_wrf"], agg["mean_h"], color=COLOR_WRF, lw=2.5, ls="-", label="WRF")
-                l3, = ax.plot(agg["ws_cfd"], agg["mean_h"], color=COLOR_CFD, lw=3.0, ls="-", label="OpenFOAM")
-
-                if not legend_handles:
-                    legend_handles = [l1, l2, l3]
-                    legend_labels = ["LiDAR", "WRF", "OpenFOAM"]
-
-                # 为了放下风向箭头，扩展X轴，并在右侧绘制一个淡灰色背景带
-                ax.relim()
-                ax.autoscale_view(scalex=True, scaley=False)
-                curr_xlim = ax.get_xlim()
-                max_ws = max(curr_xlim[1], 10.0)
-                
-                # 分配箭头区域：max_ws 的 1.1倍到 1.6倍区域
-                arrow_start = max_ws * 1.15
-                ax.set_xlim(0, max_ws * 1.7)
-
-                # 绘制灰色背景作为“风向颜色条”区域底色
-                ax.axvspan(arrow_start, max_ws * 1.7, color="#f0f0f0", alpha=0.5, zorder=0)
-
-                x_obs = arrow_start + (max_ws * 0.1)
-                x_wrf = arrow_start + (max_ws * 0.25)
-                x_cfd = arrow_start + (max_ws * 0.4)
-
-                trans = ax.get_yaxis_transform()
-                blend_trans = mtransforms.blended_transform_factory(ax.transAxes, ax.transData)
-
-                for wd_col, x_pos, col_c, title in [
-                    ("obs", 0.76, COLOR_OBS, "Obs"),
-                    ("wrf", 0.86, COLOR_WRF, "WRF"),
-                    ("cfd", 0.96, COLOR_CFD, "CFD"),
-                ]:
-                    for _, r_data in agg.iterrows():
-                        wd_raw = r_data[f"wd_{wd_col}"]
-                        if pd.isna(wd_raw):
-                            continue
-                        wd_snap = round(wd_raw / 22.5) * 22.5 % 360
-                        rot = mtransforms.Affine2D().rotate_deg(-wd_snap - 180)
-                        marker = MarkerStyle(_ARROW, transform=rot)
-                        ax.plot(
-                            x_pos,
-                            r_data["mean_h"],
-                            marker=marker,
-                            color=col_c,
-                            ms=16,  # 显著放大箭头
-                            lw=0,
-                            transform=blend_trans,
-                            clip_on=False,
-                        )
-                    # 顶部标签
-                    if row == 0:
-                        ax.text(
-                            x_pos, 1.02, title,
-                            ha="left", va="bottom", rotation=45, fontsize=24, color=col_c,
-                            fontweight="bold", transform=mtransforms.blended_transform_factory(ax.transAxes, ax.transAxes),
-                            clip_on=False,
-                        )
-
-            else:
-                ax.text(0.5, 0.5, "No Data", ha="center", va="center", fontsize=16, transform=ax.transAxes)
-                ax.set_xlim(0, 15)
-
-            for h_line in (300, 1000):
-                ax.axhline(h_line, color="0.6", lw=1.2, ls=":", zorder=0)
-
-            ax.set_ylim(0, ZMAX)
-
-            if col == 0:
-                ax.set_ylabel(f"{site}\nHeight (m)", fontsize=32, fontweight="bold")
-
+def _finish_grid_figure(
+    fig: plt.Figure,
+    start: pd.Timestamp,
+    legend_handles: list,
+    legend_labels: list,
+    xlabel: str,
+    save_path: Path,
+) -> Path:
     start_lst = start + pd.Timedelta(hours=8)
     fig.text(
         0.02, 0.98, _format_date_label(start_lst),
         ha="left", va="top", fontsize=32, fontweight="bold",
         transform=fig.transFigure,
     )
-
-    # 统一图例
     if legend_handles:
         fig.legend(
             legend_handles,
@@ -256,20 +245,251 @@ def plot_multi_time_grid_all_sites(df: pd.DataFrame, sites: list[str], start_dt:
             fontsize=32,
             framealpha=1.0,
         )
-
-    # 底部统一的X轴标签
-    fig.text(0.5, 0.02, r"Wind Speed (m s$^{-1}$)", ha="center", va="center", fontsize=36, fontweight="bold")
-
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    dt_tag = start.strftime("%Y%m%d_%H%M")
-    save_path = OUTPUT_DIR / f"ws_wd_grid_6h_all_stations_{dt_tag}.png"
+    fig.text(0.5, 0.02, xlabel, ha="center", va="center", fontsize=36, fontweight="bold")
+    save_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(save_path)
     plt.close(fig)
     return save_path
 
 
+def _draw_wd_arrows(ax, agg: pd.DataFrame, row: int, max_ws: float) -> None:
+    arrow_start = max_ws * 1.15
+    ax.set_xlim(0, max_ws * 1.7)
+    ax.axvspan(arrow_start, max_ws * 1.7, color="#f0f0f0", alpha=0.5, zorder=0)
+
+    blend_trans = mtransforms.blended_transform_factory(ax.transAxes, ax.transData)
+    for wd_col, x_pos, col_c, title in [
+        ("obs", 0.76, COLOR_OBS, "Obs"),
+        ("wrf", 0.86, COLOR_WRF, "WRF"),
+        ("cfd", 0.96, COLOR_CFD, "CFD"),
+    ]:
+        for _, r_data in agg.iterrows():
+            wd_raw = r_data[f"wd_{wd_col}"]
+            if pd.isna(wd_raw):
+                continue
+            wd_snap = round(wd_raw / 22.5) * 22.5 % 360
+            rot = mtransforms.Affine2D().rotate_deg(-wd_snap - 180)
+            marker = MarkerStyle(_ARROW, transform=rot)
+            ax.plot(
+                x_pos,
+                r_data["mean_h"],
+                marker=marker,
+                color=col_c,
+                ms=16,
+                lw=0,
+                transform=blend_trans,
+                clip_on=False,
+            )
+        if row == 0:
+            ax.text(
+                x_pos, 1.02, title,
+                ha="left", va="bottom", rotation=45, fontsize=24, color=col_c,
+                fontweight="bold",
+                transform=mtransforms.blended_transform_factory(ax.transAxes, ax.transAxes),
+                clip_on=False,
+            )
+
+
+def plot_multi_time_grid_ws(
+    df: pd.DataFrame,
+    sites: list[str],
+    start_dt: str,
+    show_wd_arrows: bool = False,
+) -> Path:
+    """风速廓线 m×n 网格；可选在右侧叠加风向箭头。"""
+    start, times = _prepare_grid_window(start_dt)
+    fig, axes = plt.subplots(len(sites), 6, figsize=(32, 18), sharex=False, sharey=True)
+    fig.subplots_adjust(hspace=0.3, wspace=0.15, top=0.90, bottom=0.08)
+
+    # 先收集各子图数据与 nice xmax，再决定是否全图统一
+    cells: dict[tuple[int, int], dict] = {}
+    nice_xmaxs: list[float] = []
+    for row, site in enumerate(sites):
+        for col, cur_dt in enumerate(times):
+            tl_utc = TIME_LABELS.get(cur_dt.strftime("%Y-%m-%d %H:%M:%S"))
+            if tl_utc is None:
+                cells[(row, col)] = {"kind": "oob"}
+                continue
+            sub = df[(df["obtid"] == site) & (df["time_label"] == tl_utc) & df["qc_ok"]].copy()
+            agg = _aggregate_station_profile(sub) if not sub.empty else pd.DataFrame()
+            if not agg.empty:
+                agg = agg[(agg["mean_h"] >= 0) & (agg["mean_h"] <= ZMAX)].copy()
+            if agg.empty:
+                cells[(row, col)] = {"kind": "nodata"}
+                continue
+            data_xmax = _ws_data_xmax(agg)
+            nice_xmax, _ = _nice_ws_axis(data_xmax)
+            cells[(row, col)] = {
+                "kind": "data",
+                "agg": agg,
+                "data_xmax": data_xmax,
+                "nice_xmax": nice_xmax,
+            }
+            nice_xmaxs.append(nice_xmax)
+
+    shared_xmax = None if show_wd_arrows else _resolve_shared_ws_xmax(nice_xmaxs)
+
+    legend_handles: list = []
+    legend_labels: list = []
+
+    for row, site in enumerate(sites):
+        for col, cur_dt in enumerate(times):
+            ax = axes[row, col]
+            cell = cells[(row, col)]
+
+            cur_lst = cur_dt + pd.Timedelta(hours=8)
+            if row == 0:
+                ax.set_title(cur_lst.strftime("%H:%M LST"), fontsize=22, fontweight="bold", loc="center")
+            _add_panel_label(ax, row, col)
+
+            if cell["kind"] == "oob":
+                ax.text(0.5, 0.5, "Out of bounds", ha="center", va="center", transform=ax.transAxes, fontsize=18)
+            elif cell["kind"] == "nodata":
+                ax.text(0.5, 0.5, "No Data", ha="center", va="center", fontsize=16, transform=ax.transAxes)
+                ax.set_xlim(0, 15)
+            else:
+                agg = cell["agg"]
+                l1, = ax.plot(agg["ws_obs"], agg["mean_h"], color=COLOR_OBS, lw=2.5, marker="o", ms=6.0, label="LiDAR")
+                l2, = ax.plot(agg["ws_wrf"], agg["mean_h"], color=COLOR_WRF, lw=2.5, ls="-", label="WRF")
+                l3, = ax.plot(agg["ws_cfd"], agg["mean_h"], color=COLOR_CFD, lw=3.0, ls="-", label="WRF-to-OpenFOAM")
+                if not legend_handles:
+                    legend_handles = [l1, l2, l3]
+                    legend_labels = ["LiDAR", "WRF", "WRF-to-OpenFOAM"]
+
+                forced = shared_xmax if shared_xmax is not None else (
+                    None if show_wd_arrows else cell["nice_xmax"]
+                )
+                _apply_ws_xlim(
+                    ax, cell["data_xmax"],
+                    show_wd_arrows=show_wd_arrows, agg=agg, row=row,
+                    forced_xmax=forced,
+                )
+
+            for h_line in (300, 1000):
+                ax.axhline(h_line, color="0.6", lw=1.2, ls=":", zorder=0)
+            ax.set_ylim(0, ZMAX)
+            if col == 0:
+                ax.set_ylabel(f"{site}\nHeight (m)", fontsize=32, fontweight="bold")
+
+    dt_tag = start.strftime("%Y%m%d_%H%M")
+    out_dir = OUTPUT_DIR / dt_tag
+    if show_wd_arrows:
+        # 风速 + 右侧风向箭头，文件名保留 ws_wd
+        save_path = out_dir / f"ws_wd_grid_6h_all_stations_{dt_tag}_wdarrows.png"
+    else:
+        save_path = out_dir / f"ws_grid_6h_all_stations_{dt_tag}_nowdarrows.png"
+    return _finish_grid_figure(
+        fig, start, legend_handles, legend_labels,
+        r"Wind Speed (m s$^{-1}$)", save_path,
+    )
+
+
+def plot_multi_time_grid_wd_lines(
+    df: pd.DataFrame,
+    sites: list[str],
+    start_dt: str,
+) -> Path:
+    """风向廓线 m×n 折线网格（参考 station-profile / composite 的 WD 画法）。"""
+    start, times = _prepare_grid_window(start_dt)
+    fig, axes = plt.subplots(len(sites), 6, figsize=(32, 18), sharex=False, sharey=True)
+    fig.subplots_adjust(hspace=0.3, wspace=0.15, top=0.90, bottom=0.08)
+
+    legend_handles: list = []
+    legend_labels: list = []
+
+    for row, site in enumerate(sites):
+        for col, cur_dt in enumerate(times):
+            ax = axes[row, col]
+
+            cur_lst = cur_dt + pd.Timedelta(hours=8)
+            if row == 0:
+                ax.set_title(cur_lst.strftime("%H:%M LST"), fontsize=22, fontweight="bold", loc="center")
+            _add_panel_label(ax, row, col)
+
+            tl_utc = TIME_LABELS.get(cur_dt.strftime("%Y-%m-%d %H:%M:%S"))
+            if tl_utc is None:
+                ax.text(0.5, 0.5, "Out of bounds", ha="center", va="center", transform=ax.transAxes, fontsize=18)
+                ax.set_ylim(0, ZMAX)
+                if col == 0:
+                    ax.set_ylabel(f"{site}\nHeight (m)", fontsize=32, fontweight="bold")
+                continue
+
+            sub = df[(df["obtid"] == site) & (df["time_label"] == tl_utc) & df["qc_ok"]].copy()
+            sub_z = sub[(sub["Height"] >= 0) & (sub["Height"] <= ZMAX)].copy() if not sub.empty else sub
+            agg = _aggregate_station_profile(sub) if not sub.empty else pd.DataFrame()
+            if not agg.empty:
+                agg = agg[(agg["mean_h"] >= 0) & (agg["mean_h"] <= ZMAX)].copy()
+
+            if not agg.empty:
+                obs_pts = sub_z.dropna(subset=["wd_obs", "Height"])
+                if not obs_pts.empty:
+                    ax.scatter(
+                        obs_pts["wd_obs"], obs_pts["Height"],
+                        s=8, color=COLOR_OBS, alpha=0.15, edgecolors="none", zorder=1,
+                    )
+                l1, = ax.plot(
+                    agg["wd_obs"], agg["mean_h"], "o", ms=6.0,
+                    color=COLOR_OBS, alpha=0.9, label="LiDAR",
+                )
+                l2, = ax.plot(
+                    agg["wd_wrf"], agg["mean_h"],
+                    color=COLOR_WRF, lw=2.5, ls="--", label="WRF",
+                )
+                l3, = ax.plot(
+                    agg["wd_cfd"], agg["mean_h"],
+                    color=COLOR_CFD, lw=3.0, ls="-", label="WRF-to-OpenFOAM",
+                )
+                if not legend_handles:
+                    legend_handles = [l1, l2, l3]
+                    legend_labels = ["LiDAR", "WRF", "WRF-to-OpenFOAM"]
+            else:
+                ax.text(0.5, 0.5, "No Data", ha="center", va="center", fontsize=16, transform=ax.transAxes)
+
+            for h_line in (300, 1000):
+                ax.axhline(h_line, color="0.6", lw=1.2, ls=":", zorder=0)
+
+            ax.set_xlim(0, 360)
+            ax.set_xticks([0, 90, 180, 270, 360])
+            ax.set_xticklabels(["N", "E", "S", "W", "N"])
+            ax.set_ylim(0, ZMAX)
+            if col == 0:
+                ax.set_ylabel(f"{site}\nHeight (m)", fontsize=32, fontweight="bold")
+
+    dt_tag = start.strftime("%Y%m%d_%H%M")
+    save_path = OUTPUT_DIR / dt_tag / f"wd_grid_6h_all_stations_{dt_tag}_wdlines.png"
+    return _finish_grid_figure(
+        fig, start, legend_handles, legend_labels,
+        r"Wind Direction (°)", save_path,
+    )
+
+
+def plot_multi_time_grid_all_sites(
+    df: pd.DataFrame,
+    sites: list[str],
+    start_dt: str,
+    show_wd_arrows: bool = False,
+) -> list[Path]:
+    """
+    默认（无矢量）：输出风速折线网格 + 风向折线网格。
+    --show-wd-arrows：仅输出右侧带风向箭头的风速网格。
+    """
+    saved = [plot_multi_time_grid_ws(df, sites, start_dt, show_wd_arrows=show_wd_arrows)]
+    if not show_wd_arrows:
+        saved.append(plot_multi_time_grid_wd_lines(df, sites, start_dt))
+    return saved
+
+
 def _parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Plot 3x6 grid for 6 hours WS/WD profiles for multiple stations.")
+    p = argparse.ArgumentParser(
+        description=(
+            "Plot multi-station x 6-hour WS/WD profile grids. "
+            "Outputs go under multi_time_grid/YYYYmmdd_HHMM/. "
+            "Default: two figures - ws_grid_*_nowdarrows.png (wind speed) "
+            "and wd_grid_*_wdlines.png (wind direction lines). "
+            "With --show-wd-arrows: one combined figure "
+            "ws_wd_grid_*_wdarrows.png (WS profiles + WD arrows on the right)."
+        ),
+    )
     p.add_argument(
         "--start",
         required=True,
@@ -279,7 +499,16 @@ def _parse_args() -> argparse.Namespace:
         "--sites",
         nargs="+",
         default=list(DEFAULT_SITES),
-        help="Station IDs to plot. They will be combined into a single 3x6 grid image.",
+        help="Station IDs (rows). Default: GAW103 GAW104 GAW111.",
+    )
+    p.add_argument(
+        "--show-wd-arrows",
+        action="store_true",
+        default=False,
+        help=(
+            "Overlay wind-direction arrows on the right of WS panels (widens xmax). "
+            "Default: off; instead save separate WS and WD line-profile grids."
+        ),
     )
     return p.parse_args()
 
@@ -288,8 +517,11 @@ def main() -> None:
     args = _parse_args()
     configure_matplotlib_style()
     df = quality_control(load_and_preprocess(DATA_PATH))
-    saved = plot_multi_time_grid_all_sites(df, args.sites, args.start.strip())
-    print(f"Saved: {saved}")
+    saved = plot_multi_time_grid_all_sites(
+        df, args.sites, args.start.strip(), show_wd_arrows=args.show_wd_arrows,
+    )
+    for path in saved:
+        print(f"Saved: {path}")
 
 
 if __name__ == "__main__":
