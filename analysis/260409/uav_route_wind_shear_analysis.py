@@ -4,16 +4,18 @@
 UAV 低空航线风场与垂直风切变对比：WRF vs WRF-to-OpenFOAM (CFD)
 
 沿两条典型航线（沿江开阔 / 穿楼复杂）提取 120 m（可扩展 30/60 m）水平风速
-与垂直风切变 ∂U/∂Z，并结合 buildings_lod1.stl 判定航线障碍物，输出出版级对比图。
+与三维矢量垂直风切变 |∂V/∂Z|，并结合 buildings_lod1.stl 判定航线障碍物，输出出版级对比图。
 航线总览底图使用 Export_Output.shp 建筑轮廓（按 jzgd 高度着色）。
 
 默认快照：2025-09-03 12:00:00 UTC
-垂直风切变：Δz=40 m，中心差分 (WS_140 - WS_100) / 40
+垂直风切变：Δz=40 m，中心差分
+  |∂V/∂Z| = sqrt(du²+dv²+dw²) / Δz，V=(U,V,W)
 
 用法:
   python analysis/260409/uav_route_wind_shear_analysis.py
   python analysis/260409/uav_route_wind_shear_analysis.py --datetime "2025-09-03 12:00:00"
-  python analysis/260409/uav_route_wind_shear_analysis.py --height 60
+  python analysis/260409/uav_route_wind_shear_analysis.py --height 30
+  python analysis/260409/uav_route_wind_shear_analysis.py --height 60 --skip-overview
 
 高度相关输出（fig1/fig2、沿轨 CSV）文件名带 _z{H} 后缀，避免不同高度互相覆盖。
 """
@@ -338,7 +340,7 @@ def extract_wrf_along_route(
     route_df: pd.DataFrame,
     heights: tuple[float, ...],
 ) -> pd.DataFrame:
-    """Horizontally interpolate WRF U,V→WS at given z levels onto route points."""
+    """Horizontally interpolate WRF U,V,W→WS at given z levels onto route points."""
     print(f"[WRF] Opening {nc_path.name} ...", flush=True)
     with xr.open_dataset(nc_path, mask_and_scale=False) as ds:
         x_coords = np.asarray(ds["x_rel"].values).squeeze().astype(float)
@@ -346,6 +348,8 @@ def extract_wrf_along_route(
         z_coords = np.asarray(ds["z"].values).squeeze().astype(float)
         u_all = np.asarray(ds["U"].values).squeeze().astype(float)  # (z,y,x)
         v_all = np.asarray(ds["V"].values).squeeze().astype(float)
+        has_w = "W" in ds
+        w_all = np.asarray(ds["W"].values).squeeze().astype(float) if has_w else None
 
     pts = np.column_stack([route_df["y"].to_numpy(), route_df["x"].to_numpy()])
     out = route_df.copy()
@@ -367,6 +371,11 @@ def extract_wrf_along_route(
         tag = int(round(h))
         out[f"U_wrf_{tag}"] = u
         out[f"V_wrf_{tag}"] = v
+        if w_all is not None:
+            fw = RegularGridInterpolator(
+                (y_coords, x_coords), w_all[zi], method="linear", bounds_error=False, fill_value=np.nan
+            )
+            out[f"W_wrf_{tag}"] = fw(pts)
         out[f"WS_wrf_{tag}"] = np.sqrt(u**2 + v**2)
         print(f"[WRF] z={tag}m  WS mean={np.nanmean(out[f'WS_wrf_{tag}']):.3f} m/s", flush=True)
 
@@ -515,10 +524,11 @@ def extract_cfd_along_route(
     u_band: np.ndarray,
     k_neighbors: int = 12,
 ) -> pd.DataFrame:
-    """IDW-interpolate CFD U,V→WS at given heights onto route points."""
+    """IDW-interpolate CFD U,V,W→WS at given heights onto route points."""
     out = route_df.copy()
     xs = route_df["x"].to_numpy()
     ys = route_df["y"].to_numpy()
+    has_w = u_band.ndim == 2 and u_band.shape[1] >= 3
 
     for h in heights:
         query = np.column_stack([xs, ys, np.full(len(xs), h)])
@@ -527,6 +537,8 @@ def extract_cfd_along_route(
         tag = int(round(h))
         out[f"U_cfd_{tag}"] = u
         out[f"V_cfd_{tag}"] = v
+        if has_w:
+            out[f"W_cfd_{tag}"] = idw_interpolate(tree, u_band[:, 2], query, k=k_neighbors)
         out[f"WS_cfd_{tag}"] = np.sqrt(u**2 + v**2)
         print(f"[CFD] z={tag}m  WS mean={np.nanmean(out[f'WS_cfd_{tag}']):.3f} m/s", flush=True)
 
@@ -542,18 +554,34 @@ def add_vertical_shear(
     shear_dz: float,
     prefix: str,
 ) -> pd.DataFrame:
-    """Add WS_<prefix> and dUdZ_<prefix> using (h+dz/2) and (h-dz/2)."""
+    """Add WS_<prefix> and Vector_Shear_<prefix> using 3-D vector central difference.
+
+    shear_magnitude = sqrt(du_dz^2 + dv_dz^2 + dw_dz^2), where
+    d*_dz = (*_hi - *_lo) / shear_dz.  W is included when present.
+    """
     out = df.copy()
     z_lo = int(round(target_height - shear_dz / 2.0))
     z_hi = int(round(target_height + shear_dz / 2.0))
     z_mid = int(round(target_height))
+    u_lo, u_hi = f"U_{prefix}_{z_lo}", f"U_{prefix}_{z_hi}"
+    v_lo, v_hi = f"V_{prefix}_{z_lo}", f"V_{prefix}_{z_hi}"
+    w_lo, w_hi = f"W_{prefix}_{z_lo}", f"W_{prefix}_{z_hi}"
     ws_lo = f"WS_{prefix}_{z_lo}"
     ws_hi = f"WS_{prefix}_{z_hi}"
     ws_mid = f"WS_{prefix}_{z_mid}"
+    for col in (u_lo, u_hi, v_lo, v_hi):
+        if col not in out.columns:
+            raise KeyError(f"Missing column {col} for vector shear of {prefix}")
     if ws_lo not in out.columns or ws_hi not in out.columns:
         raise KeyError(f"Missing columns {ws_lo}/{ws_hi} for shear of {prefix}")
     out[f"WS_{prefix}"] = out[ws_mid] if ws_mid in out.columns else 0.5 * (out[ws_lo] + out[ws_hi])
-    out[f"dUdZ_{prefix}"] = (out[ws_hi] - out[ws_lo]) / shear_dz
+    du_dz = (out[u_hi] - out[u_lo]) / shear_dz
+    dv_dz = (out[v_hi] - out[v_lo]) / shear_dz
+    if w_lo in out.columns and w_hi in out.columns:
+        dw_dz = (out[w_hi] - out[w_lo]) / shear_dz
+    else:
+        dw_dz = 0.0
+    out[f"Vector_Shear_{prefix}"] = np.sqrt(du_dz**2 + dv_dz**2 + dw_dz**2)
     return out
 
 
@@ -597,9 +625,12 @@ def _draw_building_profile(
 
     h_plot = np.nan_to_num(h, nan=0.0)
     h_max = float(np.nanmax(h_plot)) if h_plot.size else 0.0
+    refs: list[float] = []
+    if ref_height is not None and ref_height > 0:
+        refs = [float(ref_height)]
     # Always reserve a twin axis so panels share the same bottom context;
     # empty routes just show a flat zero baseline.
-    ymax = max(h_max * 1.15, float(ref_height or 0.0) * 1.25, 40.0)
+    ymax = max(h_max * 1.15, max(refs, default=0.0) * 1.25, 40.0)
 
     ax_b = ax.twinx()
     ax_b.fill_between(
@@ -615,15 +646,15 @@ def _draw_building_profile(
     )
     if h_max > 0:
         ax_b.plot(d, h_plot, color="#5D4037", lw=0.6, alpha=0.7, zorder=1, solid_capstyle="butt")
-    if ref_height is not None and ref_height > 0:
+    for rh in refs:
         ax_b.axhline(
-            ref_height,
+            rh,
             color="#5D4037",
             ls="--",
             lw=0.9,
             alpha=0.65,
             zorder=1,
-            label=f"z = {int(ref_height)} m",
+            label=f"z = {int(rh)} m",
         )
     ax_b.set_ylim(0.0, ymax)
     ax_b.set_ylabel(r"$H_\mathrm{b}$ (m)", color="#5D4037", fontsize=10)
@@ -636,26 +667,52 @@ def _draw_building_profile(
     return ax_b
 
 
-def _merge_legends(ax, ax_extra, loc: str = "upper right", fontsize: float = 9) -> None:
+def _collect_legend_entries(ax, ax_extra=None) -> tuple[list, list]:
     handles, labels = ax.get_legend_handles_labels()
     if ax_extra is not None:
         h2, l2 = ax_extra.get_legend_handles_labels()
-        # Drop empty labels from twin (e.g. no buildings)
         for hh, ll in zip(h2, l2):
             if ll:
                 handles.append(hh)
                 labels.append(ll)
-    ax.legend(handles, labels, loc=loc, fontsize=fontsize)
+    return handles, labels
+
+
+def _dedupe_legend_entries(handles, labels) -> tuple[list, list]:
+    seen: set[str] = set()
+    out_h, out_l = [], []
+    for h, lab in zip(handles, labels):
+        if not lab or lab in seen:
+            continue
+        seen.add(lab)
+        out_h.append(h)
+        out_l.append(lab)
+    return out_h, out_l
+
+
+def format_datetime_utc8(dt: pd.Timestamp) -> str:
+    """Convert naive/aware UTC datetime to ``YYYY-mm-dd HH:MM (UTC+8)``."""
+    ts = pd.Timestamp(dt)
+    if ts.tzinfo is None:
+        ts = ts.tz_localize("UTC")
+    else:
+        ts = ts.tz_convert("UTC")
+    local = ts.tz_convert("Asia/Shanghai")
+    return local.strftime("%Y-%m-%d %H:%M (UTC+8)")
 
 
 def plot_figure1_wind_speed(
     route_dfs: dict[str, pd.DataFrame],
     out_path: Path,
     target_height: float,
+    datetime_utc: pd.Timestamp | None = None,
 ) -> None:
     configure_matplotlib_style()
-    fig, axes = plt.subplots(2, 1, figsize=(11, 7.5), sharex=False)
+    fig, axes = plt.subplots(2, 1, figsize=(11, 8.2), sharex=False)
     route_order = list(ROUTE_SPECS.keys())
+
+    all_handles: list = []
+    all_labels: list = []
 
     for ax, rname in zip(axes, route_order):
         df = route_dfs[rname]
@@ -689,18 +746,49 @@ def plot_figure1_wind_speed(
             zorder=3,
         )
         ax.set_ylabel(r"$U$ (m/s)")
-        ax.set_title(f"{spec['label']}  —  z = {int(target_height)} m")
+        ax.set_title(spec["label"])
         ax.set_xlim(dist_km.min(), dist_km.max())
         ax.set_xlabel("Distance along route (km)")
-        _merge_legends(ax, ax_b, loc="upper right", fontsize=9)
 
-    fig.suptitle(
-        f"Along-track horizontal wind speed  (z={int(target_height)} m)",
-        fontsize=14,
-        fontweight="bold",
-        y=1.01,
+        h, lab = _collect_legend_entries(ax, ax_b)
+        all_handles.extend(h)
+        all_labels.extend(lab)
+
+    all_handles, all_labels = _dedupe_legend_entries(all_handles, all_labels)
+    wind_h, wind_l, other_h, other_l = [], [], [], []
+    for h, lab in zip(all_handles, all_labels):
+        if lab.startswith("WRF"):
+            wind_h.append(h)
+            wind_l.append(lab)
+        else:
+            other_h.append(h)
+            other_l.append(lab)
+    fig.legend(
+        wind_h + other_h,
+        wind_l + other_l,
+        loc="lower center",
+        ncol=4,
+        fontsize=9,
+        frameon=True,
+        bbox_to_anchor=(0.5, 0.02),
     )
-    fig.tight_layout()
+
+    time_txt = format_datetime_utc8(datetime_utc) if datetime_utc is not None else None
+    if time_txt:
+        fig.suptitle(
+            f"Along-track horizontal wind speed  (z={int(target_height)} m)\n{time_txt}",
+            fontsize=14,
+            fontweight="bold",
+            y=0.995,
+        )
+    else:
+        fig.suptitle(
+            f"Along-track horizontal wind speed  (z={int(target_height)} m)",
+            fontsize=14,
+            fontweight="bold",
+            y=0.995,
+        )
+    fig.tight_layout(rect=(0.0, 0.08, 1.0, 0.98))
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path)
     plt.close(fig)
@@ -712,11 +800,14 @@ def plot_figure2_shear(
     out_path: Path,
     target_height: float,
     shear_dz: float,
-    peak_percentile: float = 95.0,
+    datetime_utc: pd.Timestamp | None = None,
 ) -> None:
     configure_matplotlib_style()
-    fig, axes = plt.subplots(2, 1, figsize=(11, 7.5), sharex=False)
+    fig, axes = plt.subplots(2, 1, figsize=(11, 8.2), sharex=False)
     route_order = list(ROUTE_SPECS.keys())
+
+    all_handles: list = []
+    all_labels: list = []
 
     for ax, rname in zip(axes, route_order):
         df = route_dfs[rname]
@@ -733,7 +824,7 @@ def plot_figure2_shear(
 
         ax.plot(
             dist_km,
-            df["dUdZ_wrf"],
+            df["Vector_Shear_wrf"],
             color="#4C78A8",
             lw=2.4,
             alpha=0.85,
@@ -742,7 +833,7 @@ def plot_figure2_shear(
         )
         ax.plot(
             dist_km,
-            df["dUdZ_cfd"],
+            df["Vector_Shear_cfd"],
             color="#E45756",
             lw=1.1,
             alpha=0.95,
@@ -750,41 +841,51 @@ def plot_figure2_shear(
             zorder=3,
         )
 
-        # Highlight CFD peaks (urban route emphasis)
-        abs_shear = np.abs(df["dUdZ_cfd"].to_numpy())
-        thr = float(np.nanpercentile(abs_shear, peak_percentile))
-        peak_mask = abs_shear >= thr
-        if np.any(peak_mask):
-            ax.scatter(
-                dist_km[peak_mask],
-                df["dUdZ_cfd"].to_numpy()[peak_mask],
-                s=28,
-                c="#F58518",
-                edgecolors="k",
-                linewidths=0.4,
-                zorder=4,
-                label=f"CFD |∂U/∂Z| ≥ P{int(peak_percentile)} ({thr:.4f} 1/s)",
-            )
-
-        ax.set_ylabel(r"$\partial U / \partial Z$ (1/s)")
-        ax.set_title(
-            f"{spec['label']}  —  Δz = {int(shear_dz)} m  "
-            f"(centred on {int(target_height)} m)"
-        )
+        ax.set_ylabel("Vertical Wind Shear Magnitude (1/s)")
+        ax.set_title(spec["label"])
         ax.set_xlim(dist_km.min(), dist_km.max())
         ax.axhline(0.0, color="0.4", lw=0.6, zorder=1)
         ax.set_xlabel("Distance along route (km)")
-        _merge_legends(ax, ax_b, loc="upper right", fontsize=8)
 
-    fig.suptitle(
-        f"Along-track vertical wind shear  "
-        f"(∂U/∂Z ≈ [U({int(target_height+shear_dz/2)}) − U({int(target_height-shear_dz/2)})]"
-        f" / {int(shear_dz)})",
-        fontsize=13,
-        fontweight="bold",
-        y=1.01,
+        h, lab = _collect_legend_entries(ax, ax_b)
+        all_handles.extend(h)
+        all_labels.extend(lab)
+
+    all_handles, all_labels = _dedupe_legend_entries(all_handles, all_labels)
+    shear_h, shear_l, other_h, other_l = [], [], [], []
+    for h, lab in zip(all_handles, all_labels):
+        if lab.startswith("WRF"):
+            shear_h.append(h)
+            shear_l.append(lab)
+        else:
+            other_h.append(h)
+            other_l.append(lab)
+    fig.legend(
+        shear_h + other_h,
+        shear_l + other_l,
+        loc="lower center",
+        ncol=4,
+        fontsize=9,
+        frameon=True,
+        bbox_to_anchor=(0.5, -0.02),
     )
-    fig.tight_layout()
+
+    time_txt = format_datetime_utc8(datetime_utc) if datetime_utc is not None else None
+    if time_txt:
+        fig.suptitle(
+            f"Along-track vertical wind shear (z={int(target_height)} m)\n{time_txt}",
+            fontsize=14,
+            fontweight="bold",
+            y=0.995,
+        )
+    else:
+        fig.suptitle(
+            "Along-track vertical wind shear",
+            fontsize=14,
+            fontweight="bold",
+            y=0.995,
+        )
+    fig.tight_layout(rect=(0.0, 0.08, 1.0, 0.98))
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path)
     plt.close(fig)
@@ -995,7 +1096,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def default_out_dir(dt: pd.Timestamp) -> Path:
-    tag = f"260409_{dt.strftime('%m%d-%H%M')}UTC"
+    tag = dt.strftime("%Y%m%d_%H%M")
     return REPO_ROOT / "results" / "uav_route_wind_shear" / tag
 
 
@@ -1006,7 +1107,8 @@ def main() -> int:
     shear_dz = float(args.shear_dz)
     z_lo = target_h - shear_dz / 2.0
     z_hi = target_h + shear_dz / 2.0
-    heights = (z_lo, target_h, z_hi)
+    # Shear needs neighbours of --height
+    heights = tuple(sorted({float(z_lo), float(target_h), float(z_hi)}))
 
     out_dir = Path(args.out_dir) if args.out_dir else default_out_dir(dt)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1015,7 +1117,8 @@ def main() -> int:
     print("UAV route wind / shear analysis")
     print(f"  datetime     : {dt}")
     print(f"  height       : {target_h} m")
-    print(f"  shear Δz     : {shear_dz} m  → layers {heights}")
+    print(f"  shear Δz     : {shear_dz} m  → layers {(z_lo, target_h, z_hi)}")
+    print(f"  extract z    : {heights}")
     print(f"  sample step  : {args.sample_step} m")
     print(f"  out_dir      : {out_dir}")
     print("=" * 64)
@@ -1066,15 +1169,15 @@ def main() -> int:
         "obstructed_120",
         "WS_wrf",
         "WS_cfd",
-        "dUdZ_wrf",
-        "dUdZ_cfd",
+        "Vector_Shear_wrf",
+        "Vector_Shear_cfd",
     ]
     # Also keep height-specific columns for transparency
     extra = []
     for h in heights:
         tag = int(round(h))
         for prefix in ("wrf", "cfd"):
-            for var in ("U", "V", "WS"):
+            for var in ("U", "V", "W", "WS"):
                 col = f"{var}_{prefix}_{tag}"
                 extra.append(col)
 
@@ -1093,13 +1196,17 @@ def main() -> int:
 
     # --- Figures ---
     plot_figure1_wind_speed(
-        routes, out_dir / f"fig1_wind_speed_along_route_{z_tag}.png", target_h
+        routes,
+        out_dir / f"fig1_wind_speed_along_route_{z_tag}.png",
+        target_h,
+        datetime_utc=dt,
     )
     plot_figure2_shear(
         routes,
         out_dir / f"fig2_vertical_wind_shear_along_route_{z_tag}.png",
         target_h,
         shear_dz,
+        datetime_utc=dt,
     )
     if not args.skip_overview:
         plot_route_overview(routes, Path(args.shp_path), out_dir / "route_overview_map.png")

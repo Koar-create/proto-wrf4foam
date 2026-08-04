@@ -14,7 +14,7 @@ Requires the paraview-env VTK build, e.g.:
   /hpc2hdd/home/zyang248/miniconda3/envs/paraview-env/bin/python \\
       analysis/260409/plot_uav_route_map_3d.py
 
-Only the z = 30 m route polylines are drawn (one line per route).
+Only one altitude is drawn per run (default z = 30 m). Use ``--z 120`` for 120 m.
 """
 
 from __future__ import annotations
@@ -352,6 +352,7 @@ def render_scene(
     stl_path: Path,
     out_path: Path,
     *,
+    route_z: float = ROUTE_Z,
     uav_stl: Path = DEFAULT_UAV_STL,
     uav_span_m: float = DEFAULT_UAV_SPAN_M,
     width: int = 2400,
@@ -381,10 +382,10 @@ def render_scene(
     bldg = load_buildings_actor(vtk, stl_path)
     ren.AddActor(bldg)
 
-    # Routes at z = 30 m only + oversized UAV model at each start
+    # Routes at constant altitude + oversized UAV model at each start
     for name, spec in ROUTE_SPECS.items():
-        xyz = build_route_xyz(spec["start"], spec["end"], ROUTE_Z, ROUTE_SAMPLE_STEP)
-        print(f"[3D] {name}: {len(xyz)} pts at z={ROUTE_Z:.0f} m", flush=True)
+        xyz = build_route_xyz(spec["start"], spec["end"], route_z, ROUTE_SAMPLE_STEP)
+        print(f"[3D] {name}: {len(xyz)} pts at z={route_z:.0f} m", flush=True)
         ren.AddActor(make_polyline_actor(vtk, xyz, spec["color"], width=7.0))
         heading = (
             float(spec["end"][0] - spec["start"][0]),
@@ -458,9 +459,20 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_UAV_SPAN_M,
         help=f"Visual UAV span in metres (default {DEFAULT_UAV_SPAN_M:.0f}; exaggerated for readability)",
     )
-    p.add_argument("--out", type=Path, default=DEFAULT_OUT, help="Output PNG path")
+    p.add_argument(
+        "--z",
+        type=float,
+        default=ROUTE_Z,
+        help=f"Route / UAV altitude in metres (default {ROUTE_Z:.0f})",
+    )
+    p.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="Output PNG path (default: .../route_overview_map_3d_z{Z}.png)",
+    )
     p.add_argument("--width", type=int, default=2400)
-    p.add_argument("--height", type=int, default=1600)
+    p.add_argument("--height", type=int, default=1600, help="Image height in pixels")
     p.add_argument("--cam-x", type=float, default=CAMERA["position"][0])
     p.add_argument("--cam-y", type=float, default=CAMERA["position"][1])
     p.add_argument("--cam-z", type=float, default=CAMERA["position"][2])
@@ -471,8 +483,21 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+def default_out_path(route_z: float) -> Path:
+    z_tag = int(round(route_z))
+    return (
+        REPO_ROOT
+        / "results"
+        / "uav_route_wind_shear"
+        / "260409_0903-1200UTC"
+        / f"route_overview_map_3d_z{z_tag}.png"
+    )
+
+
 def main() -> int:
     args = parse_args()
+    route_z = float(args.z)
+    out_path = Path(args.out) if args.out else default_out_path(route_z)
     camera = {
         "position": (args.cam_x, args.cam_y, args.cam_z),
         "focal_point": (args.focal_x, args.focal_y, args.focal_z),
@@ -481,7 +506,8 @@ def main() -> int:
     }
     render_scene(
         Path(args.stl_path),
-        Path(args.out),
+        out_path,
+        route_z=route_z,
         uav_stl=Path(args.uav_stl),
         uav_span_m=float(args.uav_span),
         width=args.width,

@@ -100,14 +100,9 @@ def main() -> int:
         help="Timezone for x-axis: utc (default) or lst (UTC+8 local standard time).",
     )
     ap.add_argument(
-        "--sharey",
-        action="store_true",
-        help="Share Y-axis scale between left and right subplots (same site).",
-    )
-    ap.add_argument(
         "--show-metrics",
         action="store_true",
-        help="Calculate and display R, MBE, and RMSE metrics on the plot.",
+        help="Calculate and display R, MBE, and RMSE metrics on the plot (default: off).",
     )
     ap.add_argument("--dpi", type=int, default=300)
     args = ap.parse_args()
@@ -135,8 +130,7 @@ def main() -> int:
         tzinfo = timezone.utc
         x_label = "Time (UTC)"
 
-    sharey_mode = "row" if args.sharey else False
-    fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(17, 10.5), sharex=True, sharey=sharey_mode)
+    fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(17, 10.5), sharex=True, sharey="row")
     fig.subplots_adjust(top=0.91, bottom=0.08, left=0.06, right=0.98, hspace=0.25, wspace=0.12)
 
     for i, site in enumerate(sites):
@@ -254,8 +248,8 @@ def main() -> int:
     out_dir = args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     roll_tag = "roll3h" if rolling_3h else "raw"
-    sharey_tag = "sharey" if args.sharey else "indepy"
-    out_path = out_dir / f"timeseries_3x2_sites_heights_{roll_tag}_{sharey_tag}_tz-{tz_mode}.png"
+    metrics_tag = "_metrics" if args.show_metrics else ""
+    out_path = out_dir / f"timeseries_3x2_sites_heights_{roll_tag}_tz-{tz_mode}{metrics_tag}.png"
     
     fig.savefig(out_path, dpi=args.dpi)
     print(f"Saved figure to: {out_path.resolve()}")
