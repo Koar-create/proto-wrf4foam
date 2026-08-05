@@ -1,4 +1,8 @@
-"""Shared settings for 20250906–13 OpenFOAM experiments (UTC 00/06/12/18, 32 cases)."""
+"""Shared settings for 20250906–13 OpenFOAM experiments.
+
+Sep 6–8: include CFD cases that have completed (case/<5000> exists).
+Sep 9–13: keep synoptic UTC 00/06/12/18 slots.
+"""
 
 from __future__ import annotations
 
@@ -13,16 +17,39 @@ UTC_DAY_FIRST = 6
 UTC_DAY_LAST = 13
 SYNOPTIC_UTC_HOURS = (0, 6, 12, 18)
 
+HOURLY_DAY_FIRST = 6
+HOURLY_DAY_LAST = 8
+CASES_ROOT = REPO_ROOT / "steady_experiments_finer_ABL"
+CASE_SUFFIX = "_two_boundaries_as_outlet"
+COMPLETION_MARKER = "5000"
+
 METRIC_START = f"2025-09-{UTC_DAY_FIRST:02d} 00:00:00"
 METRIC_END = f"2025-09-{UTC_DAY_LAST:02d} 18:00:00"
 
 
+def completed_hourly_datetimes(
+    day_first: int = HOURLY_DAY_FIRST,
+    day_last: int = HOURLY_DAY_LAST,
+    *,
+    cases_root: Path = CASES_ROOT,
+    marker: str = COMPLETION_MARKER,
+) -> list[pd.Timestamp]:
+    """Return UTC timestamps for Sep day_first–day_last cases with <marker> present."""
+    slots: list[pd.Timestamp] = []
+    for day in range(day_first, day_last + 1):
+        for hour in range(24):
+            stamp = f"202509{day:02d}_{hour:02d}00"
+            case_dir = cases_root / f"{stamp}{CASE_SUFFIX}"
+            if (case_dir / marker).is_dir():
+                slots.append(pd.Timestamp(f"2025-09-{day:02d} {hour:02d}:00:00"))
+    return slots
+
+
 def build_metric_datetimes() -> pd.DatetimeIndex:
-    slots = [
-        pd.Timestamp(f"2025-09-{day:02d} {hour:02d}:00:00")
-        for day in range(UTC_DAY_FIRST, UTC_DAY_LAST + 1)
-        for hour in SYNOPTIC_UTC_HOURS
-    ]
+    slots = completed_hourly_datetimes()
+    for day in range(HOURLY_DAY_LAST + 1, UTC_DAY_LAST + 1):
+        for hour in SYNOPTIC_UTC_HOURS:
+            slots.append(pd.Timestamp(f"2025-09-{day:02d} {hour:02d}:00:00"))
     return pd.DatetimeIndex(slots)
 
 

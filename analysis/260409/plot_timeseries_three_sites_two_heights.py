@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import math
 from datetime import timedelta, timezone
 from pathlib import Path
 
@@ -71,6 +72,14 @@ def _ensure_ws_cfd(df: pd.DataFrame) -> None:
     raise ValueError("CSV missing ws_cfd and u_cfd/v_cfd; cannot compute CFD wind speed.")
 
 
+def _pad_ymax_for_metrics(ymax: float) -> float:
+    """Bump ymax to the next even integer (e.g. 6.x -> 8) for metric headroom."""
+    nice = float(math.ceil(float(ymax) / 2.0) * 2)
+    if nice <= float(ymax) + 1e-6:
+        nice += 2.0
+    return nice
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description="Plot 3-station 2-height time series (LiDAR vs WRF vs OpenFOAM) in a 3x2 layout."
@@ -131,7 +140,7 @@ def main() -> int:
         x_label = "Time (UTC)"
 
     fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(17, 10.5), sharex=True, sharey="row")
-    fig.subplots_adjust(top=0.91, bottom=0.08, left=0.06, right=0.98, hspace=0.25, wspace=0.12)
+    fig.subplots_adjust(top=0.91, bottom=0.08, left=0.06, right=0.98, hspace=0.28, wspace=0.12)
 
     for i, site in enumerate(sites):
         df_site = df[df["obtid"].astype(str) == site].copy()
@@ -141,6 +150,7 @@ def main() -> int:
             
         for j, h_req in enumerate(height_reqs):
             ax = axes[i, j]
+            panel_label = f"({chr(ord('a') + i * len(height_reqs) + j)})"
             try:
                 h_used = _pick_nearest_height(df_site, h_req)
             except ValueError:
@@ -205,17 +215,17 @@ def main() -> int:
                     d_c = valid_cfd["ws_cfd"] - valid_cfd["ws_obs"]
                     mbe_c = d_c.mean()
                     rmse_c = np.sqrt((d_c ** 2).mean())
-                    cfd_text = f"CFD | R: {r_c:.2f}  MBE: {mbe_c:.2f}  RMSE: {rmse_c:.2f}"
+                    cfd_text = f"W2OF | R: {r_c:.2f}  MBE: {mbe_c:.2f}  RMSE: {rmse_c:.2f}"
                 else:
-                    cfd_text = "CFD | N/A"
+                    cfd_text = "W2OF | N/A"
 
-                bbox_props = dict(boxstyle="round,pad=0.2", facecolor="white", edgecolor="none", alpha=0.75)
-                ax.text(0.015, 0.96, wrf_text, transform=ax.transAxes, color=COLOR_WRF, fontsize=11, fontweight='bold', va='top', ha='left', bbox=bbox_props)
-                ax.text(0.015, 0.86, cfd_text, transform=ax.transAxes, color=COLOR_CFD, fontsize=11, fontweight='bold', va='top', ha='left', bbox=bbox_props)
-            
-            # Subplot titles and labels
+                bbox_props = dict(boxstyle="round,pad=0.25", facecolor="white", edgecolor="none", alpha=1.0)
+                ax.text(0.015, 0.97, wrf_text, transform=ax.transAxes, color=COLOR_WRF, fontsize=11, fontweight='bold', va='top', ha='left', bbox=bbox_props, zorder=5)
+                ax.text(0.015, 0.86, cfd_text, transform=ax.transAxes, color=COLOR_CFD, fontsize=11, fontweight='bold', va='top', ha='left', bbox=bbox_props, zorder=5)
+
+            # Subplot titles and labels (panel id outside axes, in title)
             layer_tag = "(Low)" if int(h_req) == 120 else "(Mid)"
-            ax.set_title(f"{site} | {int(h_req)} m {layer_tag}")
+            ax.set_title(f"{panel_label} {site} | {int(h_req)} m {layer_tag}")
             
             # Y-axis label only on the left column
             if j == 0:
@@ -229,11 +239,22 @@ def main() -> int:
             if i == 2:
                 ax.set_xlabel(x_label)
 
+    # X-limits: left fixed at 09-01 00:00 (plot tz); keep auto right edge.
+    x_left = pd.Timestamp(year=2025, month=9, day=1, hour=0, tz=tzinfo)
+    axes[0, 0].set_xlim(left=x_left)
+
+    # Leave headroom at top for metric annotations (sharey='row').
+    if args.show_metrics:
+        for i in range(axes.shape[0]):
+            ymax = max(float(ax.get_ylim()[1]) for ax in axes[i, :])
+            ymin = min(float(ax.get_ylim()[0]) for ax in axes[i, :])
+            axes[i, 0].set_ylim(ymin, _pad_ymax_for_metrics(ymax))
+
     # Common Legend
     legend_handles = [
         Line2D([0], [0], color="black", marker="o", markersize=7, lw=1.5, label="LiDAR Obs"),
         Line2D([0], [0], color=COLOR_WRF, lw=2.5, linestyle="--", label="WRF"),
-        Line2D([0], [0], color=COLOR_CFD, lw=2.5, linestyle="-", label="CFD (OpenFOAM)")
+        Line2D([0], [0], color=COLOR_CFD, lw=2.5, linestyle="-", label="WRF-to-OpenFOAM")
     ]
     fig.legend(
         handles=legend_handles, 
