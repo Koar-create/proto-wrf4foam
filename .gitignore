@@ -60,3 +60,13 @@ node_modules/
 # Marker / Surya (datalab) model weights
 .cache/
 local.env
+
+LES/*/processor*/
+LES/*/rans_orig/
+LES/*/0.rans_unused/
+LES/*/VTK/
+LES/*/0/
+LES/*/*.foam
+LES/*/log*
+LES/*/*126*
+LES/*/postProcessing/

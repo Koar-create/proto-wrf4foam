@@ -1,0 +1,372 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    arch        "LSB;label=32;scalar=64";
+    class       dictionary;
+    location    "system";
+    object      snappyHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Which of the steps to run
+castellatedMesh true;
+snap            true;
+addLayers       false;  // too hard to handle. 城市尺度模拟，除非必须，否则不开层，因为极易导致质量恶化
+
+
+// Geometry. Definition of all surfaces. All surfaces are of class
+// searchableSurface.
+// Surfaces are used
+// - to specify refinement for any mesh cell intersecting it
+// - to specify refinement for any mesh cell inside/outside/near
+// - to 'snap' the mesh boundary to the surface
+
+geometry
+{
+    buildings.stl
+    {
+        type triSurfaceMesh;
+        name buildings;
+    }
+
+    // 如果有加密框，保留在这里
+    refineBox
+    {
+        type searchableBox;
+        min ( -2500.000   -2500.000  0 );
+        max (  2500.000    2500.000  800 );  // 必须高于建筑物最高点(603m)
+    }
+};
+
+// Settings for the castellatedMesh generation.
+castellatedMeshControls
+{
+    // Refinement parameters
+    // ~~~~~~~~~~~~~~~~~~~~~
+
+    // If local number of cells is >= maxLocalCells on any processor
+    // switches from from refinement followed by balancing
+    // (current method) to (weighted) balancing before refinement.
+    maxLocalCells 20000000;  // 12000000;
+
+    // Overall cell limit (approximately). Refinement will stop immediately
+    // upon reaching this number so a refinement level might not complete.
+    // Note that this is the number of cells before removing the part which
+    // is not 'visible' from the keepPoint. The final number of cells might
+    // actually be a lot less.
+    // maxGlobalCells 15000000;  // 20000000;
+    maxGlobalCells 60000000;  // 20000000;
+
+    // The surface refinement loop might spend lots of iterations refining just a
+    // few cells. This setting will cause refinement to stop if <= minimumRefine
+    // are selected for refinement. Note: it will at least do one iteration
+    // (unless the number of cells to refine is 0)
+    minRefinementCells 10;
+
+    maxLoadUnbalance 0.10;
+
+    // --- 关键修改 1：增加过渡层厚度 ---
+    // 设为 3，让网格从粗到细过渡更自然，减少非正交性
+    // Number of buffer layers between different levels.
+    // 1 means normal 2:1 refinement restriction, larger means slower
+    // refinement.
+    nCellsBetweenLevels 3;
+
+    // Explicit feature edge refinement
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // Specifies a level for any cell intersected by its edges.
+    // This is a featureEdgeMesh, read from constant/triSurface for now.
+    features  //To enable and control edge refinement level
+    (
+        {
+            // file "flange.extendedFeatureEdgeMesh";
+            file "buildings.eMesh";
+            // file "building.eMesh";
+            level 4;
+        }
+    );
+
+    // Surface based refinement
+    // ~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // Specifies two levels for every surface. The first is the minimum level,
+    // every cell intersecting a surface gets refined up to the minimum level.
+    // The second level is the maximum level. Cells that 'see' multiple
+    // intersections where the intersections make an
+    // angle > resolveFeatureAngle get refined up to the maximum level.
+
+    refinementSurfaces
+    {
+        buildings 
+        // flange
+        {
+            // Surface-wise min and max refinement level
+            // level (2 4); // surface level, curvature level
+            level (2 4);    // surface level, curvature level
+        }
+    }
+
+    resolveFeatureAngle 30;
+
+    // Region-wise refinement
+    // ~~~~~~~~~~~~~~~~~~~~~~
+
+    // Specifies refinement level for cells in relation to a surface. One of
+    // three modes
+    // - distance. 'levels' specifies per distance to the surface the
+    //   wanted refinement level. The distances need to be specified in
+    //   descending order.
+    // - inside. 'levels' is only one entry and only the level is used. All
+    //   cells inside the surface get refined up to the level. The surface
+    //   needs to be closed for this to be possible.
+    // - outside. Same but cells outside.
+
+    refinementRegions
+    {
+        /*
+        refineHole
+        {
+            mode inside;
+            levels ((1E15 1));
+        }
+        */
+        refineBox
+        {
+            mode inside;
+            // levels ((1 3)); //formal is the distance from surface, the latter means the refinement level. Increase it to refine a region
+            // levels ((2 2)); //formal is the distance from surface, the latter means the refinement level. Increase it to refine a region
+            levels ((1E15 2));  // 框内整体加密等级 2
+        }
+    }
+
+    // Mesh selection
+    // ~~~~~~~~~~~~~~
+
+    // After refinement patches get added for all refinementSurfaces and
+    // all cells intersecting the surfaces get put into these patches. The
+    // section reachable from the locationInMesh is kept.
+    // NOTE: This point should never be on a face, always inside a cell, even
+    // after refinement.
+    // This is an outside point locationInMesh (-0.033 -0.033 0.0033);
+    locationInMesh (0 0 800);  // Inside point
+
+    // Whether any faceZones (as specified in the refinementSurfaces)
+    // are only on the boundary of corresponding cellZones or also allow
+    // free-standing zone faces. Not used if there are no faceZones.
+    allowFreeStandingZoneFaces true;
+}
+
+// Settings for the snapping.
+snapControls
+{
+    //- Number of patch smoothing iterations before finding correspondence
+    //  to surface
+    nSmoothPatch 3;
+
+    //- Relative distance for points to be attracted by surface feature point
+    //  or edge. True distance is this factor times local
+    //  maximum edge length.
+    tolerance 2.0;  // 稍微增大容差，更容易吸附
+
+    //- Number of mesh displacement relaxation iterations.
+    nSolveIter 30;  // 增加迭代次数，给它更多时间去调整
+    //nSolveIter 300;  // if too large, time-consuming
+
+    //- Maximum number of snapping relaxation iterations. Should stop
+    //  before upon reaching a correct mesh.
+    nRelaxIter 5;
+
+    // Feature snapping
+
+    //- Number of feature edge snapping iterations.
+    //  Leave out altogether to disable.
+    nFeatureSnapIter 10;
+
+    //- Detect (geometric) features by sampling the surface
+    implicitFeatureSnap false;
+
+    //- Use castellatedMeshControls::features
+    explicitFeatureSnap true;
+
+    //- Detect features between multiple surfaces
+    //  (only for explicitFeatureSnap, default = false)
+    multiRegionFeatureSnap false;
+}
+
+// Settings for the layer addition.
+addLayersControls
+{
+    // 暂时关闭，不配置
+    // Are the thickness parameters below relative to the undistorted
+    // size of the refined cell outside layer (true) or absolute sizes (false).
+    relativeSizes true;
+
+    // Per final patch (so not geometry!) the layer information
+    layers
+    {
+        /* buildings 
+        // flange
+        // "flange_.*"
+        {
+            nSurfaceLayers 4; //1;
+        } */
+    }
+
+    // Expansion factor for layer mesh
+    expansionRatio 1.0;
+
+    // Wanted thickness of final added cell layer. If multiple layers
+    // is the thickness of the layer furthest away from the wall.
+    // Relative to undistorted size of cell outside layer.
+    // See relativeSizes parameter.
+    finalLayerThickness 0.3;
+
+    // Minimum thickness of cell layer. If for any reason layer
+    // cannot be above minThickness do not add layer.
+    // See relativeSizes parameter.
+    minThickness 0.1;
+
+    // If points get not extruded do nGrow layers of connected faces that are
+    // also not grown. This helps convergence of the layer addition process
+    // close to features.
+    nGrow 0;
+
+    // Advanced settings
+
+    // When not to extrude surface. 0 is flat surface, 90 is when two faces
+    // are perpendicular
+    featureAngle 60;
+
+    // Maximum number of snapping relaxation iterations. Should stop
+    // before upon reaching a correct mesh.
+    nRelaxIter 3;
+
+    // Number of smoothing iterations of surface normals
+    nSmoothSurfaceNormals 1;
+
+    // Number of smoothing iterations of interior mesh movement direction
+    nSmoothNormals 3;
+
+    // Smooth layer thickness over surface patches
+    nSmoothThickness 10;
+
+    // Stop layer growth on highly warped cells
+    maxFaceThicknessRatio 0.5;
+
+    // Reduce layer growth where ratio thickness to medial
+    // distance is large
+    maxThicknessToMedialRatio 0.3;
+
+    // Angle used to pick up medial axis points
+    minMedianAxisAngle 90;
+
+    // Create buffer region for new layer terminations
+    nBufferCellsNoExtrude 0;
+
+    // Overall max number of layer addition iterations. The mesher will exit
+    // if it reaches this number of iterations; possibly with an illegal
+    // mesh.
+    nLayerIter 50;
+
+    // Max number of iterations after which relaxed meshQuality controls
+    // get used. Up to nRelaxIter it uses the settings in meshQualityControls,
+    // after nRelaxIter it uses the values in meshQualityControls::relaxed.
+    nRelaxedIter 20;
+}
+
+// Generic mesh quality settings. At any undoable phase these determine
+// where to undo.
+meshQualityControls
+{
+    /*
+    #include "meshQualityDict"
+
+    // Optional : some meshing phases allow usage of relaxed rules.
+    // See e.g. addLayersControls::nRelaxedIter.
+    relaxed
+    {
+        //- Maximum non-orthogonality allowed. Set to 180 to disable.
+        maxNonOrtho 75;
+    }
+
+    // Advanced
+
+    //- Number of error distribution iterations
+    nSmoothScale 4;  // 改回默认值4，你的10太高了
+    //- Amount to scale back displacement at error points
+    errorReduction 0.75;
+    
+    // 1. 去掉等号
+    // 2. 放宽限制，允许生成器先生成出来，不要强行扭曲
+    maxBoundarySkewness 20; 
+    maxInternalSkewness 4;
+    */
+
+    // --- 关键修改 2：数值稳定的质量控制 ---
+    // 1. 允许一定程度的非正交，SimpleFoam 可以处理 70 以下
+    maxNonOrtho 65;
+    
+    // 2. 关键！边界偏斜率设为 20 (OpenFOAM 标准宽松值)
+    // 之前你设为 3，导致它为了满足要求把网格压扁了
+    maxBoundarySkewness 20;
+    
+    // 3. 内部偏斜率设为 4 (标准值)
+    maxInternalSkewness 4;
+    
+    // 4. 凹陷度
+    maxConcave 80;
+    
+    // 5. 最小金字塔体积 (防止零体积)
+    minVol 1e-13;
+    
+    // 6. 最小四面体质量
+    minTetQuality 1e-15;
+    
+    // 7. 最小面积 (防止零面积面) -1 表示关闭检查，或者设为极小值
+    minArea -1;
+    
+    minTwist 0.02;
+    minDeterminant 0.001;
+    minFaceWeight 0.02;
+    minVolRatio 0.01;
+    minTriangleTwist -1;
+
+    // 平滑参数
+    nSmoothScale 4;
+    errorReduction 0.75;
+    
+    // 这里的 relaxed 是指如果在 addLayers 阶段失败了退回的标准
+    // 既然不开层，这里影响不大
+    relaxed
+    {
+        maxNonOrtho 75;
+    }
+}
+
+
+// Advanced
+
+// Write flags
+writeFlags
+(
+    scalarLevels    // write volScalarField with cellLevel for postprocessing
+    layerSets       // write cellSets, faceSets of faces in layer
+    layerFields     // write volScalarField for layer coverage
+);
+
+debug 0;
+// Merge tolerance. Is fraction of overall bounding box of initial mesh.
+// Note: the write tolerance needs to be higher than this.
+mergeTolerance 1E-6;
+
+
+// ************************************************************************* //

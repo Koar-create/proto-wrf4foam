@@ -1,0 +1,16 @@
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defaultFieldValues
+(
+    volScalarFieldValue  k            1.5;
+    volScalarFieldValue  epsilon      0.03;
+    volVectorFieldValue  U            (10 0 0);  // 全局来流速度
+    volScalarFieldValue  p            0;
+);
+

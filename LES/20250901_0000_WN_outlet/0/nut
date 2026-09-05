@@ -1,0 +1,66 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      nut;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// WALE algebraic SGS. Walls: Spalding (motorBike LES), not atmNutkWallFunction.
+
+dimensions      [0 2 -1 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    west
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    east
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    south
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    north
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    lower
+    {
+        type            nutUSpaldingWallFunction;
+        value           uniform 0;
+    }
+    upper
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    buildings
+    {
+        type            nutUSpaldingWallFunction;
+        value           uniform 0;
+    }
+    oldInternalFaces
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+}
+
+// ************************************************************************* //

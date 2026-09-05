@@ -1,0 +1,116 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    arch        "LSB;label=32;scalar=64";
+    class       dictionary;
+    location    "system";
+    object      snappyHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/snappyHexMeshDict.cfg"
+
+castellatedMesh  true;
+snap            true;
+addLayers       false;
+
+geometry
+{
+    buildings.stl
+    {
+        type triSurfaceMesh;
+        name buildings;
+    }
+
+
+
+};
+
+castellatedMeshControls
+{
+    features
+    (
+      { file  "buildings.eMesh"; level 4; }  // level 3;降低特征边层级至3
+    );
+
+    refinementSurfaces
+    {
+        buildings
+        {
+            level (1 2);//level (2 4);  // 减小层级跨度，从2到4（仅2级变化）
+            patchInfo { type wall; }
+            // 新增网格过渡控制
+            allowFreeStandingZoneFaces true;
+        }
+    }
+
+
+
+    insidePoint (0 0 800);  // 保持不变
+    nSmoothPatch 5;  // 添加边界平滑，提高网格质量
+    mergeTolerance 1e-5;  // 适当增大容差值，合并近距离点
+
+ refinementRegions
+    {
+        
+         refineBox
+        {
+            mode inside;
+            levels ((2 2)); //formal is the distance from surface, the latter means the refinement level. Increase it to refine a region
+
+        }
+
+
+}
+addLayersControls
+{
+    layers
+    {
+        buildings  // 直接指定建筑表面，而非正则表达式
+        {
+            nSurfaceLayers 2;
+        }
+    }
+    
+    // 其他参数保持不变
+}
+snapControls
+{
+    explicitFeatureSnap    true;
+    implicitFeatureSnap    true;     // 启用隐式特征捕捉
+    
+    nSmoothPatch           8;        // 增加边界平滑迭代
+    tolerance              0.001;    // 优化贴合容差
+}
+
+meshQualityControls
+{
+    maxNonOrthogonality     65;       // 降低非正交性阈值
+    maxSkewness             2;        // 严格控制歪斜度
+    maxBoundarySkewness     4;        // 边界网格更严格
+    
+    // 新增质量控制参数
+    minVol                  1e-12;    // 最小单元体积
+    maxFaceAreaRatio        10;      // 最大面面积比
+    maxCellSizeRatio        5;       // 最大单元尺寸比
+    
+    // 其他参数保持不变
+}
+
+writeFlags
+(
+
+);
+
+
+
+// ************************************************************************* //
+

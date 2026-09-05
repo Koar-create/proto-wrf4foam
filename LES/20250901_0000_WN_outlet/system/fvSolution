@@ -1,0 +1,72 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// pimpleFoam PISO-like (nOuterCorrectors 1) for the smoke.
+// One non-orthogonal corrector: mesh maxNonOrtho 65°.
+// west/north already fix p=0, so no pRef*.
+
+solvers
+{
+    p
+    {
+        solver          GAMG;
+        smoother        DICGaussSeidel;
+        tolerance       1e-6;
+        relTol          0.05;
+        minIter         1;
+    }
+
+    pFinal
+    {
+        $p;
+        relTol          0;
+    }
+
+    U
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-6;
+        relTol          0.1;
+        minIter         1;
+    }
+
+    UFinal
+    {
+        $U;
+        relTol          0;
+    }
+}
+
+PIMPLE
+{
+    nOuterCorrectors            2;
+    nCorrectors                 2;
+    nNonOrthogonalCorrectors    2;
+}
+
+relaxationFactors
+{
+    fields
+    {
+        p               1;
+    }
+    equations
+    {
+        U               1;
+    }
+}
+
+// ************************************************************************* //

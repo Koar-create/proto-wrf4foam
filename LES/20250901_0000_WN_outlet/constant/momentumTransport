@@ -1,0 +1,28 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      momentumTransport;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// pimpleFoam v2412 does not read this file. Kept in sync with
+// turbulenceProperties so a later foamRun switch does not silently go RAS.
+
+simulationType  LES;
+
+LES
+{
+    model           WALE;
+    turbulence      on;
+    printCoeffs     on;
+}
+
+// ************************************************************************* //
