@@ -5,7 +5,7 @@ OpenFOAM Domain & Refinement Region Visualizer
 Reads blockMeshDict / snappyHexMeshDict parameters and building geometry
 from STL (3-D) with optional SHP footprint fallback, then generates a
 reference-paper-style figure with:
-  - Left  : 3-D perspective view
+  - Left  : 3-D perspective view (BC labels, x/y/z triad, y=0)
   - Top-right  : Plan view (X-Y)
   - Bottom-right: Elevation view (X-Z)
 
@@ -52,6 +52,8 @@ FS_TICK = 13
 FS_LEGEND = 14
 FS_CORNER = 13
 FS_DIM = 12
+FS_BC = 12
+FS_XYZ = 16
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Domain parameters  (parsed from blockMeshDict / snappyHexMeshDict)
@@ -72,6 +74,8 @@ SHP_CX, SHP_CY = 737789.45, 2557954.55
 C_DOMAIN = "#111111"
 C_REFINE = "#1A56C4"
 C_BUILD = "#3DAA55"
+C_Y0 = "#FF4D00"
+C_TOP = "#666666"
 BG = "#FFFFFF"
 GRID = "#DDDDDD"
 
@@ -147,6 +151,109 @@ def box3d(ax, x0, x1, y0, y1, z0, z1, color, lw=1.6, ls="-", alpha=1.0):
                 [corners[a, 1], corners[b, 1]],
                 [corners[a, 2], corners[b, 2]],
                 color=color, lw=lw, ls=ls, alpha=alpha, zorder=4)
+
+
+def draw_arrow3d(ax, p0, p1, color, shaft_lw=4.5, head_len=0.42, head_width=0.22):
+    """Thick 3-D shaft + triangular head (more reliable than FancyArrowPatch)."""
+    p0 = np.asarray(p0, dtype=float)
+    p1 = np.asarray(p1, dtype=float)
+    vec = p1 - p0
+    length = float(np.linalg.norm(vec))
+    if length < 1e-9:
+        return
+    d = vec / length
+    head_len = min(head_len, 0.45 * length)
+    shaft_end = p1 - d * head_len
+    ax.plot(
+        [p0[0], shaft_end[0]], [p0[1], shaft_end[1]], [p0[2], shaft_end[2]],
+        color=color, lw=shaft_lw, solid_capstyle="round", zorder=9,
+    )
+    n_xy = np.array([-d[1], d[0], 0.0])
+    n_norm = np.linalg.norm(n_xy)
+    if n_norm < 1e-8:
+        n_xy = np.array([1.0, 0.0, 0.0])
+    else:
+        n_xy = n_xy / n_norm
+    n_xy = n_xy * head_width
+    n_z = np.array([0.0, 0.0, head_width * 0.55])
+    verts = [
+        [p1.tolist(), (shaft_end + n_xy).tolist(), (shaft_end - n_xy).tolist()],
+        [p1.tolist(), (shaft_end + n_z).tolist(), (shaft_end - n_z).tolist()],
+    ]
+    ax.add_collection3d(
+        Poly3DCollection(verts, facecolor=color, edgecolor=color, linewidths=0.4, zorder=9)
+    )
+
+
+def add_bc_annotations(ax, D):
+    """Face labels and Top (slip) callout on the 3-D panel."""
+    kw = dict(fontsize=FS_BC, fontweight="bold", color="#111111",
+              ha="center", va="center", zorder=10, clip_on=False)
+    # Near faces (camera azim=-50 looks from +x, -y): inflow at low z.
+    ax.text(0.0, D["ymin"] - 0.12, 0.18, "south (inflow)", **kw)
+    ax.text(D["xmax"] + 0.12, 0.0, 0.18, "east (inflow)", **kw)
+    # Far faces: outflow at high z.
+    ax.text(D["xmin"] - 0.08, 0.0, D["zmax"] - 0.12, "west (outflow)", **kw)
+    ax.text(0.0, D["ymax"] + 0.08, D["zmax"] - 0.12, "north (outflow)", **kw)
+
+    top_pt = (0.0, 0.0, D["zmax"])
+    text_pt = (4.1, 4.4, D["zmax"] + 0.28)
+    ax.scatter(
+        [top_pt[0]], [top_pt[1]], [top_pt[2]],
+        color=C_TOP, s=36, depthshade=False, zorder=11,
+    )
+    ax.plot(
+        [top_pt[0], text_pt[0]], [top_pt[1], text_pt[1]], [top_pt[2], text_pt[2]],
+        color=C_TOP, lw=1.4, zorder=10,
+    )
+    ax.text(
+        text_pt[0], text_pt[1], text_pt[2], "Top (slip)",
+        fontsize=FS_BC, fontweight="bold", color="#111111",
+        ha="left", va="bottom", zorder=11, clip_on=False,
+    )
+
+
+def add_xyz_triad(ax, D):
+    """Small x/y/z triad at the visible south-west ground corner."""
+    ox = D["xmin"] + 0.55
+    oy = D["ymin"] + 0.55
+    oz = 0.0
+    lx, ly, lz = 1.55, 1.55, 0.70
+    draw_arrow3d(ax, [ox, oy, oz], [ox + lx, oy, oz], "#111111",
+                 shaft_lw=2.2, head_len=0.32, head_width=0.16)
+    draw_arrow3d(ax, [ox, oy, oz], [ox, oy + ly, oz], "#111111",
+                 shaft_lw=2.2, head_len=0.32, head_width=0.16)
+    draw_arrow3d(ax, [ox, oy, oz], [ox, oy, oz + lz], "#111111",
+                 shaft_lw=2.2, head_len=0.18, head_width=0.12)
+    tkw = dict(fontsize=FS_XYZ, fontweight="bold", color="#111111",
+               zorder=12, clip_on=False)
+    ax.text(ox + lx + 0.12, oy, oz, "x", ha="left", va="center", **tkw)
+    ax.text(ox, oy + ly + 0.12, oz, "y", ha="center", va="bottom", **tkw)
+    ax.text(ox, oy, oz + lz + 0.10, "z", ha="center", va="bottom", **tkw)
+
+
+def add_y0_marker(ax3d, ax_xy, D):
+    """Conspicuous y = 0 (Pearl River corridor) on the 3-D and plan panels."""
+    x0, x1 = D["xmin"], D["xmax"]
+    z0, z1 = D["zmin"], D["zmax"]
+    ax3d.plot([x0, x1], [0.0, 0.0], [z0, z0], color=C_Y0, lw=2.6, zorder=8)
+    ax3d.plot([x0, x1], [0.0, 0.0], [z1, z1], color=C_Y0, lw=1.8, ls="--", zorder=8)
+    ax3d.plot([x0, x0], [0.0, 0.0], [z0, z1], color=C_Y0, lw=1.8, zorder=8)
+    ax3d.plot([x1, x1], [0.0, 0.0], [z0, z1], color=C_Y0, lw=1.8, zorder=8)
+    ax3d.text(
+        x1 + 0.18, 0.0, 0.55, "y = 0",
+        color=C_Y0, fontsize=FS_BC + 1, fontweight="bold",
+        ha="left", va="center", zorder=12, clip_on=False,
+    )
+
+    ax_xy.plot(
+        [x0, x1], [0.0, 0.0], color=C_Y0, lw=2.4, zorder=7, solid_capstyle="butt",
+    )
+    ax_xy.text(
+        x1 + 0.08, 0.0, "y = 0",
+        color=C_Y0, fontsize=FS_CORNER, fontweight="bold",
+        ha="left", va="center", zorder=8,
+    )
 
 
 def add_stl_to_axes(stl_tris, ax3d, ax_xy, ax_xz):
@@ -225,13 +332,20 @@ def make_figure(stl_tris=None, footprints=None, show_titles=True):
     else:
         add_footprints_to_axes(footprints or [], ax3d, ax_xy)
 
-    ax3d.set_xlabel("Easting [km]", fontsize=FS_LABEL, labelpad=8)
-    ax3d.set_ylabel("Northing [km]", fontsize=FS_LABEL, labelpad=8)
-    ax3d.set_zlabel("Height [km]", fontsize=FS_LABEL, labelpad=8)
+    add_bc_annotations(ax3d, D)
+    add_xyz_triad(ax3d, D)
+    add_y0_marker(ax3d, ax_xy, D)
+
+    ax3d.set_xlabel("x   Easting [km]", fontsize=FS_LABEL, labelpad=8)
+    ax3d.set_ylabel("y   Northing [km]", fontsize=FS_LABEL, labelpad=8)
+    ax3d.set_zlabel("z   Height [km]", fontsize=FS_LABEL, labelpad=8)
     if show_titles:
         ax3d.set_title("3D View", fontsize=FS_TITLE, fontweight="bold", pad=10)
     ax3d.view_init(elev=25, azim=-50)
     ax3d.tick_params(labelsize=FS_TICK)
+    ax3d.set_xlim(D["xmin"] - 0.6, D["xmax"] + 0.8)
+    ax3d.set_ylim(D["ymin"] - 0.6, D["ymax"] + 0.6)
+    ax3d.set_zlim(D["zmin"], D["zmax"] + 0.40)
 
     # ══════════════════════════════════════════════════════════════════════
     # (B) Plan view  X-Y
@@ -248,10 +362,10 @@ def make_figure(stl_tris=None, footprints=None, show_titles=True):
         ax_xy.text(RB["xmin"] + off, RB["ymax"] - off, "refineBox",
                    color=C_REFINE, fontsize=FS_CORNER, fontweight="bold", va="top", zorder=6)
 
-    ax_xy.set_xlim(D["xmin"] - 0.35, D["xmax"] + 0.35)
+    ax_xy.set_xlim(D["xmin"] - 0.35, D["xmax"] + 0.85)
     ax_xy.set_ylim(D["ymin"] - 0.35, D["ymax"] + 0.35)
-    ax_xy.set_xlabel("Easting [km]", fontsize=FS_LABEL)
-    ax_xy.set_ylabel("Northing [km]", fontsize=FS_LABEL)
+    ax_xy.set_xlabel("x   Easting [km]", fontsize=FS_LABEL)
+    ax_xy.set_ylabel("y   Northing [km]", fontsize=FS_LABEL)
     if show_titles:
         ax_xy.set_title("(a)  Plan View (X\u2013Y)", fontsize=FS_TITLE, fontweight="bold")
     ax_xy.set_aspect("equal")
@@ -274,8 +388,8 @@ def make_figure(stl_tris=None, footprints=None, show_titles=True):
 
     ax_xz.set_xlim(D["xmin"] - 0.35, D["xmax"] + 0.35)
     ax_xz.set_ylim(-0.05, D["zmax"] + 0.12)
-    ax_xz.set_xlabel("Easting [km]", fontsize=FS_LABEL)
-    ax_xz.set_ylabel("Height [km]", fontsize=FS_LABEL)
+    ax_xz.set_xlabel("x   Easting [km]", fontsize=FS_LABEL)
+    ax_xz.set_ylabel("z   Height [km]", fontsize=FS_LABEL)
     if show_titles:
         ax_xz.set_title("(b)  Elevation View (X\u2013Z)", fontsize=FS_TITLE, fontweight="bold", pad=20)
     ax_xz.grid(True, lw=0.4, color=GRID, zorder=0)
