@@ -42,13 +42,27 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-# 目标时次：20250906–13，UTC 00/06/12/18（共 32 个实验；缺失 CFD 文件会跳过并告警）。
+# 目标时次来自 campaign_config.METRIC_DATETIMES（9/6–8 已完成小时次 + 9/9–13 天气尺度时次）。
+# 三表 inner join：WRF / LiDAR / CFD 任一缺时次都会整段丢掉，脚本会逐项警告。
 target_datetimes = cfg.METRIC_DATETIMES
 target_times = target_datetimes.strftime("%Y-%m-%d %H:%M:%S").tolist()
 
 cfd_files = [cfg.cfd_filename(dt) for dt in target_datetimes]
 
 EXCLUDED_OBTIDS = {"GAW105"}
+
+
+def _unique_times(df: pd.DataFrame) -> set[str]:
+    return set(df["datetime"].astype(str))
+
+
+def _warn_missing(label: str, have: set[str]) -> list[str]:
+    miss = [t for t in target_times if t not in have]
+    if miss:
+        print(f"[WARN] {label} missing {len(miss)}/{len(target_times)} target time(s):")
+        for t in miss:
+            print(f"       {t}")
+    return miss
 
 
 def load_and_preprocess(
@@ -66,6 +80,8 @@ def load_and_preprocess(
 
     df_wrf = df_wrf[df_wrf["datetime"].isin(target_times)].copy()
     df_lidar = df_lidar[df_lidar["datetime"].isin(target_times)].copy()
+    _warn_missing("WRF CSV", _unique_times(df_wrf))
+    _warn_missing("LiDAR CSV", _unique_times(df_lidar))
 
     print("Step 2: Loading and merging CFD data...")
     cfd_list = []
@@ -79,10 +95,13 @@ def load_and_preprocess(
         tmp["datetime"] = pd.to_datetime(tmp["datetime"]).dt.strftime("%Y-%m-%d %H:%M:%S")
         cfd_list.append(tmp)
     if missing:
-        print(f"[WARN] Skipped {len(missing)} missing CFD file(s), e.g. {missing[0]}")
+        print(f"[WARN] Skipped {len(missing)} missing CFD file(s):")
+        for f in missing:
+            print(f"       {f}")
     if not cfd_list:
         raise FileNotFoundError(f"No CFD files found under {cfd_dir}")
     df_cfd = pd.concat(cfd_list, ignore_index=True)
+    _warn_missing("CFD CSV", _unique_times(df_cfd))
 
     for df in (df_wrf, df_lidar, df_cfd):
         df.drop(df[df["obtid"].isin(EXCLUDED_OBTIDS)].index, inplace=True)
@@ -149,6 +168,7 @@ def load_and_preprocess(
         "epsilon_cfd",
     ]
     final_df = merged[final_columns].copy()
+    _warn_missing("merged table", _unique_times(final_df))
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
     print(f"Merge Complete! Final shape: {final_df.shape}")

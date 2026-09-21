@@ -238,7 +238,20 @@ def parse_args() -> argparse.Namespace:
         metavar="YYYY-MM-DD HH:MM:SS",
         help="Extract only the given UTC datetime(s); default: all campaign synoptic slots.",
     )
+    p.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-extract every requested slot and overwrite those rows in --out.",
+    )
     return p.parse_args()
+
+
+def _load_existing_csv(path: Path) -> pd.DataFrame | None:
+    if not path.is_file():
+        return None
+    df = pd.read_csv(path)
+    df["datetime"] = pd.to_datetime(df["datetime"])
+    return df
 
 
 def main() -> int:
@@ -266,27 +279,50 @@ def main() -> int:
     if missing:
         print(f"[WARN] {missing} NetCDF file(s) missing across exp03/exp05 auxhist2")
 
-    if not jobs:
+    existing = None if args.force else _load_existing_csv(args.out)
+    if existing is not None:
+        have = {pd.Timestamp(t) for t in existing["datetime"].unique()}
+        n_before = len(jobs)
+        jobs = [(dt, path) for dt, path in jobs if pd.Timestamp(dt) not in have]
+        print(
+            f"[Update] {args.out.name} already has {len(have)} slot(s); "
+            f"extracting {len(jobs)}/{n_before} missing"
+        )
+
+    if not jobs and existing is None:
         print("No WRF files to extract.", file=sys.stderr)
         return 1
 
     all_frames: list[pd.DataFrame] = []
+    extracted_times: set[pd.Timestamp] = set()
     for dt, nc_path in jobs:
         src = "myExp03" if dt.normalize() <= split_date.normalize() else "myExp05"
         print(f"  WRF [lidar] {dt} ({src}) <- {nc_path.name} ...", end=" ", flush=True)
         try:
             df = extract_nc_file(nc_path, station_info, dt_hint=dt)
             all_frames.append(df)
+            extracted_times.add(pd.Timestamp(dt))
             print(f"OK  rows={len(df)}")
         except Exception as exc:
             print(f"FAILED ({exc})")
             return 1
 
+    if existing is not None:
+        keep = existing[~existing["datetime"].isin(extracted_times)].copy()
+        if not keep.empty:
+            all_frames.insert(0, keep)
+
+    if not all_frames:
+        print(f"Nothing to write; {args.out} already covers the requested slots.")
+        return 0
+
     out_df = pd.concat(all_frames, ignore_index=True)
+    out_df["datetime"] = pd.to_datetime(out_df["datetime"])
     out_df = out_df.sort_values(["datetime", "obtid", "z_probe"]).reset_index(drop=True)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out_df.to_csv(args.out, index=False)
-    print(f"\nSaved: {args.out}  shape={out_df.shape}")
+    n_slots = out_df["datetime"].nunique()
+    print(f"\nSaved: {args.out}  shape={out_df.shape}  slots={n_slots}")
     return 0
 
 
