@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 可视化 steady_experiments_finer_ABL 实验目录下 postProcessing/y800m.csv 的 X-Z 垂直剖面风场
-用法: python visualize_x-z_wind_field.py steady_experiments_finer_ABL/20250903_0000
+用法: python analysis/260409/ws-xz-plane/visualize_x-z_wind_field.py steady_experiments_finer_ABL/20250903_0000
 """
 
 import os
@@ -161,7 +161,7 @@ def visualize_xz_wind_field(csv_file_path, output_title):
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python visualize_x-z_wind_field.py <experiment_directory>")
+        print("Usage: python analysis/260409/ws-xz-plane/visualize_x-z_wind_field.py <experiment_directory>")
         sys.exit(1)
     
     experiment_dir = sys.argv[1]

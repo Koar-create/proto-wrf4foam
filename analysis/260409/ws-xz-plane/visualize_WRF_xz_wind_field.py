@@ -4,11 +4,11 @@
 可视化 WRF 输出文件的 X-Z 垂直剖面风场
 基于 y=800m 的纬度线（lat=23.1211944444）提取垂直剖面
 
-用法: python visualize_WRF_x-z_wind_field.py <nc_file_path> [--lat LAT] [--lon LON] [--output OUTPUT]
+用法: python analysis/260409/ws-xz-plane/visualize_WRF_x-z_wind_field.py <nc_file_path> [--lat LAT] [--lon LON] [--output OUTPUT]
 
 示例:
-    python visualize_WRF_x-z_wind_field.py W_myExp03/auxhist2/tmp/auxhist2_d03_2025-09-03_04:00:00_tmp.nc
-    python visualize_WRF_x-z_wind_field.py W_myExp03/auxhist2/tmp/auxhist2_d03_2025-09-03_04:00:00_tmp.nc --lat 23.1211944444 --lon 113.321102778
+    python analysis/260409/ws-xz-plane/visualize_WRF_x-z_wind_field.py W_myExp03/auxhist2/tmp/auxhist2_d03_2025-09-03_04:00:00_tmp.nc
+    python analysis/260409/ws-xz-plane/visualize_WRF_x-z_wind_field.py W_myExp03/auxhist2/tmp/auxhist2_d03_2025-09-03_04:00:00_tmp.nc --lat 23.1211944444 --lon 113.321102778
 """
 
 import os

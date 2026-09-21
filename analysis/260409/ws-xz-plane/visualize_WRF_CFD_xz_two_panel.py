@@ -24,12 +24,12 @@ Layout ``vertical`` (2×1):
 
 Usage
 -----
-    python visualize_WRF_CFD_xz_two_panel.py  /path/to/CFD_run_directory
-    python visualize_WRF_CFD_xz_two_panel.py  /path/to/CFD_run_directory --layout vertical
+    python analysis/260409/ws-xz-plane/visualize_WRF_CFD_xz_two_panel.py  /path/to/CFD_run_directory
+    python analysis/260409/ws-xz-plane/visualize_WRF_CFD_xz_two_panel.py  /path/to/CFD_run_directory --layout vertical
 
 Example
 -------
-    python visualize_WRF_CFD_xz_two_panel.py \\
+    python analysis/260409/ws-xz-plane/visualize_WRF_CFD_xz_two_panel.py \\
         steady_experiments_finer_ABL/20250901_1000_two_boundaries_as_outlet
 
 Path inference
@@ -61,8 +61,10 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import PolyCollection
 from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter, FixedLocator
 
-# Sibling util: fixed Guangzhou origin lon/lat ↔ local XY (UTM49N)
-_UTIL_DIR = os.path.dirname(os.path.abspath(__file__))
+# Repo util: fixed Guangzhou origin lon/lat ↔ local XY (UTM49N)
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.abspath(os.path.join(_SCRIPT_DIR, "..", "..", ".."))
+_UTIL_DIR = os.path.join(_REPO_ROOT, "util")
 if _UTIL_DIR not in sys.path:
     sys.path.insert(0, _UTIL_DIR)
 from convert_lonlat_xy_origin import (  # noqa: E402
@@ -128,7 +130,7 @@ def wind_speed_colorbar_ticks(vmax: float) -> np.ndarray:
 # ---------------------------------------------------------------------------
 
 def _repo_root() -> str:
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return _REPO_ROOT
 
 
 def default_output_path(cfd_dir: str, layout: str = DEFAULT_LAYOUT) -> str:
