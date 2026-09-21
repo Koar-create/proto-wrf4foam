@@ -20,9 +20,12 @@ WS_MAX_OBS = 30.0
 WS_MAX_CFD = 20.0
 HEIGHT_BINS = np.arange(0, 2150, 50)
 
+UTC_DAY_FIRST = 1
+UTC_DAY_LAST = 5
 TIME_LABELS = {
     f"2025-09-{d:02d} {h:02d}:00:00": f"{d:02d}_{h:02d}00 UTC"
-    for d in range(1, 4) for h in range(24)
+    for d in range(UTC_DAY_FIRST, UTC_DAY_LAST + 1)
+    for h in range(24)
 }
 
 COLOR_OBS = "#1a1a2e"
@@ -59,8 +62,29 @@ def load_and_preprocess(path: Path) -> pd.DataFrame:
     df['wd_obs'] = np.degrees(np.arctan2(-df['u_obs'], -df['v_obs'])) % 360
     df['wd_wrf'] = np.degrees(np.arctan2(-df['u_wrf'], -df['v_wrf'])) % 360
     df['wd_cfd'] = np.degrees(np.arctan2(-df['u_cfd'], -df['v_cfd'])) % 360
-    df['time_label'] = df['datetime'].astype(str).map(TIME_LABELS)
+    df['time_label'] = df['datetime'].dt.strftime('%Y-%m-%d %H:%M:%S').map(TIME_LABELS)
     return df
+
+
+def _normalize_utc_hour(datetime_utc: str) -> str:
+    """Normalize to 'YYYY-MM-DD HH:00:00' and require an hourly slot in TIME_LABELS."""
+    dt = pd.Timestamp(datetime_utc)
+    if pd.isna(dt):
+        raise ValueError(f"cannot parse datetime {datetime_utc!r}")
+    if dt.minute != 0 or dt.second != 0 or dt.microsecond != 0:
+        raise ValueError(
+            f"datetime must be an exact UTC hour, got {datetime_utc!r}. "
+            f"Example: 2025-09-04 14:00:00"
+        )
+    key = dt.strftime("%Y-%m-%d %H:%M:%S")
+    if key not in TIME_LABELS:
+        raise ValueError(
+            f"datetime must be hourly UTC in "
+            f"2025-09-{UTC_DAY_FIRST:02d}..{UTC_DAY_LAST:02d} "
+            f"(00:00–23:00, {len(TIME_LABELS)} slots), got {datetime_utc!r}. "
+            f"Example: 2025-09-04 14:00:00"
+        )
+    return key
 
 
 def quality_control(df: pd.DataFrame,
@@ -78,10 +102,10 @@ def _format_time_label_for_display(t_raw: str, tz: str) -> str:
     dt = pd.Timestamp(t_raw)
     if tz == "lst":
         dt = dt + pd.Timedelta(hours=8)
-        suffix = "LST"
+        suffix = "UTC+8"
     else:
         suffix = "UTC"
-    return f"{dt.strftime('%Y-%m-%d %d_%H00')} {suffix}"
+    return f"{dt.strftime('%Y-%m-%d %H:%M')} ({suffix})"
 
 
 def _uv_from_wd(df: pd.DataFrame, prefix: str) -> pd.DataFrame:
@@ -106,7 +130,6 @@ def _aggregate_composite(sub: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame,
     if not sub_obs.empty:
         agg_obs = sub_obs.groupby('H_bin', observed=True).agg(
             mean_ws=('ws_obs', 'mean'),
-            std_ws=('ws_obs', 'std'),
             mean_h=('Height', 'mean'),
         ).dropna(subset=['mean_h']).reset_index()
 
@@ -132,33 +155,26 @@ def plot_ws_wd_composite_profile(
     datetime_utc: str,
     out_dir: Path,
     *,
-    tz: str = "utc",
+    tz: str = "lst",
     zmax: float = 1000.0,
 ) -> Path:
     tz = tz.lower()
     if tz not in {"utc", "lst"}:
         raise ValueError("tz must be one of: utc, lst")
 
-    tl_utc = TIME_LABELS.get(datetime_utc)
-    if tl_utc is None:
-        raise ValueError(
-            f"datetime must be hourly UTC in 2025-09-01..03, got {datetime_utc!r}. "
-            f"Example: 2025-09-03 15:00:00"
-        )
+    datetime_utc = _normalize_utc_hour(datetime_utc)
+    tl_utc = TIME_LABELS[datetime_utc]
 
     sub = df[(df['time_label'] == tl_utc) & df['qc_ok']].copy()
-    sub_raw, agg_obs, agg_wd = _aggregate_composite(sub)
+    _, agg_obs, agg_wd = _aggregate_composite(sub)
 
     fig, (ax_ws, ax_wd) = plt.subplots(1, 2, figsize=(10, 6), constrained_layout=True)
     tl_disp = _format_time_label_for_display(datetime_utc, tz=tz)
-    n_sites = sub['obtid'].nunique() if not sub.empty else 0
 
     if not agg_obs.empty:
-        ax_ws.errorbar(
+        ax_ws.plot(
             agg_obs['mean_ws'], agg_obs['mean_h'],
-            xerr=agg_obs['std_ws'].fillna(0),
-            fmt='o', ms=4, color=COLOR_OBS, alpha=0.85,
-            elinewidth=0.8, capsize=2, zorder=5,
+            color='black', lw=2.0, ls='-', marker='o', ms=4, alpha=0.9, zorder=5,
         )
     if not agg_wd.empty:
         ax_ws.plot(agg_wd['ws_wrf'], agg_wd['mean_h'], color=COLOR_WRF, lw=2.0, ls='--')
@@ -173,21 +189,17 @@ def plot_ws_wd_composite_profile(
     ax_ws.xaxis.set_major_formatter(ScalarFormatter(useOffset=False))
     ax_ws.set_xlabel(r'Wind Speed (m s$^{-1}$)', fontsize=11)
     ax_ws.set_ylabel('Height (m)', fontsize=11)
-    ax_ws.set_title('Wind Speed (4-station composite)', fontweight='bold')
+    ax_ws.set_title('Wind Speed', fontweight='bold')
 
-    if not sub_raw.empty:
-        obs_pts = sub_raw.dropna(subset=['wd_obs', 'Height'])
-        ax_wd.scatter(
-            obs_pts['wd_obs'], obs_pts['Height'],
-            s=2, color=COLOR_OBS, alpha=0.12, edgecolors='none', zorder=1,
-        )
     if not agg_wd.empty:
-        ax_wd.plot(agg_wd['wd_obs'], agg_wd['mean_h'], 'o', ms=4,
-                   color=COLOR_OBS, alpha=0.9, label='LiDAR')
+        ax_wd.plot(
+            agg_wd['wd_obs'], agg_wd['mean_h'],
+            color='black', lw=2.0, ls='-', marker='o', ms=4, alpha=0.9, label='LiDAR',
+        )
         ax_wd.plot(agg_wd['wd_wrf'], agg_wd['mean_h'],
                    color=COLOR_WRF, lw=2.0, ls='--', label='WRF')
         ax_wd.plot(agg_wd['wd_cfd'], agg_wd['mean_h'],
-                   color=COLOR_CFD, lw=2.0, ls='-', label='OpenFOAM')
+                   color=COLOR_CFD, lw=2.0, ls='-', label='WRF-to-OpenFOAM')
 
     ax_wd.set_ylim(0, zmax)
     ax_wd.set_xlim(0, 360)
@@ -195,19 +207,19 @@ def plot_ws_wd_composite_profile(
     ax_wd.set_xticklabels(['N', 'E', 'S', 'W', 'N'], fontsize=9)
     ax_wd.set_xlabel('Wind Direction (°)', fontsize=11)
     ax_wd.set_yticklabels([])
-    ax_wd.set_title('Wind Direction (4-station composite)', fontweight='bold')
+    ax_wd.set_title('Wind Direction', fontweight='bold')
     ax_wd.legend(loc='upper right', fontsize=10, framealpha=0.9)
 
     legend_handles = [
-        Line2D([0], [0], marker='o', ms=5, color=COLOR_OBS, linestyle='none', label='LiDAR (obs)'),
+        Line2D([0], [0], color='black', lw=2, ls='-', marker='o', ms=5, label='LiDAR (obs)'),
         Line2D([0], [0], color=COLOR_WRF, lw=2, ls='--', label='WRF'),
-        Line2D([0], [0], color=COLOR_CFD, lw=2, ls='-', label='OpenFOAM'),
+        Line2D([0], [0], color=COLOR_CFD, lw=2, ls='-', label='WRF-to-OpenFOAM'),
     ]
     ax_ws.legend(handles=legend_handles, fontsize=10, loc='upper right', framealpha=0.9)
 
     dt_tag = pd.Timestamp(datetime_utc).strftime('%Y%m%d_%H%M')
     fig.suptitle(
-        f'Composite WS & WD Profiles — {tl_disp}  (n={n_sites} sites)',
+        f'Composite WS & WD Profiles — {tl_disp}',
         fontsize=14, fontweight='bold',
     )
 
@@ -225,10 +237,13 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument(
         "--datetime",
         required=True,
-        help='UTC hour string, e.g. "2025-09-03 15:00:00" (must exist in merged CSV).',
+        help=(
+            'UTC hour string, e.g. "2025-09-04 14:00:00" '
+            f"(hourly 2025-09-{UTC_DAY_FIRST:02d}..{UTC_DAY_LAST:02d} 00–23)."
+        ),
     )
-    p.add_argument("--tz", choices=["utc", "lst"], default="utc",
-                   help="Title time zone: utc (default) or lst (UTC+8).")
+    p.add_argument("--tz", choices=["utc", "lst"], default="lst",
+                   help="Title time zone: lst (UTC+8, default) or utc.")
     p.add_argument("--zmax", type=float, default=1000.0,
                    help="Upper limit of y-axis (height, m). Default: 1000.")
     p.add_argument("--out-dir", type=Path, default=OUTPUT_DIR,
