@@ -12,7 +12,7 @@ from matplotlib.patches import Patch
 COLOR_WRF = "#e07b39"
 COLOR_CFD = "#2196a5"
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 ANALYSIS_DIR = Path(__file__).resolve().parent
 CIRCULAR_CSV = ANALYSIS_DIR / "wind_direction_metrics_circular.csv"
 VECTOR_CSV = ANALYSIS_DIR / "wind_direction_metrics_vector.csv"

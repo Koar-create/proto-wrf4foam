@@ -7,7 +7,7 @@ from pathlib import Path
 warnings.filterwarnings('ignore')
 
 # ─── 路径配置 ────────────────────────────────────────
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 ANALYSIS_DIR = Path(__file__).resolve().parent
 DATA_PATH = REPO_ROOT / "data/260409/processed/merged_lidar_simulation_final.csv"
 

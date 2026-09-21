@@ -7,7 +7,7 @@ import pandas as pd
 from pathlib import Path
 
 # ─── 路径与阈值配置（避免 Hardcoding）────────────────────────────────────────
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 ANALYSIS_DIR = Path(__file__).resolve().parent
 DATA_PATH = REPO_ROOT / "data/260409/processed/merged_lidar_simulation_final.csv"   # 已处理数据
 LAYER_SUMMARY_CSV = ANALYSIS_DIR / "layer_metrics_summary.csv"

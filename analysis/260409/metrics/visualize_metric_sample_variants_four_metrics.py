@@ -11,8 +11,8 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-DATA_PATH = REPO_ROOT / "analysis/260409/metric_sample_variants_no_high_wide.csv"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+DATA_PATH = Path(__file__).resolve().parent / "metric_sample_variants_no_high_wide.csv"
 OUTPUT_DIR = REPO_ROOT / "results/metric_sample_variants/260409"
 
 

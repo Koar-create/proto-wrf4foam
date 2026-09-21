@@ -187,7 +187,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--formats",
         nargs="+",
-        default=["png", "pdf"],
+        default=["png"],
         choices=["png", "pdf", "svg"],
         help="Figure formats to write.",
     )

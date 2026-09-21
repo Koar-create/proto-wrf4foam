@@ -16,7 +16,7 @@ if str(_SCRIPT_DIR) not in sys.path:
 
 import print_metric as pm  # noqa: E402
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CSV = REPO_ROOT / "data/260409/processed/merged_lidar_simulation_final.csv"
 DEFAULT_OUT = _SCRIPT_DIR / "metric_profile_shear_20250901_1900_0000_bjt.csv"
 
