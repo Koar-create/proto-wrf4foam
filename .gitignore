@@ -25,6 +25,10 @@ data/synthetic_wind/
 .cursor/
 results/reference*/
 results/new-visual-advice/
+system/
+analysis/260616-*/
+analysis/260513-*Copy/
+analysis/260528-*/
 
 # large amount of data
 *.png
@@ -38,8 +42,12 @@ results/new-visual-advice/
 *.zip
 *.log
 *.json
+*.md
 *.txt
 *.stl
+*.slurm
+log.*
+*_orig
 *.mp4
 *tmp.py
 surrogate_dataset/inflow/*.json
