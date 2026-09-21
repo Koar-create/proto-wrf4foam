@@ -80,10 +80,10 @@ def _format_time_label_for_display(t_raw: str, tz: str) -> str:
     dt = pd.Timestamp(t_raw)
     if tz == "lst":
         dt = dt + pd.Timedelta(hours=8)
-        suffix = "LST"
+        suffix = "UTC+8"
     else:
         suffix = "UTC"
-    return f"{dt.strftime('%Y-%m-%d %H:%M')} {suffix}"
+    return f"{dt.strftime('%Y-%m-%d %H:%M')} ({suffix})"
 
 
 def _uv_from_wd(df: pd.DataFrame, prefix: str) -> pd.DataFrame:
@@ -116,7 +116,6 @@ def _aggregate_composite(
     if not sub_obs.empty:
         agg_obs = sub_obs.groupby('H_bin', observed=True).agg(
             mean_ws=('ws_obs', 'mean'),
-            std_ws=('ws_obs', 'std'),
             mean_h=('Height', 'mean'),
         ).dropna(subset=['mean_h']).reset_index()
 
@@ -162,18 +161,15 @@ def plot_ws_wd_composite_profile(
         & df['qc_ok']
         & (df['Height'] <= zmax)
     ].copy()
-    sub_raw, agg_obs, agg_wd = _aggregate_composite(sub, _height_bins(zmax))
+    _, agg_obs, agg_wd = _aggregate_composite(sub, _height_bins(zmax))
 
     fig, (ax_ws, ax_wd) = plt.subplots(1, 2, figsize=(10, 6), constrained_layout=True)
     tl_disp = _format_time_label_for_display(datetime_utc, tz=tz)
-    n_sites = sub['obtid'].nunique() if not sub.empty else 0
 
     if not agg_obs.empty:
-        ax_ws.errorbar(
+        ax_ws.plot(
             agg_obs['mean_ws'], agg_obs['mean_h'],
-            xerr=agg_obs['std_ws'].fillna(0),
-            fmt='o', ms=4, color=COLOR_OBS, alpha=0.85,
-            elinewidth=0.8, capsize=2, zorder=5,
+            color='black', lw=2.0, ls='-', marker='o', ms=4, alpha=0.9, zorder=5,
         )
     if not agg_wd.empty:
         ax_ws.plot(agg_wd['ws_wrf'], agg_wd['mean_h'], color=COLOR_WRF, lw=2.0, ls='--')
@@ -189,21 +185,17 @@ def plot_ws_wd_composite_profile(
     ax_ws.xaxis.set_major_formatter(ScalarFormatter(useOffset=False))
     ax_ws.set_xlabel(r'Wind Speed (m s$^{-1}$)', fontsize=11)
     ax_ws.set_ylabel('Height (m)', fontsize=11)
-    ax_ws.set_title('Wind Speed (3-station composite)', fontweight='bold')
+    ax_ws.set_title('Wind Speed', fontweight='bold')
 
-    if not sub_raw.empty:
-        obs_pts = sub_raw.dropna(subset=['wd_obs', 'Height'])
-        ax_wd.scatter(
-            obs_pts['wd_obs'], obs_pts['Height'],
-            s=2, color=COLOR_OBS, alpha=0.12, edgecolors='none', zorder=1,
-        )
     if not agg_wd.empty:
-        ax_wd.plot(agg_wd['wd_obs'], agg_wd['mean_h'], 'o', ms=4,
-                   color=COLOR_OBS, alpha=0.9, label='LiDAR')
+        ax_wd.plot(
+            agg_wd['wd_obs'], agg_wd['mean_h'],
+            color='black', lw=2.0, ls='-', marker='o', ms=4, alpha=0.9, label='LiDAR',
+        )
         ax_wd.plot(agg_wd['wd_wrf'], agg_wd['mean_h'],
                    color=COLOR_WRF, lw=2.0, ls='--', label='WRF')
         ax_wd.plot(agg_wd['wd_cfd'], agg_wd['mean_h'],
-                   color=COLOR_CFD, lw=2.0, ls='-', label='OpenFOAM')
+                   color=COLOR_CFD, lw=2.0, ls='-', label='WRF-to-OpenFOAM')
 
     ax_wd.set_ylim(0, zmax)
     ax_wd.set_xlim(0, 360)
@@ -211,19 +203,19 @@ def plot_ws_wd_composite_profile(
     ax_wd.set_xticklabels(['N', 'E', 'S', 'W', 'N'], fontsize=9)
     ax_wd.set_xlabel('Wind Direction (°)', fontsize=11)
     ax_wd.set_yticklabels([])
-    ax_wd.set_title('Wind Direction (3-station composite)', fontweight='bold')
+    ax_wd.set_title('Wind Direction', fontweight='bold')
     ax_wd.legend(loc='upper right', fontsize=10, framealpha=0.9)
 
     legend_handles = [
-        Line2D([0], [0], marker='o', ms=5, color=COLOR_OBS, linestyle='none', label='LiDAR (obs)'),
+        Line2D([0], [0], color='black', lw=2, ls='-', marker='o', ms=5, label='LiDAR (obs)'),
         Line2D([0], [0], color=COLOR_WRF, lw=2, ls='--', label='WRF'),
-        Line2D([0], [0], color=COLOR_CFD, lw=2, ls='-', label='OpenFOAM'),
+        Line2D([0], [0], color=COLOR_CFD, lw=2, ls='-', label='WRF-to-OpenFOAM'),
     ]
     ax_ws.legend(handles=legend_handles, fontsize=10, loc='upper right', framealpha=0.9)
 
     dt_tag = pd.Timestamp(datetime_utc).strftime('%Y%m%d_%H%M')
     fig.suptitle(
-        f'Composite WS & WD Profiles — {tl_disp}  (n={n_sites} sites)',
+        f'Composite WS & WD Profiles — {tl_disp}',
         fontsize=14, fontweight='bold',
     )
 
