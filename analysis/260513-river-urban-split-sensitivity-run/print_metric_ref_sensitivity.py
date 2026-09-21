@@ -1,7 +1,7 @@
 """
 print_metric_ref_sensitivity.py — 单时次 river/urban split 敏感性 CSV 的分层风速指标表。
 
-参考 analysis/260409/print_metric_sample_variants.py 的表格风格，但：
+参考 analysis/260409/metrics/print_metric_sample_variants.py 的表格风格，但：
   - 数据源仅含一个 datetime（不再按 UTC/LST/日历日划分子集）；
   - CFD 列拆为 reference（ws_cfd_ref）与 sensitivity（ws_cfd_sen）。
 
@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_260409 = _REPO_ROOT / "analysis" / "260409"
+_260409 = _REPO_ROOT / "analysis" / "260409" / "metrics"
 if str(_260409) not in sys.path:
     sys.path.insert(0, str(_260409))
 

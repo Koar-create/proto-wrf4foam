@@ -21,6 +21,7 @@ import argparse
 import glob
 import os
 import re
+import sys
 import warnings
 from dataclasses import dataclass
 from typing import Iterable
@@ -29,7 +30,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-import visualize_WRF_CFD_xz_at_time as vat
+_UTIL_DIR = os.path.dirname(os.path.abspath(__file__))
+_XZ_DIR = os.path.abspath(os.path.join(_UTIL_DIR, "..", "analysis", "260409", "ws-xz-plane"))
+if _XZ_DIR not in sys.path:
+    sys.path.insert(0, _XZ_DIR)
+
 import visualize_WRF_CFD_xz_two_panel as v2p
 
 RESULTS_PROFILE_DIR = os.path.join("results", "wrf_openfoam", "y_slice_profile")
@@ -245,6 +250,20 @@ def load_wrf_zonal_profile(nc_path: str, max_height: float = v2p.MAX_HEIGHT, **k
     return ProfileSeries(label="WRF", height=h, ws=ws, wd=wd, kind="wrf")
 
 
+def parse_time_from_csv(csv_path: str):
+    """Parse time from ``..._t<time>.csv`` (e.g. ``y-4995m_t10.csv`` → 10)."""
+    base = os.path.basename(csv_path)
+    m = re.search(r"_t([\d.]+)\.csv$", base, re.IGNORECASE)
+    if not m:
+        raise ValueError(
+            f"Cannot parse time from CSV filename: '{base}'\n"
+            "Expected pattern: ..._t<time>.csv  (e.g. y-4995m_t10.csv)"
+        )
+    t = float(m.group(1))
+    time_str = str(int(t)) if t == int(t) else m.group(1)
+    return t, time_str
+
+
 def load_cfd_zonal_profile(csv_path: str, max_height: float = v2p.MAX_HEIGHT) -> ProfileSeries:
     """读取 y 切片 CSV，沿 x 对 U:0/U:1 做 zonal mean。"""
     if not os.path.isfile(csv_path):
@@ -271,7 +290,7 @@ def load_cfd_zonal_profile(csv_path: str, max_height: float = v2p.MAX_HEIGHT) ->
     v = agg["v"].to_numpy()
     ws, wd = _ws_wd_from_uv(u, v)
 
-    _, time_str = vat.parse_time_from_csv(csv_path)
+    _, time_str = parse_time_from_csv(csv_path)
     return ProfileSeries(label=f"CFD t={time_str}", height=h, ws=ws, wd=wd, kind="cfd")
 
 
@@ -329,7 +348,7 @@ def discover_cfd_csvs(post_dir: str, required: bool = False) -> list[str]:
 
 
 def _cfd_csv_sort_key(path: str) -> float:
-    _, time_str = vat.parse_time_from_csv(path)
+    _, time_str = parse_time_from_csv(path)
     return float(time_str)
 
 

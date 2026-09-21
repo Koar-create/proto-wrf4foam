@@ -40,6 +40,7 @@ results/new-visual-advice/
 *.json
 *.txt
 *.stl
+*.mp4
 *tmp.py
 surrogate_dataset/inflow/*.json
 analysis/*/*.md
@@ -65,7 +66,7 @@ LES/*/processor*/
 LES/*/rans_orig/
 LES/*/0.rans_unused/
 LES/*/VTK/
-LES/*/0/
+LES/*/[0-9]*/
 LES/*/*.foam
 LES/*/log*
 LES/*/*126*

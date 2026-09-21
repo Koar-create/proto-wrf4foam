@@ -36,7 +36,7 @@ if tail -n 5 ${LOG} | grep -q "Finalising parallel run"; then
     conda deactivate
     cd $PROJECT_ROOT
     python $UTIL/visualize_x-y_wind_field.py $1
-    python $UTIL/visualize_x-z_wind_field.py $1
+    python analysis/260409/ws-xz-plane/visualize_CFD_xz_wind_field.py $1
     bash   $UTIL/check_scientific_usability_diag.sh $EXPE/${LOG}
     echo -e "\e[1;32mAll procedures done.\e[0m"
 else
