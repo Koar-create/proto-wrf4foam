@@ -42,7 +42,8 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-# 目标时次来自 campaign_config.METRIC_DATETIMES（9/6–8 已完成小时次 + 9/9–13 天气尺度时次）。
+# 目标时次来自 campaign_config.METRIC_DATETIMES
+# （9/6–8 已完成小时次 + 9/9–13 天气尺度时次，以及这些日期上已算完的额外小时次）。
 # 三表 inner join：WRF / LiDAR / CFD 任一缺时次都会整段丢掉，脚本会逐项警告。
 target_datetimes = cfg.METRIC_DATETIMES
 target_times = target_datetimes.strftime("%Y-%m-%d %H:%M:%S").tolist()

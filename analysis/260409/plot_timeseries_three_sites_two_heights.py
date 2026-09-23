@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import re
 from datetime import timedelta, timezone
 from pathlib import Path
 
@@ -18,6 +19,14 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # Color specifications from metrics/visualize_metric_sample_variants_four_metrics.py
 COLOR_WRF = "#e07b39"
 COLOR_CFD = "#2196a5"
+
+# Same finished-case rule as scripts/plot_experiment_hourly_status.py:
+# a UTC hour has data only when <YYYYMMDD_HHMM>_two_boundaries_as_outlet/5000 exists.
+CASES_ROOT = REPO_ROOT / "steady_experiments_finer_ABL"
+CASE_RE = re.compile(r"^(\d{8})_(\d{4})_two_boundaries_as_outlet$")
+COMPLETION_MARKER = "5000"
+LATER_MERGED_CSV = REPO_ROOT / "data/260707/processed/merged_lidar_simulation_final.csv"
+X_RIGHT = (2025, 9, 9, 23)
 
 
 def configure_matplotlib_style() -> None:
@@ -80,6 +89,46 @@ def _pad_ymax_for_metrics(ymax: float) -> float:
     return nice
 
 
+def finished_utc_timestamps(cases_root: Path) -> set[pd.Timestamp]:
+    """UTC hours whose production case has a ``5000`` directory."""
+    if not cases_root.is_dir():
+        raise FileNotFoundError(f"cases root not found: {cases_root}")
+    finished: set[pd.Timestamp] = set()
+    for path in cases_root.iterdir():
+        if not path.is_dir():
+            continue
+        match = CASE_RE.match(path.name)
+        if match is None or not (path / COMPLETION_MARKER).is_dir():
+            continue
+        day, hhmm = match.group(1), match.group(2)
+        finished.add(
+            pd.Timestamp(
+                f"{day[:4]}-{day[4:6]}-{day[6:8]} {hhmm[:2]}:{hhmm[2:]}:00",
+                tz="UTC",
+            )
+        )
+    return finished
+
+
+def _read_merged(path: Path) -> pd.DataFrame:
+    df = pd.read_csv(path)
+    df["datetime"] = pd.to_datetime(df["datetime"], utc=True).dt.floor("h")
+    return df
+
+
+def load_merged_frames(primary: Path, later: Path | None) -> pd.DataFrame:
+    """Stack merged CSVs. Duplicate keys keep the primary file."""
+    frames = [_read_merged(primary)]
+    if later is not None and later.resolve() != primary.resolve():
+        if later.exists():
+            frames.append(_read_merged(later))
+        else:
+            print(f"Warning: later merged CSV not found, skipped: {later}")
+    df = pd.concat(frames, ignore_index=True)
+    df = df.drop_duplicates(subset=["datetime", "obtid", "Height"], keep="first")
+    return df
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description="Plot 3-station 2-height time series (LiDAR vs WRF vs OpenFOAM) in a 3x2 layout."
@@ -88,7 +137,20 @@ def main() -> int:
         "--csv",
         type=Path,
         default=REPO_ROOT / "data/260409/processed/merged_lidar_simulation_final.csv",
-        help="Input merged CSV path.",
+        help="Primary merged CSV (wind-speed values). Duplicate keys win over --csv-later.",
+    )
+    ap.add_argument(
+        "--csv-later",
+        type=Path,
+        default=LATER_MERGED_CSV,
+        help="Merged CSV for hours after the primary file (same columns). "
+        "Values still come only from these merged tables.",
+    )
+    ap.add_argument(
+        "--cases-root",
+        type=Path,
+        default=CASES_ROOT,
+        help="OpenFOAM case root. A timestamp is drawn only if <case>/5000 exists.",
     )
     ap.add_argument(
         "--out-dir",
@@ -122,9 +184,21 @@ def main() -> int:
     if not csv_path.exists():
         raise FileNotFoundError(f"CSV not found: {csv_path.resolve()}")
 
-    df = pd.read_csv(csv_path)
-    df["datetime"] = pd.to_datetime(df["datetime"], utc=True)
+    df = load_merged_frames(csv_path, args.csv_later)
     _ensure_ws_cfd(df)
+
+    finished = finished_utc_timestamps(args.cases_root)
+    in_csv = set(df["datetime"].unique())
+    kept = in_csv & finished
+    df = df[df["datetime"].isin(kept)].copy()
+    x_right_utc = pd.Timestamp(year=X_RIGHT[0], month=X_RIGHT[1], day=X_RIGHT[2], hour=X_RIGHT[3], tz="UTC")
+    missing = sorted(t for t in finished if t <= x_right_utc and t not in in_csv and t >= pd.Timestamp("2025-09-01", tz="UTC"))
+    print(
+        f"[Info] merged hours drawn: {len(kept)}  |  "
+        f"finished cases through {x_right_utc.strftime('%Y-%m-%d %H:%M')} UTC missing from merged CSV: {len(missing)}"
+    )
+    for t in missing:
+        print(f"       no merged row: {t.strftime('%Y-%m-%d %H:%M')} UTC")
 
     tz_mode = str(args.tz).lower()
     rolling_3h = bool(args.rolling_3h)
@@ -169,7 +243,7 @@ def main() -> int:
                     
             if tz_mode == "lst":
                 df_plot = df_plot.tz_convert(tzinfo)
-                
+
             ax.plot(
                 df_plot.index,
                 df_plot["ws_obs"],
@@ -181,20 +255,20 @@ def main() -> int:
                 alpha=0.85,
             )
             ax.plot(
-                df_plot.index, 
-                df_plot["ws_wrf"], 
-                linestyle="--", 
-                linewidth=2.0, 
-                color=COLOR_WRF, 
-                alpha=0.95, 
+                df_plot.index,
+                df_plot["ws_wrf"],
+                linestyle="--",
+                linewidth=2.0,
+                color=COLOR_WRF,
+                alpha=0.95,
             )
             ax.plot(
-                df_plot.index, 
-                df_plot["ws_cfd"], 
-                linestyle="-", 
-                linewidth=2.0, 
-                color=COLOR_CFD, 
-                alpha=0.95, 
+                df_plot.index,
+                df_plot["ws_cfd"],
+                linestyle="-",
+                linewidth=2.0,
+                color=COLOR_CFD,
+                alpha=0.95,
             )
 
             # Calculate and annotate metrics
@@ -215,9 +289,9 @@ def main() -> int:
                     d_c = valid_cfd["ws_cfd"] - valid_cfd["ws_obs"]
                     mbe_c = d_c.mean()
                     rmse_c = np.sqrt((d_c ** 2).mean())
-                    cfd_text = f"W2OF | R: {r_c:.2f}  MBE: {mbe_c:.2f}  RMSE: {rmse_c:.2f}"
+                    cfd_text = f"W-OF | R: {r_c:.2f}  MBE: {mbe_c:.2f}  RMSE: {rmse_c:.2f}"
                 else:
-                    cfd_text = "W2OF | N/A"
+                    cfd_text = "W-OF | N/A"
 
                 bbox_props = dict(boxstyle="round,pad=0.25", facecolor="white", edgecolor="none", alpha=1.0)
                 ax.text(0.015, 0.97, wrf_text, transform=ax.transAxes, color=COLOR_WRF, fontsize=11, fontweight='bold', va='top', ha='left', bbox=bbox_props, zorder=5)
@@ -239,9 +313,10 @@ def main() -> int:
             if i == 2:
                 ax.set_xlabel(x_label)
 
-    # X-limits: left fixed at 09-01 00:00 (plot tz); keep auto right edge.
+    # X-limits in the plot timezone. Right edge is 2025-09-09 23:00.
     x_left = pd.Timestamp(year=2025, month=9, day=1, hour=0, tz=tzinfo)
-    axes[0, 0].set_xlim(left=x_left)
+    x_right = pd.Timestamp(year=X_RIGHT[0], month=X_RIGHT[1], day=X_RIGHT[2], hour=X_RIGHT[3], tz=tzinfo)
+    axes[0, 0].set_xlim(x_left, x_right)
 
     # Leave headroom at top for metric annotations (sharey='row').
     if args.show_metrics:
@@ -254,7 +329,7 @@ def main() -> int:
     legend_handles = [
         Line2D([0], [0], color="black", marker="o", markersize=7, lw=1.5, label="LiDAR Obs"),
         Line2D([0], [0], color=COLOR_WRF, lw=2.5, linestyle="--", label="WRF"),
-        Line2D([0], [0], color=COLOR_CFD, lw=2.5, linestyle="-", label="WRF-to-OpenFOAM")
+        Line2D([0], [0], color=COLOR_CFD, lw=2.5, linestyle="-", label="WRF-OpenFOAM")
     ]
     fig.legend(
         handles=legend_handles, 

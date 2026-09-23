@@ -1,7 +1,8 @@
 """Shared settings for 20250906–13 OpenFOAM experiments.
 
 Sep 6–8: include CFD cases that have completed (case/<5000> exists).
-Sep 9–13: keep synoptic UTC 00/06/12/18 slots.
+Sep 9–13: keep synoptic UTC 00/06/12/18 slots, and also any extra
+hours whose OpenFOAM case has already finished.
 """
 
 from __future__ import annotations
@@ -46,10 +47,20 @@ def completed_hourly_datetimes(
 
 
 def build_metric_datetimes() -> pd.DatetimeIndex:
+    """Completed hours on Sep 6–8, then synoptic slots plus finished extras later."""
     slots = completed_hourly_datetimes()
+    seen = set(slots)
     for day in range(HOURLY_DAY_LAST + 1, UTC_DAY_LAST + 1):
         for hour in SYNOPTIC_UTC_HOURS:
-            slots.append(pd.Timestamp(f"2025-09-{day:02d} {hour:02d}:00:00"))
+            ts = pd.Timestamp(f"2025-09-{day:02d} {hour:02d}:00:00")
+            if ts not in seen:
+                slots.append(ts)
+                seen.add(ts)
+        for ts in completed_hourly_datetimes(day_first=day, day_last=day):
+            if ts not in seen:
+                slots.append(ts)
+                seen.add(ts)
+    slots.sort()
     return pd.DatetimeIndex(slots)
 
 
