@@ -13,6 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -27,6 +28,11 @@ CASE_RE = re.compile(r"^(\d{8})_(\d{4})_two_boundaries_as_outlet$")
 COMPLETION_MARKER = "5000"
 LATER_MERGED_CSV = REPO_ROOT / "data/260707/processed/merged_lidar_simulation_final.csv"
 X_RIGHT = (2025, 9, 9, 23)
+# Typhoon-affected window in UTC+8 (inclusive start, inclusive end on the hour axis).
+TYPHOON_START_LST = "2025-09-07 11:00:00"
+TYPHOON_END_LST = "2025-09-09 03:00:00"
+TYPHOON_SHADE = "#c5cad6"
+TYPHOON_SHADE_ALPHA = 0.38
 
 
 def configure_matplotlib_style() -> None:
@@ -213,6 +219,10 @@ def main() -> int:
         tzinfo = timezone.utc
         x_label = "Time (UTC)"
 
+    lst_tz = timezone(timedelta(hours=8))
+    typhoon_x0 = pd.Timestamp(TYPHOON_START_LST, tz=lst_tz).tz_convert(tzinfo)
+    typhoon_x1 = pd.Timestamp(TYPHOON_END_LST, tz=lst_tz).tz_convert(tzinfo)
+
     fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(17, 10.5), sharex=True, sharey="row")
     fig.subplots_adjust(top=0.91, bottom=0.08, left=0.06, right=0.98, hspace=0.28, wspace=0.12)
 
@@ -225,6 +235,14 @@ def main() -> int:
         for j, h_req in enumerate(height_reqs):
             ax = axes[i, j]
             panel_label = f"({chr(ord('a') + i * len(height_reqs) + j)})"
+            ax.axvspan(
+                typhoon_x0,
+                typhoon_x1,
+                facecolor=TYPHOON_SHADE,
+                alpha=TYPHOON_SHADE_ALPHA,
+                edgecolor="none",
+                zorder=0,
+            )
             try:
                 h_used = _pick_nearest_height(df_site, h_req)
             except ValueError:
@@ -253,6 +271,7 @@ def main() -> int:
                 linewidth=1.2,
                 color="black",
                 alpha=0.85,
+                zorder=3,
             )
             ax.plot(
                 df_plot.index,
@@ -261,6 +280,7 @@ def main() -> int:
                 linewidth=2.0,
                 color=COLOR_WRF,
                 alpha=0.95,
+                zorder=3,
             )
             ax.plot(
                 df_plot.index,
@@ -269,6 +289,7 @@ def main() -> int:
                 linewidth=2.0,
                 color=COLOR_CFD,
                 alpha=0.95,
+                zorder=3,
             )
 
             # Calculate and annotate metrics
@@ -329,13 +350,19 @@ def main() -> int:
     legend_handles = [
         Line2D([0], [0], color="black", marker="o", markersize=7, lw=1.5, label="LiDAR Obs"),
         Line2D([0], [0], color=COLOR_WRF, lw=2.5, linestyle="--", label="WRF"),
-        Line2D([0], [0], color=COLOR_CFD, lw=2.5, linestyle="-", label="WRF-OpenFOAM")
+        Line2D([0], [0], color=COLOR_CFD, lw=2.5, linestyle="-", label="WRF-OpenFOAM"),
+        Patch(
+            facecolor=TYPHOON_SHADE,
+            alpha=TYPHOON_SHADE_ALPHA,
+            edgecolor="none",
+            label="Typhoon-affected",
+        ),
     ]
     fig.legend(
-        handles=legend_handles, 
-        loc="upper center", 
-        bbox_to_anchor=(0.5, 0.98), 
-        ncols=3, 
+        handles=legend_handles,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 0.98),
+        ncols=4, 
         frameon=False,
         handlelength=2.5,
         fontsize=17
