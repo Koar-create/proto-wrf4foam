@@ -20,8 +20,10 @@ A footprint is solid at a slice only when the shapefile height jzgd reaches
 that slice; air above a lower roof stays in the fluid set. vtkValidPointMask
 is applied as well, so unsampled resample points are not treated as calm air.
 
-Weather labels follow the manuscript cut: 1-6 September regular (6 September
-is 3-hourly and stays in the regular aggregate), 7-9 September typhoon.
+Weather labels follow analysis/tapah-direct-influence/typhoon_affected_period.md:
+typhoon is 2025-09-07 03:00 through 2025-09-08 19:00 UTC, inclusive
+(Beijing 11:00 on 7 September through 03:00 on 9 September). Other hours
+in the 1-9 September set are regular.
 Snapshot hours are serially correlated. Regime ranges describe that realized
 time variation. They are not an iid sampling distribution.
 """
@@ -78,7 +80,9 @@ SENSITIVITY = (
 )
 
 BJT = timezone(timedelta(hours=8))
-TYPHOON_START = pd.Timestamp("2025-09-07 00:00:00", tz="UTC")
+# Inclusive window from typhoon_affected_period.md (41 hours).
+TYPHOON_START = pd.Timestamp("2025-09-07 03:00:00", tz="UTC")
+TYPHOON_END = pd.Timestamp("2025-09-08 19:00:00", tz="UTC")
 
 OUT_DIR = os.path.join(_REPO, "results", "wrf_openfoam", "local_wind_ratio")
 MASK_NPZ = os.path.join(OUT_DIR, "building_fluid_mask.npz")
@@ -123,10 +127,14 @@ def kernel_size(smooth_m: float) -> int:
 
 
 def regime_of(ts: pd.Timestamp) -> str:
-    """Manuscript cut: through 6 September regular, from 7 September typhoon."""
+    """Tapah-affected window, inclusive: 07 Sep 03:00 through 08 Sep 19:00 UTC."""
     if ts.tzinfo is None:
         ts = ts.tz_localize("UTC")
-    return "typhoon" if ts >= TYPHOON_START else "regular"
+    else:
+        ts = ts.tz_convert("UTC")
+    if TYPHOON_START <= ts <= TYPHOON_END:
+        return "typhoon"
+    return "regular"
 
 
 def iter_target_cases(root: str) -> list[str]:
@@ -138,7 +146,7 @@ def iter_target_cases(root: str) -> list[str]:
         "20250904": list(range(24)),
         "20250905": list(range(24)),
         "20250906": [0, 3, 6, 9, 12, 15, 18, 21],
-        "20250907": [h for h in range(24) if h not in (13, 14, 16, 17)],
+        "20250907": list(range(24)),
         "20250908": list(range(24)),
         "20250909": [0, 3, 6, 9, 12, 15, 18, 21],
     }
@@ -541,6 +549,7 @@ def _lag1(series: pd.Series, times: pd.Series) -> float:
 def write_summaries(snapshot_csv: str, sens_csv: str) -> None:
     snap = pd.read_csv(snapshot_csv)
     snap["time_utc"] = pd.to_datetime(snap["time_utc"], utc=True)
+    snap["regime"] = snap["time_utc"].map(regime_of)
     rows = []
     for (regime, height), g in snap.groupby(["regime", "height_m"], sort=True):
         g = g.sort_values("time_utc")
@@ -576,6 +585,8 @@ def write_summaries(snapshot_csv: str, sens_csv: str) -> None:
     print(f"Wrote {REGIME_CSV} ({len(regime_df)} rows)")
 
     sens = pd.read_csv(sens_csv)
+    sens["time_utc"] = pd.to_datetime(sens["time_utc"], utc=True)
+    sens["regime"] = sens["time_utc"].map(regime_of)
     sens_rows = []
     for (setting, regime, height), g in sens.groupby(
         ["setting", "regime", "height_m"], sort=True
@@ -678,22 +689,131 @@ def write_case_list(root: str) -> None:
     print(f"Wrote {CASE_LIST} ({len(pending)} cases still need slices)")
 
 
+_HELP = argparse.RawDescriptionHelpFormatter
+
+_EPILOG = """\
+cases:
+  steady_experiments_finer_ABL/202509DD_HH00_two_boundaries_as_outlet
+  1-5, 7, and 8 September: every hour; 6 and 9 September: 3-hourly.
+  A case is used only when its 5000/ directory exists.
+  Heights are fixed at 30, 60, and 120 m.
+
+outputs (results/wrf_openfoam/local_wind_ratio/):
+  building_fluid_mask.npz    solid cells at each slice height
+  case_list.txt              foam paths that still lack a slice CSV
+  snapshot_stats.csv         one row per finished case and height
+  zones.csv                  baseline acceleration and deceleration patches
+  sensitivity_snapshots.csv  one-at-a-time departures from the baseline
+  regime_summary.csv         regular, and typhoon 07 Sep 03:00-08 Sep 19:00 UTC
+  sensitivity_summary.csv    the same settings aggregated by regime
+
+baseline zone rule:
+  smooth 25 m, R' threshold 1.2, minimum area about 25 cells.
+  Deceleration patches use R' < 0.8 with the same smooth and area.
+  Sensitivity also tries smooth 15 m, thresholds 1.1 and 1.3,
+  and minimum areas 250 m2 and 2500 m2.
+
+resume:
+  run skips a (case, height) already present in snapshot_stats.csv.
+  A slice CSV smaller than 80 MB is treated as still being written.
+
+examples:
+  python analysis/260923/local_wind_ratio.py build-mask
+  python analysis/260923/local_wind_ratio.py list-cases
+  python analysis/260923/local_wind_ratio.py run --limit 2
+  python analysis/260923/local_wind_ratio.py summarize
+  python analysis/260923/local_wind_ratio.py all
+"""
+
+_DEFAULT_SHP = os.path.join(
+    "data", "Guangzhou_shp_file", "project_UTM49", "Export_Output.shp",
+)
+
+
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description=__doc__)
-    sub = p.add_subparsers(dest="cmd", required=True)
+    p = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=_HELP,
+        epilog=_EPILOG,
+    )
+    sub = p.add_subparsers(dest="cmd", required=True, metavar="command")
 
-    b = sub.add_parser("build-mask", help="Rasterize height-aware building footprints")
-    b.add_argument("--shp", default=None)
+    b = sub.add_parser(
+        "build-mask",
+        help="rasterize height-aware building footprints",
+        description=(
+            "Rasterize the UTM49 building shapefile onto the 1000 x 1000 "
+            "ResampleToImage grid. A cell is solid at 30, 60, or 120 m only "
+            "when the shapefile height jzgd reaches that slice. Writes "
+            f"{MASK_NPZ}."
+        ),
+        formatter_class=_HELP,
+    )
+    b.add_argument(
+        "--shp",
+        default=None,
+        metavar="PATH",
+        help=f"building shapefile with a jzgd field (default: {_DEFAULT_SHP})",
+    )
 
-    sub.add_parser("list-cases", help="Write foam paths that still lack 30/60/120 m CSV")
+    sub.add_parser(
+        "list-cases",
+        help="list foam cases that still lack a 30/60/120 m CSV",
+        description=(
+            "Scan the 1-9 September production cases and write foam paths "
+            f"that are still missing one or more of 30m.csv, 60m.csv, and "
+            f"120m.csv under postProcessing/. Output: {CASE_LIST}."
+        ),
+        formatter_class=_HELP,
+    )
 
-    r = sub.add_parser("run", help="Compute R, R', zones, and sensitivity rows")
-    r.add_argument("--limit", type=int, default=None, help="Only the first N target cases")
+    r = sub.add_parser(
+        "run",
+        help="compute R, R', zones, and sensitivity rows",
+        description=(
+            "For each finished slice CSV, interpolate the matching 1 km WRF "
+            "wind onto the CFD grid, form R and R' on interior fluid cells, "
+            "and label acceleration and deceleration patches. Rows are "
+            "appended to snapshot_stats.csv, zones.csv, and "
+            "sensitivity_snapshots.csv. Requires building_fluid_mask.npz."
+        ),
+        formatter_class=_HELP,
+    )
+    r.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        metavar="N",
+        help="process only the first N target cases (default: the full 1-9 September set)",
+    )
 
-    sub.add_parser("summarize", help="Regime and sensitivity tables from the snapshot CSVs")
+    sub.add_parser(
+        "summarize",
+        help="aggregate snapshot CSVs into regime and sensitivity tables",
+        description=(
+            "Read snapshot_stats.csv and sensitivity_snapshots.csv and write "
+            f"{REGIME_CSV} and {SENS_CSV}. Ranges are the realized spread of "
+            "a serially correlated sequence, not an iid sampling distribution."
+        ),
+        formatter_class=_HELP,
+    )
 
-    a = sub.add_parser("all", help="build-mask, run, summarize")
-    a.add_argument("--limit", type=int, default=None)
+    a = sub.add_parser(
+        "all",
+        help="build the mask if missing, then run and summarize",
+        description=(
+            "Build building_fluid_mask.npz when it is absent, run the case "
+            "loop, then summarize when snapshot_stats.csv exists."
+        ),
+        formatter_class=_HELP,
+    )
+    a.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        metavar="N",
+        help="process only the first N target cases (default: the full 1-9 September set)",
+    )
     return p
 
 
