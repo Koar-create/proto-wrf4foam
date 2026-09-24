@@ -5,8 +5,13 @@ R = V_CFD / V_WRF is a custom ratio. The denominator is the 1 km WRF wind speed
 at the same horizontal location, not a no-building CFD rerun, so this is not
 Blocken's amplification factor.
 
-R' = V_CFD / mean(V_CFD on fluid cells at the same height) is the within-domain
-reference. It does not inherit a WRF bias.
+R' = V_CFD / mean(V_CFD on interior fluid cells at the same height) is the
+within-domain reference. It does not inherit a WRF bias.
+
+Zone detection and percentiles use the interior only: |x| and |y| <= 2000 m
+(a 500 m band inside each lateral boundary is dropped). A fast zone is a
+contiguous patch of smoothed R' above the threshold. R is summarized inside
+those patches and is not used to draw them.
 
 Horizontal slices are the ParaView ResampleToImage product:
 1000 x 1000 points on [-2500, 2500] m (about 5 m). Building footprints from
@@ -53,6 +58,9 @@ CELL_AREA = DX * DX
 # Guard against a near-zero WRF denominator. 0.2 m/s keeps calm hours in the
 # sample; those hours are still reported with n_ratio so the floor is visible.
 WRF_SPEED_FLOOR = 0.2
+# Drop a 500 m band inside each lateral boundary. Zone detection and
+# percentiles use only the remaining interior (|x| and |y| <= 2000 m).
+MARGIN_M = 500.0
 BASE_SMOOTH_M = 25.0
 BASE_THRESHOLD = 1.2
 BASE_MIN_AREA_M2 = 25.0 * CELL_AREA  # ~25 cells, about 25 m x 25 m
@@ -89,6 +97,14 @@ AUTOCORR_NOTE = (
 
 def grid_axis() -> np.ndarray:
     return np.linspace(XY_MIN, XY_MAX, GRID_N)
+
+
+def interior_mask() -> np.ndarray:
+    """True inside the analysis square, 500 m clear of each lateral boundary."""
+    axis = grid_axis()
+    yy, xx = np.meshgrid(axis, axis, indexing="ij")
+    limit = XY_MAX - MARGIN_M
+    return (np.abs(xx) <= limit) & (np.abs(yy) <= limit)
 
 
 def xy_to_ij(x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -247,6 +263,7 @@ def label_zones(
     threshold: float,
     min_area_m2: float,
     above: bool,
+    companion: np.ndarray | None = None,
 ) -> tuple[np.ndarray, list[dict]]:
     if above:
         candidate = np.isfinite(field) & (field > threshold)
@@ -265,16 +282,23 @@ def label_zones(
             continue
         kept[sel] = True
         vals = field[sel]
-        zones.append(
-            {
-                "n_cells": n_cells,
-                "area_m2": n_cells * CELL_AREA,
-                "peak": float(np.nanmax(vals) if above else np.nanmin(vals)),
-                "mean": float(np.nanmean(vals)),
-                "centroid_x_m": float(xx[sel].mean()),
-                "centroid_y_m": float(yy[sel].mean()),
-            }
-        )
+        zone = {
+            "n_cells": n_cells,
+            "area_m2": n_cells * CELL_AREA,
+            "peak": float(np.nanmax(vals) if above else np.nanmin(vals)),
+            "mean": float(np.nanmean(vals)),
+            "centroid_x_m": float(xx[sel].mean()),
+            "centroid_y_m": float(yy[sel].mean()),
+            "mean_companion": float("nan"),
+            "peak_companion": float("nan"),
+        }
+        if companion is not None:
+            cvals = companion[sel]
+            cvals = cvals[np.isfinite(cvals)]
+            if cvals.size:
+                zone["mean_companion"] = float(np.mean(cvals))
+                zone["peak_companion"] = float(np.max(cvals) if above else np.min(cvals))
+        zones.append(zone)
     return kept, zones
 
 
@@ -318,20 +342,39 @@ def _percentile(vals: np.ndarray, q: float) -> float:
 
 
 def zone_summary(zones: list[dict]) -> dict[str, float]:
+    empty = {
+        "n_zones": 0,
+        "area_m2": 0.0,
+        "peak_of_peaks": float("nan"),
+        "median_zone_peak": float("nan"),
+        "mean_zone_mean": float("nan"),
+        "area_weighted_mean": float("nan"),
+        "mean_zone_mean_companion": float("nan"),
+        "area_weighted_mean_companion": float("nan"),
+        "peak_of_peaks_companion": float("nan"),
+    }
     if not zones:
-        return {
-            "n_zones": 0,
-            "peak_of_peaks": float("nan"),
-            "median_zone_peak": float("nan"),
-            "mean_zone_mean": float("nan"),
-        }
+        return empty
     peaks = np.array([z["peak"] for z in zones], dtype=float)
     means = np.array([z["mean"] for z in zones], dtype=float)
+    areas = np.array([z["area_m2"] for z in zones], dtype=float)
+    comp = np.array([z["mean_companion"] for z in zones], dtype=float)
+    comp_peak = np.array([z["peak_companion"] for z in zones], dtype=float)
+    area_sum = float(areas.sum())
+    finite_comp = np.isfinite(comp) & (areas > 0)
     return {
         "n_zones": len(zones),
-        "peak_of_peaks": float(np.max(peaks)),
-        "median_zone_peak": float(np.median(peaks)),
-        "mean_zone_mean": float(np.mean(means)),
+        "area_m2": area_sum,
+        "peak_of_peaks": float(np.nanmax(peaks)),
+        "median_zone_peak": float(np.nanmedian(peaks)),
+        "mean_zone_mean": float(np.nanmean(means)),
+        "area_weighted_mean": float(np.sum(means * areas) / area_sum) if area_sum else float("nan"),
+        "mean_zone_mean_companion": float(np.nanmean(comp)) if finite_comp.any() else float("nan"),
+        "area_weighted_mean_companion": (
+            float(np.sum(comp[finite_comp] * areas[finite_comp]) / areas[finite_comp].sum())
+            if finite_comp.any() else float("nan")
+        ),
+        "peak_of_peaks_companion": float(np.nanmax(comp_peak)) if np.isfinite(comp_peak).any() else float("nan"),
     }
 
 
@@ -342,7 +385,7 @@ def analyze_case(
 ) -> tuple[dict, list[dict], list[dict]]:
     csv_path = os.path.join(cfd_dir, "postProcessing", f"{height}m.csv")
     grid = load_cfd_grid(csv_path)
-    fluid = grid["sampled"] & ~inside_building
+    fluid = grid["sampled"] & ~inside_building & interior_mask()
     v_cfd = grid["wind_speed"]
     v_wrf = wrf_speed_on_grid(cfd_dir, height)
 
@@ -399,13 +442,11 @@ def analyze_case(
     for spec in SENSITIVITY:
         sm_r = smooth_fluid(ratio, usable, spec["smooth_m"])
         sm_p = smooth_fluid(ratio_p, usable, spec["smooth_m"])
-        acc_r, zones_r = label_zones(sm_r, spec["threshold"], spec["min_area_m2"], above=True)
-        acc_p, zones_p = label_zones(sm_p, spec["threshold"], spec["min_area_m2"], above=True)
-        dec_r, zones_d = label_zones(sm_r, DECEL_THRESHOLD, spec["min_area_m2"], above=False)
-        inter = int(np.logical_and(acc_r, acc_p).sum())
-        union = int(np.logical_or(acc_r, acc_p).sum())
-        jaccard = float(inter / union) if union else float("nan")
-        sr = zone_summary(zones_r)
+        # Zones are detected on the interior Λ' field. Λ is reported inside them.
+        acc_p, zones_p = label_zones(
+            sm_p, spec["threshold"], spec["min_area_m2"], above=True, companion=sm_r,
+        )
+        _, zones_d = label_zones(sm_p, DECEL_THRESHOLD, spec["min_area_m2"], above=False)
         sp = zone_summary(zones_p)
         sd = zone_summary(zones_d)
         sens_rows.append(
@@ -419,16 +460,18 @@ def analyze_case(
                 "min_area_m2": spec["min_area_m2"],
                 "p98_R": snap["p98_R"],
                 "p98_Rp": snap["p98_Rp"],
-                "n_accel_R": sr["n_zones"],
-                "mean_zone_mean_R": sr["mean_zone_mean"],
-                "median_zone_peak_R": sr["median_zone_peak"],
-                "peak_of_peaks_R": sr["peak_of_peaks"],
+                "n_accel_R": sp["n_zones"],
+                "mean_zone_mean_R": sp["mean_zone_mean_companion"],
+                "median_zone_peak_R": float("nan"),
+                "peak_of_peaks_R": sp["peak_of_peaks_companion"],
+                "area_weighted_mean_R": sp["area_weighted_mean_companion"],
+                "zone_area_m2": sp["area_m2"],
                 "n_accel_Rp": sp["n_zones"],
                 "mean_zone_mean_Rp": sp["mean_zone_mean"],
                 "peak_of_peaks_Rp": sp["peak_of_peaks"],
                 "n_decel_R": sd["n_zones"],
                 "mean_zone_mean_decel_R": sd["mean_zone_mean"],
-                "jaccard_accel_R_Rp": jaccard,
+                "jaccard_accel_R_Rp": float("nan"),
             }
         )
         if spec["setting"] != "baseline":
@@ -438,20 +481,24 @@ def analyze_case(
                 "smooth_m": spec["smooth_m"],
                 "threshold": spec["threshold"],
                 "min_area_m2": spec["min_area_m2"],
-                "n_accel_zones": sr["n_zones"],
-                "accel_mean_of_zone_means": sr["mean_zone_mean"],
-                "accel_median_zone_peak": sr["median_zone_peak"],
-                "accel_peak_of_peaks": sr["peak_of_peaks"],
+                "n_interior": int(usable.sum()),
+                "n_accel_zones": sp["n_zones"],
+                "accel_zone_area_m2": sp["area_m2"],
+                "accel_mean_of_zone_means": sp["mean_zone_mean_companion"],
+                "accel_area_weighted_mean": sp["area_weighted_mean_companion"],
+                "accel_median_zone_peak": float("nan"),
+                "accel_peak_of_peaks": sp["peak_of_peaks_companion"],
                 "n_accel_zones_Rp": sp["n_zones"],
                 "accel_mean_of_zone_means_Rp": sp["mean_zone_mean"],
+                "accel_area_weighted_mean_Rp": sp["area_weighted_mean"],
                 "accel_peak_of_peaks_Rp": sp["peak_of_peaks"],
-                "jaccard_accel_R_Rp": jaccard,
+                "jaccard_accel_R_Rp": float("nan"),
                 "n_decel_zones": sd["n_zones"],
                 "decel_mean_of_zone_means": sd["mean_zone_mean"],
                 "decel_peak_of_peaks": sd["peak_of_peaks"],
             }
         )
-        for kind, zones in (("accel_R", zones_r), ("accel_Rp", zones_p), ("decel_R", zones_d)):
+        for kind, zones in (("accel_Rp", zones_p), ("decel_Rp", zones_d)):
             for zi, z in enumerate(zones, start=1):
                 lon, lat = xy_to_lonlat(z["centroid_x_m"], z["centroid_y_m"])
                 zone_rows.append(
@@ -463,6 +510,8 @@ def analyze_case(
                         "zone_id": zi,
                         "peak": z["peak"],
                         "mean": z["mean"],
+                        "peak_R": z["peak_companion"],
+                        "mean_R": z["mean_companion"],
                         "area_m2": z["area_m2"],
                         "n_cells": z["n_cells"],
                         "centroid_x_m": z["centroid_x_m"],
