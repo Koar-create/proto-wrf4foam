@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import sys
 import warnings
 
 import matplotlib.pyplot as plt
@@ -41,6 +42,8 @@ import visualize_WRF_CFD_xy_two_panel as base
 DEFAULT_HEIGHTS = (30, 60, 120)
 # Not a horizon/vertical layout choice — dedicated multi-height product dir
 MULTI_HEIGHT_DIR = "multi_height"
+# Analysis module holding the local wind ratio / acceleration-zone definition
+ANALYSIS_SUBDIR = os.path.join("analysis", "260923")
 
 
 def default_output_path(cfd_dir: str, heights: tuple[int, ...]) -> str:
@@ -126,6 +129,8 @@ def compose_three_height_figure(
     case_label: str,
     output_path: str,
     shp_path: str | None = None,
+    zone_masks: dict[int, np.ndarray] | None = None,
+    zone_axis: np.ndarray | None = None,
 ) -> None:
     """3x2 grid: rows = heights, cols = WRF | CFD; one shared colorbar on the right."""
     base._apply_global_style()
@@ -227,6 +232,7 @@ def compose_three_height_figure(
             ax_cfd, cfd_by_h[height], vmax=shared_vmax, label="",
             quiver_key_speed=key_u, show_quiver_key=False,
             add_panel_label=False, xy_lim=xy_lim,
+            zone_mask=(zone_masks or {}).get(height), zone_axis=zone_axis,
         )
         if mappable is None:
             mappable = hb
@@ -266,6 +272,47 @@ def compose_three_height_figure(
     plt.close(fig)
 
 
+def acceleration_zone_masks(
+    cfd_dir: str, heights: tuple[int, ...],
+) -> tuple[dict[int, np.ndarray], np.ndarray]:
+    """
+    Recompute the localized acceleration zones exactly as defined in Section 2.6:
+    local wind ratio above 1.2 after 25 m smoothing, minimum area 625 m².
+
+    The analysis module is reused rather than reimplemented, so the zones drawn
+    on the figure cannot drift away from the statistics reported in the text.
+    Returns the per-height zone masks and the common grid axis in metres.
+    """
+    ana_dir = os.path.join(base._repo_root(), ANALYSIS_SUBDIR)
+    if ana_dir not in sys.path:
+        sys.path.insert(0, ana_dir)
+    import local_wind_ratio as lwr
+
+    inside_building = lwr.load_masks(lwr.MASK_NPZ)
+    masks: dict[int, np.ndarray] = {}
+    for h in heights:
+        grid = lwr.load_cfd_grid(base.resolve_cfd_csv(cfd_dir, h))
+        fluid = grid["sampled"] & ~inside_building[h]
+        v_cfd = grid["wind_speed"]
+        v_wrf = lwr.wrf_speed_on_grid(cfd_dir, h)
+        usable = (
+            fluid
+            & np.isfinite(v_cfd)
+            & np.isfinite(v_wrf)
+            & (v_wrf >= lwr.WRF_SPEED_FLOOR)
+        )
+        ratio = np.full(v_cfd.shape, np.nan, dtype=np.float64)
+        ratio[usable] = v_cfd[usable] / v_wrf[usable]
+        smoothed = lwr.smooth_fluid(ratio, usable, lwr.BASE_SMOOTH_M)
+        kept, zones = lwr.label_zones(
+            smoothed, lwr.BASE_THRESHOLD, lwr.BASE_MIN_AREA_M2, above=True,
+        )
+        masks[h] = kept
+        area_km2 = sum(z["area_m2"] for z in zones) / 1e6
+        print(f"      {h:g} m : {len(zones)} zones, {area_km2:.1f} km²")
+    return masks, lwr.grid_axis()
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         description="WRF-CFD X-Y wind field 3x2 multi-height comparison (shared colorbar)",
@@ -295,6 +342,9 @@ def build_parser() -> argparse.ArgumentParser:
                    help="WRF crop half-width in deg (default: from CFD XY domain)")
     p.add_argument("--no-wrf", action="store_true",
                    help="Skip WRF panels even if the file is available")
+    p.add_argument("--zones", action="store_true",
+                   help="Overlay the localized acceleration zones of Section 2.6 "
+                        "on the WRF-to-OpenFOAM panels")
     return p
 
 
@@ -331,10 +381,12 @@ def main() -> None:
         cfd_csv = base.resolve_cfd_csv(cfd_dir, h)
         print(f"  {h:g} m -> {cfd_csv}")
         cfd_by_h[h] = base.load_cfd_csv(cfd_csv)
+        valid = cfd_by_h[h].get('valid')
+        ws_valid = cfd_by_h[h]['wind_speed'][valid] if valid is not None else cfd_by_h[h]['wind_speed']
         print(
             f"      {len(cfd_by_h[h]['x']):,} points  |  "
-            f"WS [{cfd_by_h[h]['wind_speed'].min():.2f}, "
-            f"{cfd_by_h[h]['wind_speed'].max():.2f}] m/s",
+            f"fluid {len(ws_valid):,}  |  "
+            f"WS [{ws_valid.min():.2f}, {ws_valid.max():.2f}] m/s",
         )
 
     # WRF crop centred on CFD XY footprint (same as two_panel)
@@ -366,11 +418,20 @@ def main() -> None:
                 )
 
     print("\nRendering figure ...")
+
+    zone_masks = None
+    zone_axis = None
+    if args.zones:
+        print("\n[3] Recomputing localized acceleration zones (Section 2.6) ...")
+        zone_masks, zone_axis = acceleration_zone_masks(cfd_dir, heights)
+
     compose_three_height_figure(
         wrf_by_h, cfd_by_h, heights,
         case_label=basename,
         output_path=output_path,
         shp_path=shp_path,
+        zone_masks=zone_masks,
+        zone_axis=zone_axis,
     )
 
 

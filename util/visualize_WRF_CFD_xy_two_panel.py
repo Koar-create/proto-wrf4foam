@@ -389,13 +389,19 @@ def load_cfd_csv(csv_path: str):
         req = ['Coords:0', 'Coords:1', 'U:0', 'U:1']
         if any(c not in chunk.columns for c in req):
             raise KeyError(f"Missing columns in {csv_path}. Expected: {req}")
-        chunks.append(chunk[req].astype(float))
+        keep = req + (['vtkValidPointMask'] if 'vtkValidPointMask' in chunk.columns else [])
+        chunks.append(chunk[keep].astype(float))
 
     df = pd.concat(chunks, ignore_index=True)
     u0 = df['U:0'].values
     u1 = df['U:1'].values
-    return dict(x=df['Coords:0'].values, y=df['Coords:1'].values,
-                u0=u0, u1=u1, wind_speed=np.sqrt(u0**2 + u1**2))
+    out = dict(x=df['Coords:0'].values, y=df['Coords:1'].values,
+               u0=u0, u1=u1, wind_speed=np.sqrt(u0**2 + u1**2))
+    if 'vtkValidPointMask' in df.columns:
+        # Resampled points inside a building solid carry no fluid solution and
+        # are written as zeros; flag them so they are never plotted as calm air.
+        out['valid'] = df['vtkValidPointMask'].values == 1
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -630,34 +636,44 @@ def draw_cfd_panel(ax, data: dict, vmax=None,
                    show_vectors=True, quiver_key_speed=None,
                    xy_lim=None,
                    show_quiver_key=True, quiver_key_xy=(0.82, 1.035),
-                   add_panel_label=True):
+                   add_panel_label=True, zone_mask=None, zone_axis=None,
+                   zone_color='#ff2d95'):
     x = data['x']
     y = data['y']
     u0 = data['u0']
     u1 = data['u1']
     ws = data['wind_speed']
+    # Points inside building solids (vtkValidPointMask = 0) hold the zero fill
+    # of the resampler, not a flow solution. Keeping them out of the field, the
+    # colour scale and the vectors leaves them blank, matching the white
+    # building footprints drawn on the WRF panels.
+    valid = data.get('valid')
+    if valid is None:
+        valid = np.ones(ws.shape, dtype=bool)
 
     if vmax is None:
-        vmax = np.nanpercentile(ws, 98)
+        vmax = np.nanpercentile(ws[valid], 98)
     key_u = quiver_key_speed if quiver_key_speed is not None else _quiver_key_speed(vmax)
 
-    hb = ax.hexbin(x, y, C=ws,
-                   gridsize=HEXBIN_GRID, cmap='viridis',
+    if xy_lim is not None:
+        x0, x1, y0, y1 = xy_lim
+    else:
+        x0, x1, y0, y1 = cfd_xy_square_limits(data)
+    extent = (x0, x1, y0, y1)
+
+    hb = ax.hexbin(x[valid], y[valid], C=ws[valid],
+                   gridsize=HEXBIN_GRID, extent=extent, cmap='viridis',
                    reduce_C_function=np.mean,
                    vmin=0, vmax=vmax,
-                   alpha=0.85, edgecolors='none', rasterized=True)
+                   alpha=0.85, edgecolors='none', rasterized=True, zorder=2)
 
-    if show_vectors:
-        if xy_lim is not None:
-            x0, x1, y0, y1 = xy_lim
-        else:
-            x0, x1 = float(np.nanmin(x)), float(np.nanmax(x))
-            y0, y1 = float(np.nanmin(y)), float(np.nanmax(y))
+    if show_vectors and np.count_nonzero(valid) > 3:
+        xv, yv = x[valid], y[valid]
         x_g, y_g = np.mgrid[x0:x1:complex(0, QUIVER_GRID_CFD),
                             y0:y1:complex(0, QUIVER_GRID_CFD)]
-        sub = max(1, len(x) // 100_000)
-        gu0 = griddata((x[::sub], y[::sub]), u0[::sub], (x_g, y_g), method='linear')
-        gu1 = griddata((x[::sub], y[::sub]), u1[::sub], (x_g, y_g), method='linear')
+        sub = max(1, len(xv) // 100_000)
+        gu0 = griddata((xv[::sub], yv[::sub]), u0[valid][::sub], (x_g, y_g), method='linear')
+        gu1 = griddata((xv[::sub], yv[::sub]), u1[valid][::sub], (x_g, y_g), method='linear')
         mask = np.isfinite(gu0) & np.isfinite(gu1)
 
         qv = ax.quiver(x_g.ravel()[mask.ravel()], y_g.ravel()[mask.ravel()],
@@ -675,10 +691,11 @@ def draw_cfd_panel(ax, data: dict, vmax=None,
                          fontproperties={'family': 'serif', 'size': 14, 'weight': 'bold'},
                          labelsep=0.04)
 
-    if xy_lim is not None:
-        x0, x1, y0, y1 = xy_lim
-    else:
-        x0, x1, y0, y1 = cfd_xy_square_limits(data)
+    if zone_mask is not None and zone_axis is not None:
+        ax.contour(zone_axis, zone_axis, zone_mask.astype(float),
+                   levels=[0.5], colors=[zone_color],
+                   linewidths=1.3, zorder=6)
+
     ax.set_xlim(x0, x1)
     ax.set_ylim(y0, y1)
     ax.margins(0)
