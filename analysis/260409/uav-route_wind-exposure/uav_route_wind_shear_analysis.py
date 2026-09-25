@@ -5,7 +5,6 @@ UAV 低空航线风场与垂直风切变对比：WRF vs WRF-to-OpenFOAM (CFD)
 
 沿两条典型航线（沿江开阔 / 穿楼复杂）提取 120 m（可扩展 30/60 m）水平风速
 与三维矢量垂直风切变 |∂V/∂Z|，并结合 constant/triSurface/buildings.stl 判定航线障碍物，输出出版级对比图。
-航线总览底图使用 Export_Output.shp 建筑轮廓（按 jzgd 高度着色）。
 
 默认快照：2025-09-03 12:00:00 UTC
 垂直风切变：Δz=40 m，中心差分
@@ -15,7 +14,7 @@ UAV 低空航线风场与垂直风切变对比：WRF vs WRF-to-OpenFOAM (CFD)
   python analysis/260409/uav_route_wind_shear_analysis.py
   python analysis/260409/uav_route_wind_shear_analysis.py --datetime "2025-09-03 12:00:00"
   python analysis/260409/uav_route_wind_shear_analysis.py --height 30
-  python analysis/260409/uav_route_wind_shear_analysis.py --height 60 --skip-overview
+  python analysis/260409/uav_route_wind_shear_analysis.py --height 60
 
 高度相关输出（fig1/fig2、沿轨 CSV）文件名带 _z{H} 后缀，避免不同高度互相覆盖。
 """
@@ -29,13 +28,10 @@ import sys
 import time
 from pathlib import Path
 
-import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
-from matplotlib.collections import PatchCollection
-from matplotlib.patches import Polygon as MplPolygon
 from scipy.interpolate import RegularGridInterpolator
 from scipy.spatial import cKDTree
 
@@ -48,10 +44,6 @@ DEFAULT_HEIGHT = 120.0
 DEFAULT_SAMPLE_STEP = 20.0
 DEFAULT_SHEAR_DZ = 40.0
 DEFAULT_STL = Path(__file__).resolve().parents[3] / "constant" / "triSurface" / "buildings.stl"
-DEFAULT_SHP = REPO_ROOT / "data" / "Guangzhou_shp_file" / "project_UTM49" / "Export_Output.shp"
-# Same origin as scripts/shp_to_lod1_stl.py → OpenFOAM / STL local XY
-DEFAULT_ORIGIN_LON = 113.3218197
-DEFAULT_ORIGIN_LAT = 23.1133057
 DEFAULT_CELL_CENTRES = (
     REPO_ROOT
     / "steady_experiments_finer_ABL"
@@ -892,249 +884,6 @@ def plot_figure2_shear(
     print(f"[Plot] Saved {out_path}", flush=True)
 
 
-def origin_utm49n(lon: float, lat: float) -> tuple[float, float]:
-    """WGS84 lon/lat (deg) → UTM Zone 49N easting/northing (m)."""
-    from pyproj import Transformer
-
-    transformer = Transformer.from_crs("EPSG:4326", "EPSG:32649", always_xy=True)
-    ox, oy = transformer.transform(lon, lat)
-    return float(ox), float(oy)
-
-
-def _rings_from_shape(shp) -> list[np.ndarray]:
-    """Extract exterior rings from a pyshp polygon (skip hole rings).
-
-    ESRI shapefiles in this dataset use clockwise exteriors; holes (if any)
-    are subsequent parts. Nearly all buildings here are single-ring polygons.
-    """
-    pts = np.asarray(shp.points, dtype=float)
-    if pts.size == 0:
-        return []
-    parts = list(shp.parts) + [len(pts)]
-    rings: list[np.ndarray] = []
-    # First ring = exterior; later rings = holes (omit for filled basemap)
-    for i in range(len(parts) - 1):
-        if i > 0:
-            break
-        ring = pts[parts[i] : parts[i + 1]]
-        if ring.shape[0] >= 2 and np.allclose(ring[0], ring[-1]):
-            ring = ring[:-1]
-        if ring.shape[0] < 3:
-            continue
-        x, y = ring[:, 0], ring[:, 1]
-        area = abs(0.5 * float(np.sum(x * np.roll(y, -1) - y * np.roll(x, -1))))
-        if area < 5.0:  # m² — drop slivers
-            continue
-        rings.append(ring)
-    return rings
-
-
-def load_building_footprints_local(
-    shp_path: Path,
-    origin_xy: tuple[float, float],
-    clip_xy: float,
-    height_field: str = "jzgd",
-    encoding: str = "gbk",
-) -> tuple[list[np.ndarray], np.ndarray]:
-    """Load building rings in OpenFOAM/STL local XY, clipped to ±clip_xy.
-
-    Returns
-    -------
-    rings : list of (N, 2) arrays in local metres
-    heights : (len(rings),) building height (m), one value per ring
-    """
-    import shapefile
-
-    ox, oy = origin_xy
-    reader = shapefile.Reader(str(shp_path), encoding=encoding)
-    field_names = [f[0] for f in reader.fields[1:]]
-    if height_field not in field_names:
-        raise ValueError(f"Height field '{height_field}' not in {field_names}")
-    hi = field_names.index(height_field)
-
-    rings: list[np.ndarray] = []
-    heights: list[float] = []
-    pad = 50.0  # keep buildings that only slightly poke into the view
-
-    for shp, rec in zip(reader.shapes(), reader.records()):
-        if shp.shapeType not in (5, 15, 25):  # POLYGON / Z / M
-            continue
-        try:
-            h = float(rec[hi])
-        except (TypeError, ValueError):
-            h = float("nan")
-        if not np.isfinite(h):
-            continue
-        for ring_utm in _rings_from_shape(shp):
-            ring = np.column_stack([ring_utm[:, 0] - ox, ring_utm[:, 1] - oy])
-            if (
-                ring[:, 0].max() < -clip_xy - pad
-                or ring[:, 0].min() > clip_xy + pad
-                or ring[:, 1].max() < -clip_xy - pad
-                or ring[:, 1].min() > clip_xy + pad
-            ):
-                continue
-            rings.append(ring)
-            heights.append(h)
-
-    print(
-        f"[SHP] {len(rings)} footprint rings within ±{clip_xy:.0f} m "
-        f"from {shp_path.name}",
-        flush=True,
-    )
-    return rings, np.asarray(heights, dtype=float)
-
-
-def plot_route_overview(
-    route_dfs: dict[str, pd.DataFrame],
-    shp_path: Path,
-    out_path: Path,
-    clip_xy: float = 1800.0,
-    origin_lon: float = DEFAULT_ORIGIN_LON,
-    origin_lat: float = DEFAULT_ORIGIN_LAT,
-) -> None:
-    """Top-down map of routes on SHP building footprints (height-coloured)."""
-    configure_matplotlib_style()
-    # Lock one face for every text artist (avoids bold/regular fallback mismatch)
-    font_family = "Times New Roman"
-    ox, oy = origin_utm49n(origin_lon, origin_lat)
-    rings, heights = load_building_footprints_local(Path(shp_path), (ox, oy), clip_xy)
-
-    fig, ax = plt.subplots(figsize=(8.8, 7.6))
-    fig.patch.set_facecolor("white")
-    # Cool open-space ground so warm building fills read clearly
-    ax.set_facecolor("#e6ebf0")
-
-    cbar = None
-    if len(rings) == 0:
-        print("[SHP] WARNING: no footprints in view; drawing routes only", flush=True)
-    else:
-        # Clip colour scale at P96 so a few towers do not wash out the city
-        vmax = float(np.nanpercentile(heights, 96))
-        vmin = 0.0
-        if not np.isfinite(vmax) or vmax <= vmin:
-            vmax = max(float(np.nanmax(heights)), vmin + 1.0)
-        norm = mcolors.Normalize(vmin=vmin, vmax=vmax, clip=True)
-        # Truncate Oranges so the lightest fill is still darker than the ground
-        cmap = mcolors.LinearSegmentedColormap.from_list(
-            "urban_ht",
-            ["#f0d5a8", "#e09a3e", "#c45c26", "#7a2e12"],
-            N=256,
-        )
-        patches = [MplPolygon(r, closed=True) for r in rings]
-        coll = PatchCollection(
-            patches,
-            cmap=cmap,
-            norm=norm,
-            array=heights,
-            edgecolors="#3d342c",
-            linewidths=0.18,
-            alpha=0.95,
-            zorder=1,
-        )
-        ax.add_collection(coll)
-        cbar = fig.colorbar(coll, ax=ax, fraction=0.046, pad=0.02)
-        cbar.set_label("Building height (m)", fontsize=20, fontfamily=font_family)
-        cbar.ax.tick_params(labelsize=16)
-        for tick in cbar.ax.get_yticklabels():
-            tick.set_fontfamily(font_family)
-
-    route_colors = {"Route1_open_river": "#0D47A1", "Route2_urban_canyon": "#B71C1C"}
-    # Text offsets: Route 1 (E–W) label above; Route 2 (N–S) label to the right
-    endpoint_ann = {
-        "Route1_open_river": {
-            "start": {"xytext": (0, 22), "ha": "center", "va": "bottom"},
-            "end": {"xytext": (0, 22), "ha": "center", "va": "bottom"},
-        },
-        "Route2_urban_canyon": {
-            "start": {"xytext": (22, 0), "ha": "left", "va": "center"},
-            "end": {"xytext": (22, 0), "ha": "left", "va": "center"},
-        },
-    }
-    for rname, df in route_dfs.items():
-        color = route_colors.get(rname, "k")
-        ax.plot(
-            df["x"],
-            df["y"],
-            color=color,
-            lw=2.6,
-            solid_capstyle="round",
-            label=ROUTE_SPECS[rname]["label"],
-            zorder=3,
-        )
-        x0, y0 = float(df["x"].iloc[0]), float(df["y"].iloc[0])
-        x1, y1 = float(df["x"].iloc[-1]), float(df["y"].iloc[-1])
-        for x, y in ((x0, y0), (x1, y1)):
-            ax.scatter(
-                x,
-                y,
-                c="k",
-                s=40,
-                zorder=4,
-                edgecolors="white",
-                linewidths=0.7,
-            )
-        ann = endpoint_ann.get(
-            rname,
-            {
-                "start": {"xytext": (0, 22), "ha": "center", "va": "bottom"},
-                "end": {"xytext": (0, 22), "ha": "center", "va": "bottom"},
-            },
-        )
-        for label, (x, y), key in (
-            ("Start", (x0, y0), "start"),
-            ("End", (x1, y1), "end"),
-        ):
-            sty = ann[key]
-            ax.annotate(
-                label,
-                xy=(x, y),
-                xytext=sty["xytext"],
-                textcoords="offset points",
-                color=color,
-                fontsize=16,
-                fontfamily=font_family,
-                fontweight="bold",
-                ha=sty["ha"],
-                va=sty["va"],
-                zorder=5,
-            )
-
-    ax.set_xlim(-clip_xy, clip_xy)
-    ax.set_ylim(-clip_xy, clip_xy)
-    ax.set_aspect("equal")
-    ax.set_xlabel("x (m)", fontsize=20, fontfamily=font_family)
-    ax.set_ylabel("y (m)", fontsize=20, fontfamily=font_family)
-    ax.tick_params(axis="both", labelsize=18)
-    for tick in ax.get_xticklabels() + ax.get_yticklabels():
-        tick.set_fontfamily(font_family)
-    ax.set_title(
-        "UAV route overview with building footprints",
-        fontsize=18,
-        fontfamily=font_family,
-        fontweight="bold",
-    )
-    ax.grid(True, color="0.45", alpha=0.22, linestyle=":", linewidth=0.7)
-    ax.legend(
-        loc="upper left",
-        fontsize=16,
-        framealpha=0.92,
-        prop={"family": font_family, "size": 16},
-    )
-    fig.tight_layout()
-    # Re-assert family after layout (tick labels can be rebuilt)
-    for tick in ax.get_xticklabels() + ax.get_yticklabels():
-        tick.set_fontfamily(font_family)
-    if cbar is not None:
-        cbar.ax.yaxis.label.set_fontfamily(font_family)
-        for tick in cbar.ax.get_yticklabels():
-            tick.set_fontfamily(font_family)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, facecolor=fig.get_facecolor())
-    plt.close(fig)
-    print(f"[Plot] Saved {out_path}", flush=True)
-
-
 # ---------------------------------------------------------------------------
 # CLI / main
 # ---------------------------------------------------------------------------
@@ -1148,14 +897,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--cfd-case-dir", type=Path, default=None, help="Explicit OpenFOAM case directory")
     p.add_argument("--cell-centres", type=Path, default=DEFAULT_CELL_CENTRES, help="Fallback cellCentres / 0/C")
     p.add_argument("--stl-path", type=Path, default=DEFAULT_STL, help="Buildings binary STL (obstruction)")
-    p.add_argument(
-        "--shp-path",
-        type=Path,
-        default=DEFAULT_SHP,
-        help="Building footprints SHP for route overview basemap",
-    )
     p.add_argument("--out-dir", type=Path, default=None, help="Output directory under results/")
-    p.add_argument("--skip-overview", action="store_true", help="Skip route overview map")
     return p.parse_args()
 
 
@@ -1272,9 +1014,6 @@ def main() -> int:
         shear_dz,
         datetime_utc=dt,
     )
-    if not args.skip_overview:
-        plot_route_overview(routes, Path(args.shp_path), out_dir / "route_overview_map.png")
-
     print("\nDone.")
     return 0
 
