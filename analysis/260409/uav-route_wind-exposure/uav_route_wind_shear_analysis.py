@@ -38,7 +38,7 @@ from scipy.spatial import cKDTree
 # ---------------------------------------------------------------------------
 # Paths & defaults
 # ---------------------------------------------------------------------------
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_DATETIME = "2025-09-03 12:00:00"
 DEFAULT_HEIGHT = 120.0
 DEFAULT_SAMPLE_STEP = 20.0

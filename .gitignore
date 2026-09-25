@@ -37,6 +37,8 @@ analysis/260528-*/
 *.svg
 *.csv
 *.h5
+*.npz
+*.pkl
 *.ipynb
 *.npy
 *.zip

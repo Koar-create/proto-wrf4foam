@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_IN_DIR = REPO_ROOT / "results/uav_route_wind_shear_multi_z/20250901_1000"
 DEFAULT_OUT = Path(__file__).resolve().parent / "uav_route_stats_20250901_1000.csv"
 
