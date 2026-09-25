@@ -33,7 +33,6 @@ DEFAULT_OUT = (
     REPO_ROOT
     / "results"
     / "uav_route_wind_shear"
-    / "20250903_1200"
     / "route_overview_map_3d_z30.png"
 )
 
@@ -494,7 +493,6 @@ def default_out_path(route_z: float) -> Path:
         REPO_ROOT
         / "results"
         / "uav_route_wind_shear"
-        / "20250903_1200"
         / f"route_overview_map_3d_z{z_tag}.png"
     )
 
