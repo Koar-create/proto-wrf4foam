@@ -32,11 +32,28 @@ FONT_CANDIDATES = (
 )
 
 
+def _dejavu_serif_bold() -> Path | None:
+    """Matplotlib ships DejaVu Serif; use it when the Linux font paths are absent."""
+    try:
+        import matplotlib
+    except ImportError:
+        return None
+    path = Path(matplotlib.get_data_path()) / "fonts" / "ttf" / "DejaVuSerif-Bold.ttf"
+    return path if path.is_file() else None
+
+
 def _font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    for path in FONT_CANDIDATES:
+    candidates = list(FONT_CANDIDATES)
+    bundled = _dejavu_serif_bold()
+    if bundled is not None:
+        candidates.append(bundled)
+    for path in candidates:
         if path.is_file():
             return ImageFont.truetype(str(path), size=size)
-    return ImageFont.load_default()
+    raise FileNotFoundError(
+        "DejaVu Serif Bold was not found. On Linux install fonts-dejavu-core; "
+        "locally it is shipped with matplotlib as DejaVuSerif-Bold.ttf."
+    )
 
 
 def _match_height(image: Image.Image, height: int) -> Image.Image:
