@@ -43,7 +43,7 @@ DEFAULT_DATETIME = "2025-09-03 12:00:00"
 DEFAULT_HEIGHT = 120.0
 DEFAULT_SAMPLE_STEP = 20.0
 DEFAULT_SHEAR_DZ_LIST = (20.0, 40.0, 80.0)
-DEFAULT_STL = REPO_ROOT / "data" / "Guangzhou_shp_file" / "project_UTM49" / "buildings_lod1.stl"
+DEFAULT_STL = Path(__file__).resolve().parents[3] / "constant" / "triSurface" / "buildings.stl"
 DEFAULT_SHP = REPO_ROOT / "data" / "Guangzhou_shp_file" / "project_UTM49" / "Export_Output.shp"
 # Same origin as scripts/shp_to_lod1_stl.py → OpenFOAM / STL local XY
 DEFAULT_ORIGIN_LON = 113.3218197
@@ -1053,7 +1053,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def default_out_dir(dt: pd.Timestamp) -> Path:
-    tag = f"260409_{dt.strftime('%m%d-%H%M')}UTC"
+    tag = dt.strftime("%Y%m%d_%H%M")
     return REPO_ROOT / "results" / "uav_route_wind_shear" / tag
 
 

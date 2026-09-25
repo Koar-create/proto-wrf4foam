@@ -11,8 +11,7 @@ Camera / framing deliberately matches the reference VTK-style view:
   - opaque light-gray buildings, dark background, white cube axes
 
 Requires the paraview-env VTK build, e.g.:
-  /hpc2hdd/home/zyang248/miniconda3/envs/paraview-env/bin/python \\
-      analysis/260409/plot_uav_route_map_3d.py
+  conda run -n paraview-env python analysis/260409/plot_uav_route_map_3d.py
 
 Only one altitude is drawn per run (default z = 30 m). Use ``--z 120`` for 120 m.
 """
@@ -25,20 +24,16 @@ from pathlib import Path
 
 import numpy as np
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_STL = (
-    REPO_ROOT
-    / "data"
-    / "Guangzhou_shp_file"
-    / "project_UTM49"
-    / "buildings_lod1_with_correct_canton_tower.stl"
-)
+REPO_ROOT = Path(__file__).resolve().parents[3]
+_STL_DIR = REPO_ROOT / "constant" / "triSurface"
+STL_WITH_CANTON = _STL_DIR / "buildings.stl"
+STL_BEFORE_CANTON = _STL_DIR / "buildings_before_canton_lod2.stl"
 DEFAULT_UAV_STL = REPO_ROOT / "gazebo_wind_plugin" / "models" / "iris_wind_quad" / "meshes" / "iris.stl"
 DEFAULT_OUT = (
     REPO_ROOT
     / "results"
     / "uav_route_wind_shear"
-    / "260409_0903-1200UTC"
+    / "20250903_1200"
     / "route_overview_map_3d_z30.png"
 )
 
@@ -85,7 +80,7 @@ def _require_vtk():
     except ImportError as exc:
         raise SystemExit(
             "This script needs VTK (paraview-env).\n"
-            "  /hpc2hdd/home/zyang248/miniconda3/envs/paraview-env/bin/python "
+            "  conda run -n paraview-env python "
             "analysis/260409/plot_uav_route_map_3d.py\n"
             f"Import error: {exc}"
         ) from exc
@@ -451,7 +446,17 @@ def render_scene(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--stl-path", type=Path, default=DEFAULT_STL, help="Buildings binary STL")
+    p.add_argument(
+        "--canton-lod2",
+        action="store_true",
+        help="Use buildings.stl (default: buildings_before_canton_lod2.stl)",
+    )
+    p.add_argument(
+        "--stl-path",
+        type=Path,
+        default=None,
+        help="Buildings binary STL (overrides --canton-lod2)",
+    )
     p.add_argument("--uav-stl", type=Path, default=DEFAULT_UAV_STL, help="UAV / Iris binary STL")
     p.add_argument(
         "--uav-span",
@@ -489,14 +494,23 @@ def default_out_path(route_z: float) -> Path:
         REPO_ROOT
         / "results"
         / "uav_route_wind_shear"
-        / "260409_0903-1200UTC"
+        / "20250903_1200"
         / f"route_overview_map_3d_z{z_tag}.png"
     )
+
+
+def resolve_stl_path(args: argparse.Namespace) -> Path:
+    if args.stl_path is not None:
+        return Path(args.stl_path)
+    if args.canton_lod2:
+        return STL_WITH_CANTON
+    return STL_BEFORE_CANTON
 
 
 def main() -> int:
     args = parse_args()
     route_z = float(args.z)
+    stl_path = resolve_stl_path(args)
     out_path = Path(args.out) if args.out else default_out_path(route_z)
     camera = {
         "position": (args.cam_x, args.cam_y, args.cam_z),
@@ -505,7 +519,7 @@ def main() -> int:
         "view_angle": args.view_angle,
     }
     render_scene(
-        Path(args.stl_path),
+        stl_path,
         out_path,
         route_z=route_z,
         uav_stl=Path(args.uav_stl),
