@@ -130,8 +130,11 @@ def daily_improvement_ylabel(spec: MetricSpec) -> str:
     return labels[spec.key]
 
 
+SUMMARY_CATEGORIES = ["All", "Daytime", "Nighttime", "Typhoon"]
+
+
 def plot_summary_bars(ax: plt.Axes, df: pd.DataFrame, spec: MetricSpec) -> None:
-    categories = ["All", "Daytime", "Nighttime"]
+    categories = [c for c in SUMMARY_CATEGORIES if c in set(df["time_category"].astype(str))]
     layer_offsets = {"Low": -0.18, "Mid": 0.18}
     model_offsets = {"wrf": -0.055, "cfd": 0.055}
     width = 0.10
@@ -245,7 +248,7 @@ def plot_daily_dumbbell_lines(
 
     legend_handles = [
         Line2D([0], [0], color=COLOR_WRF, lw=1.6, label="WRF"),
-        Line2D([0], [0], color=COLOR_CFD, lw=1.6, label="CFD"),
+        Line2D([0], [0], color=COLOR_CFD, lw=1.6, label="WRF-OpenFOAM"),
         Line2D([0], [0], color="0.25", lw=1.6, alpha=0.98, label="Low"),
         Line2D([0], [0], color="0.25", lw=1.6, alpha=0.48, label="Mid"),
         Line2D([0], [0], color="0.25", marker="o", lw=0, label="daytime"),

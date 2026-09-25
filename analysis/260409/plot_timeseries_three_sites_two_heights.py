@@ -27,10 +27,12 @@ CASES_ROOT = REPO_ROOT / "steady_experiments_finer_ABL"
 CASE_RE = re.compile(r"^(\d{8})_(\d{4})_two_boundaries_as_outlet$")
 COMPLETION_MARKER = "5000"
 LATER_MERGED_CSV = REPO_ROOT / "data/260707/processed/merged_lidar_simulation_final.csv"
-X_RIGHT = (2025, 9, 9, 23)
-# Typhoon-affected window in UTC+8 (inclusive start, inclusive end on the hour axis).
+# Right edge sits after the last finished case (2025-09-09 21:00 UTC = 05:00 UTC+8 on 10 Sep).
+X_RIGHT_LST = "2025-09-10 06:00:00"
+# Manuscript §2.1: 03:00 UTC 7 Sep through 19:00 UTC 8 Sep, inclusive.
 TYPHOON_START_LST = "2025-09-07 11:00:00"
 TYPHOON_END_LST = "2025-09-09 03:00:00"
+MAX_CONNECTED_GAP = pd.Timedelta(hours=1.5)
 TYPHOON_SHADE = "#c5cad6"
 TYPHOON_SHADE_ALPHA = 0.38
 
@@ -88,11 +90,29 @@ def _ensure_ws_cfd(df: pd.DataFrame) -> None:
 
 
 def _pad_ymax_for_metrics(ymax: float) -> float:
-    """Bump ymax to the next even integer (e.g. 6.x -> 8) for metric headroom."""
+    """Leave headroom for the regular/typhoon metric lines."""
     nice = float(math.ceil(float(ymax) / 2.0) * 2)
     if nice <= float(ymax) + 1e-6:
         nice += 2.0
-    return nice
+    return nice + 2.0
+
+
+def _plot_broken(ax, series: pd.Series, *, isolated_marker: str | None, **kwargs) -> None:
+    """Draw a line through hourly points, and markers where the cadence is coarser."""
+    s = series.dropna()
+    if s.empty:
+        return
+    gaps = s.index.to_series().diff()
+    seg_id = (gaps > MAX_CONNECTED_GAP).cumsum()
+    base_marker = kwargs.pop("marker", None)
+    base_ms = kwargs.pop("markersize", 3.5)
+    for _, seg in s.groupby(seg_id):
+        marker = base_marker
+        ms = base_ms
+        if len(seg) == 1 and marker is None:
+            marker = isolated_marker
+            ms = 4.0
+        ax.plot(seg.index, seg.to_numpy(), marker=marker, markersize=ms, **kwargs)
 
 
 def finished_utc_timestamps(cases_root: Path) -> set[pd.Timestamp]:
@@ -197,7 +217,7 @@ def main() -> int:
     in_csv = set(df["datetime"].unique())
     kept = in_csv & finished
     df = df[df["datetime"].isin(kept)].copy()
-    x_right_utc = pd.Timestamp(year=X_RIGHT[0], month=X_RIGHT[1], day=X_RIGHT[2], hour=X_RIGHT[3], tz="UTC")
+    x_right_utc = pd.Timestamp(X_RIGHT_LST).tz_localize(timezone(timedelta(hours=8))).tz_convert("UTC")
     missing = sorted(t for t in finished if t <= x_right_utc and t not in in_csv and t >= pd.Timestamp("2025-09-01", tz="UTC"))
     print(
         f"[Info] merged hours drawn: {len(kept)}  |  "
@@ -262,29 +282,32 @@ def main() -> int:
             if tz_mode == "lst":
                 df_plot = df_plot.tz_convert(tzinfo)
 
-            ax.plot(
-                df_plot.index,
+            _plot_broken(
+                ax,
                 df_plot["ws_obs"],
+                isolated_marker="o",
                 linestyle="-",
                 marker="o",
-                markersize=3.5,
+                markersize=3.2,
                 linewidth=1.2,
                 color="black",
                 alpha=0.85,
                 zorder=3,
             )
-            ax.plot(
-                df_plot.index,
+            _plot_broken(
+                ax,
                 df_plot["ws_wrf"],
+                isolated_marker="o",
                 linestyle="--",
                 linewidth=2.0,
                 color=COLOR_WRF,
                 alpha=0.95,
                 zorder=3,
             )
-            ax.plot(
-                df_plot.index,
+            _plot_broken(
+                ax,
                 df_plot["ws_cfd"],
+                isolated_marker="o",
                 linestyle="-",
                 linewidth=2.0,
                 color=COLOR_CFD,
@@ -292,31 +315,44 @@ def main() -> int:
                 zorder=3,
             )
 
-            # Calculate and annotate metrics
+            # Regular-weather and typhoon-affected metrics, same window as the shade.
             if args.show_metrics:
-                valid_wrf = df_plot[["ws_obs", "ws_wrf"]].dropna()
-                if len(valid_wrf) > 1:
-                    r_w = valid_wrf["ws_obs"].corr(valid_wrf["ws_wrf"])
-                    d_w = valid_wrf["ws_wrf"] - valid_wrf["ws_obs"]
-                    mbe_w = d_w.mean()
-                    rmse_w = np.sqrt((d_w ** 2).mean())
-                    wrf_text = f"WRF | R: {r_w:.2f}  MBE: {mbe_w:.2f}  RMSE: {rmse_w:.2f}"
-                else:
-                    wrf_text = "WRF | N/A"
-
-                valid_cfd = df_plot[["ws_obs", "ws_cfd"]].dropna()
-                if len(valid_cfd) > 1:
-                    r_c = valid_cfd["ws_obs"].corr(valid_cfd["ws_cfd"])
-                    d_c = valid_cfd["ws_cfd"] - valid_cfd["ws_obs"]
-                    mbe_c = d_c.mean()
-                    rmse_c = np.sqrt((d_c ** 2).mean())
-                    cfd_text = f"W-OF | R: {r_c:.2f}  MBE: {mbe_c:.2f}  RMSE: {rmse_c:.2f}"
-                else:
-                    cfd_text = "W-OF | N/A"
-
-                bbox_props = dict(boxstyle="round,pad=0.25", facecolor="white", edgecolor="none", alpha=1.0)
-                ax.text(0.015, 0.97, wrf_text, transform=ax.transAxes, color=COLOR_WRF, fontsize=11, fontweight='bold', va='top', ha='left', bbox=bbox_props, zorder=5)
-                ax.text(0.015, 0.86, cfd_text, transform=ax.transAxes, color=COLOR_CFD, fontsize=11, fontweight='bold', va='top', ha='left', bbox=bbox_props, zorder=5)
+                in_typhoon = (df_plot.index >= typhoon_x0) & (df_plot.index <= typhoon_x1)
+                bbox_props = dict(boxstyle="round,pad=0.15", facecolor="white", edgecolor="none", alpha=0.92)
+                lines = []
+                layer_tag = "(Low)" if int(h_req) == 120 else "(Mid)"
+                print(f"[Fig4] {site} {int(h_req)} m {layer_tag}")
+                for tag, mask in (("Reg", ~in_typhoon), ("Typ", in_typhoon)):
+                    part = df_plot.loc[mask]
+                    for model, col in (("WRF", "ws_wrf"), ("W-OF", "ws_cfd")):
+                        pair = part[["ws_obs", col]].dropna()
+                        if len(pair) > 1:
+                            r = pair["ws_obs"].corr(pair[col])
+                            d = pair[col] - pair["ws_obs"]
+                            text = (
+                                f"{tag} {model} | R: {r:.2f}  "
+                                f"MBE: {d.mean():+.2f}  RMSE: {np.sqrt((d ** 2).mean()):.2f}"
+                            )
+                            print(f"       {text}  N={len(pair)}")
+                        else:
+                            text = f"{tag} {model} | N/A"
+                            print(f"       {text}")
+                        lines.append((model, text))
+                for k, (model, text) in enumerate(lines):
+                    color = COLOR_WRF if model == "WRF" else COLOR_CFD
+                    ax.text(
+                        0.012,
+                        0.985 - k * 0.075,
+                        text,
+                        transform=ax.transAxes,
+                        color=color,
+                        fontsize=8.5,
+                        fontweight="bold",
+                        va="top",
+                        ha="left",
+                        bbox=bbox_props,
+                        zorder=5,
+                    )
 
             # Subplot titles and labels (panel id outside axes, in title)
             layer_tag = "(Low)" if int(h_req) == 120 else "(Mid)"
@@ -334,9 +370,9 @@ def main() -> int:
             if i == 2:
                 ax.set_xlabel(x_label)
 
-    # X-limits in the plot timezone. Right edge is 2025-09-09 23:00.
+    # X-limits in the plot timezone. Right edge includes the last 9 Sep case.
     x_left = pd.Timestamp(year=2025, month=9, day=1, hour=0, tz=tzinfo)
-    x_right = pd.Timestamp(year=X_RIGHT[0], month=X_RIGHT[1], day=X_RIGHT[2], hour=X_RIGHT[3], tz=tzinfo)
+    x_right = pd.Timestamp(X_RIGHT_LST).tz_localize(lst_tz).tz_convert(tzinfo)
     axes[0, 0].set_xlim(x_left, x_right)
 
     # Leave headroom at top for metric annotations (sharey='row').
