@@ -27,6 +27,20 @@ ROUTE_TITLES = {
     "Route2_urban_canyon": "Route 2 (urban canyon)",
 }
 COLOR = {"regular": "#4C78A8", "typhoon": "#F58518"}
+NCOLS = 3
+
+
+def _panel_letter(row: int, col: int, ncols: int = NCOLS) -> str:
+    """行优先子图标号：a, b, ...（2×3 → a–f）。"""
+    return chr(ord("a") + row * ncols + col)
+
+
+def _add_panel_label(ax, row: int, col: int, ncols: int = NCOLS) -> None:
+    ax.text(
+        0.04, 0.97, f"({_panel_letter(row, col, ncols)})",
+        transform=ax.transAxes, ha="left", va="top",
+        fontsize=12, fontweight="bold", zorder=10,
+    )
 
 
 def _regime_of_case(case: str) -> str:
@@ -85,6 +99,7 @@ def main() -> int:
                 ax.set_ylabel(r"$\Lambda = V_{CFD}/V_{WRF}$")
             ax.set_zorder(ax_b.get_zorder() + 1)
             ax.patch.set_visible(False)
+            _add_panel_label(ax, r_i, c_i)
     fig.legend(
         handles=[
             plt.Line2D([0], [0], color=COLOR["regular"], lw=1.8, label="Regular, median"),
