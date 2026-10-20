@@ -19,6 +19,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -30,6 +31,45 @@ _DEFAULT_CASES = (
     ("20250908_0000_two_boundaries_as_outlet", "typhoon-affected 09-08 08:00 (UTC+8)"),
 )
 _DEFAULT_OUT_DIR = os.path.join(_REPO, "results", "wrf_openfoam", "local_wind_ratio")
+
+# CFD domain x/y (m), same as manuscript LiDAR virtual probes.
+LIDAR_SITES_XY: dict[str, tuple[float, float]] = {
+    "GAW103": (975.0, -320.0),
+    "GAW104": (450.0, 350.0),
+    "GAW111": (75.0, 30.0),
+}
+# Text offset (m) from each site for side labels.
+LIDAR_LABEL_OFFSET_M: dict[str, tuple[float, float]] = {
+    "GAW103": (70.0, 55.0),
+    "GAW104": (70.0, -70.0),
+    "GAW111": (85.0, 25.0),
+}
+
+
+def annotate_lidar_stations(ax: Axes) -> None:
+    for name, (x, y) in LIDAR_SITES_XY.items():
+        ax.plot(
+            x,
+            y,
+            marker="x",
+            color="k",
+            markersize=8,
+            markeredgewidth=1.5,
+            linestyle="none",
+            zorder=6,
+        )
+        ox, oy = LIDAR_LABEL_OFFSET_M.get(name, (60.0, 0.0))
+        ax.annotate(
+            name,
+            (x, y),
+            xytext=(x + ox, y + oy),
+            textcoords="data",
+            fontsize=9,
+            color="k",
+            ha="left",
+            va="center",
+            zorder=6,
+        )
 
 
 def configure_style() -> None:
@@ -92,6 +132,7 @@ def plot_one(
         cmap="coolwarm", vmin=0.6, vmax=1.8, shading="auto",
     )
     ax.contour(axis, axis, kept.astype(float), levels=[0.5], colors="k", linewidths=0.6)
+    annotate_lidar_stations(ax)
     ax.set_xlim(-2000, 2000)
     ax.set_ylim(-2000, 2000)
     ax.set_aspect("equal")

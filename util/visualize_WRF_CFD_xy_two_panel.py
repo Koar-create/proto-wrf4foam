@@ -347,8 +347,11 @@ def extract_wrf_xy(nc_path: str, target_height: float,
     else:
         i_min, i_max = np.where(rows)[0][[0, -1]]
         j_min, j_max = np.where(cols)[0][[0, -1]]
-        i_max += 1
-        j_max += 1
+        # One extra row/column on each side so pcolormesh reaches the axis frame.
+        i_min = max(i_min - 1, 0)
+        j_min = max(j_min - 1, 0)
+        i_max = min(i_max + 2, lats.shape[0])
+        j_max = min(j_max + 2, lats.shape[1])
 
     z_crop = z[:, i_min:i_max, j_min:j_max]
     u_crop = u[:, i_min:i_max, j_min:j_max]
