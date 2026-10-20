@@ -665,7 +665,7 @@ def draw_wrf_panel(ax, data: dict, cfd_top=CFD_TOP,
 
 
 def draw_cfd_panel(ax, data: dict, vmax=None,
-                   label='(b) WRF-to-OpenFOAM',
+                   label='(b) WRF-OpenFOAM',
                    xz_lim=None, building_polys=None):
     x = data['x']
     z = data['z']
@@ -811,7 +811,7 @@ def compose_figure(wrf_data, cfd_data, case_label: str, output_path: str,
         cax = fig.add_axes([cbar_left, cbar_bottom, cbar_w, cbar_h])
 
     wrf_label = '(a) WRF'
-    cfd_label = '(b) WRF-to-OpenFOAM'
+    cfd_label = '(b) WRF-OpenFOAM'
 
     mappable = None
     if wrf_data is not None:

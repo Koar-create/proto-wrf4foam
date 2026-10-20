@@ -195,7 +195,7 @@ def plot_ws_wd_composite_profile(
         ax_wd.plot(agg_wd['wd_wrf'], agg_wd['mean_h'],
                    color=COLOR_WRF, lw=2.0, ls='--', label='WRF')
         ax_wd.plot(agg_wd['wd_cfd'], agg_wd['mean_h'],
-                   color=COLOR_CFD, lw=2.0, ls='-', label='WRF-to-OpenFOAM')
+                   color=COLOR_CFD, lw=2.0, ls='-', label='WRF-OpenFOAM')
 
     ax_wd.set_ylim(0, zmax)
     ax_wd.set_xlim(0, 360)
@@ -209,7 +209,7 @@ def plot_ws_wd_composite_profile(
     legend_handles = [
         Line2D([0], [0], color='black', lw=2, ls='-', marker='o', ms=5, label='LiDAR (obs)'),
         Line2D([0], [0], color=COLOR_WRF, lw=2, ls='--', label='WRF'),
-        Line2D([0], [0], color=COLOR_CFD, lw=2, ls='-', label='WRF-to-OpenFOAM'),
+        Line2D([0], [0], color=COLOR_CFD, lw=2, ls='-', label='WRF-OpenFOAM'),
     ]
     ax_ws.legend(handles=legend_handles, fontsize=10, loc='upper right', framealpha=0.9)
 

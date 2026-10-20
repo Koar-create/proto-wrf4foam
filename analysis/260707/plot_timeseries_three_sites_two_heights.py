@@ -293,7 +293,7 @@ def main() -> int:
     legend_handles = [
         Line2D([0], [0], color="black", marker="o", markersize=7, lw=1.5, label="LiDAR Obs"),
         Line2D([0], [0], color=COLOR_WRF, lw=2.5, linestyle="--", label="WRF"),
-        Line2D([0], [0], color=COLOR_CFD, lw=2.5, linestyle="-", label="WRF-to-OpenFOAM")
+        Line2D([0], [0], color=COLOR_CFD, lw=2.5, linestyle="-", label="WRF-OpenFOAM")
     ]
     fig.legend(
         handles=legend_handles, 

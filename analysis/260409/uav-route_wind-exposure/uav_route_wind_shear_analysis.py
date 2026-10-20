@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-UAV 低空航线风场与垂直风切变对比：WRF vs WRF-to-OpenFOAM (CFD)
+UAV 低空航线风场与垂直风切变对比：WRF vs WRF-OpenFOAM (CFD)
 
 沿两条典型航线（沿江开阔 / 穿楼复杂）提取 120 m（可扩展 30/60 m）水平风速
 与三维矢量垂直风切变 |∂V/∂Z|，并结合 constant/triSurface/buildings.stl 判定航线障碍物，输出出版级对比图。
@@ -734,7 +734,7 @@ def plot_figure1_wind_speed(
             color="#E45756",
             lw=1.1,
             alpha=0.95,
-            label="WRF-to-OpenFOAM",
+            label="WRF-OpenFOAM",
             zorder=3,
         )
         ax.set_ylabel(r"$U$ (m/s)")
@@ -829,7 +829,7 @@ def plot_figure2_shear(
             color="#E45756",
             lw=1.1,
             alpha=0.95,
-            label="WRF-to-OpenFOAM",
+            label="WRF-OpenFOAM",
             zorder=3,
         )
 

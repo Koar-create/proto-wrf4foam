@@ -43,6 +43,7 @@ analysis/260528-*/
 *.npy
 *.zip
 *.log
+*.out
 *.json
 *.md
 *.txt

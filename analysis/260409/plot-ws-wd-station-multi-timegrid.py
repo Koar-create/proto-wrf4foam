@@ -351,10 +351,10 @@ def plot_multi_time_grid_ws(
                 agg = cell["agg"]
                 l1, = ax.plot(agg["ws_obs"], agg["mean_h"], color=COLOR_OBS, lw=2.5, marker="o", ms=6.0, label="LiDAR")
                 l2, = ax.plot(agg["ws_wrf"], agg["mean_h"], color=COLOR_WRF, lw=2.5, ls="-", label="WRF")
-                l3, = ax.plot(agg["ws_cfd"], agg["mean_h"], color=COLOR_CFD, lw=3.0, ls="-", label="WRF-to-OpenFOAM")
+                l3, = ax.plot(agg["ws_cfd"], agg["mean_h"], color=COLOR_CFD, lw=3.0, ls="-", label="WRF-OpenFOAM")
                 if not legend_handles:
                     legend_handles = [l1, l2, l3]
-                    legend_labels = ["LiDAR", "WRF", "WRF-to-OpenFOAM"]
+                    legend_labels = ["LiDAR", "WRF", "WRF-OpenFOAM"]
 
                 forced = shared_xmax if shared_xmax is not None else (
                     None if show_wd_arrows else cell["nice_xmax"]
@@ -437,11 +437,11 @@ def plot_multi_time_grid_wd_lines(
                 )
                 l3, = ax.plot(
                     agg["wd_cfd"], agg["mean_h"],
-                    color=COLOR_CFD, lw=3.0, ls="-", label="WRF-to-OpenFOAM",
+                    color=COLOR_CFD, lw=3.0, ls="-", label="WRF-OpenFOAM",
                 )
                 if not legend_handles:
                     legend_handles = [l1, l2, l3]
-                    legend_labels = ["LiDAR", "WRF", "WRF-to-OpenFOAM"]
+                    legend_labels = ["LiDAR", "WRF", "WRF-OpenFOAM"]
             else:
                 ax.text(0.5, 0.5, "No Data", ha="center", va="center", fontsize=16, transform=ax.transAxes)
 

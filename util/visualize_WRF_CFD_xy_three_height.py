@@ -205,7 +205,7 @@ def compose_three_height_figure(
         ax_cfd = axes[row, 1]
 
         titles[(row, 0)] = f"({letter_wrf}) WRF at {height:g} m"
-        titles[(row, 1)] = f"({letter_cfd}) WRF-to-\nOpenFOAM at {height:g} m"
+        titles[(row, 1)] = f"({letter_cfd}) WRF-OpenFOAM at {height:g} m"
 
         wrf_data = wrf_by_h.get(height)
         if wrf_data is not None:
@@ -344,7 +344,7 @@ def build_parser() -> argparse.ArgumentParser:
                    help="Skip WRF panels even if the file is available")
     p.add_argument("--zones", action="store_true",
                    help="Overlay the localized acceleration zones of Section 2.6 "
-                        "on the WRF-to-OpenFOAM panels")
+                        "on the WRF-OpenFOAM panels")
     return p
 
 
