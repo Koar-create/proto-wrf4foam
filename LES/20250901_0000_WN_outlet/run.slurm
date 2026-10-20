@@ -7,11 +7,13 @@
 # 自适应 dt，但 writeControl=adjustableRunTime，输出落在整数秒。
 # 100 s 生产：从 latestTime(=5) 续跑。节点仅 cpu3-[11-17,20]。
 # 冒烟在 cpu3-11 约 113 s_wall/s_sim → 95 s 约 3.0 h，给 8 h 余量。
+# 300 s 续跑：Q/涡量、LiDAR 探针 0.2 s、fieldAverage 自 t=100。
+# 200 s 物理 × ~113 s_wall/s_sim ≈ 6.3 h，给 12 h。节点 cpu3-[11-17,20]。
 #SBATCH --account=root
 #SBATCH --partition=a128m512u
 #SBATCH --qos=a128m512u
-#SBATCH --job-name=LES_100s
-#SBATCH --output=LES_100s.%j
+#SBATCH --job-name=LES_300s
+#SBATCH --output=LES_300s.%j
 #SBATCH --nodelist=cpu3-[11-17,20]
 #SBATCH --nodes=1
 #SBATCH --ntasks=128
@@ -19,14 +21,14 @@
 #SBATCH --exclusive
 #SBATCH --hint=nomultithread
 #SBATCH --distribution=block:block
-#SBATCH --time=8:00:00
+#SBATCH --time=12:00:00
 
 source "$HOME/OpenFOAM/OpenFOAM-v2412/etc/bashrc"
 
 case_path="${HOME}/WRF-OpenFOAM-Coupling/LES/20250901_0000_WN_outlet"
 cd "${case_path}" || exit 1
 
-LOG=log.pimpleFoam.100s
+LOG=log.pimpleFoam.300s
 : > "${LOG}"
 
 echo "===== Job started at $(date) =====" >> "${LOG}"

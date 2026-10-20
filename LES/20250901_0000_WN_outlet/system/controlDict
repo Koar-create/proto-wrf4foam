@@ -26,7 +26,7 @@ startTime       0;
 
 stopAt          endTime;
 
-endTime         100;
+endTime         300;
 
 deltaT          0.01;
 
@@ -133,6 +133,45 @@ functions
         fields          (phi);
         writeControl    writeTime;
         log             true;
+    }
+
+    #include "probesLidar"
+
+    Q1
+    {
+        type            Q;
+        libs            (fieldFunctionObjects);
+        writeControl    writeTime;
+    }
+
+    vorticity1
+    {
+        type            vorticity;
+        libs            (fieldFunctionObjects);
+        writeControl    writeTime;
+    }
+
+    fieldAverage1
+    {
+        type            fieldAverage;
+        libs            (fieldFunctionObjects);
+        writeControl    writeTime;
+        timeStart       100;
+        fields
+        (
+            U
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+            p
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+        );
     }
 }
 
