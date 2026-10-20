@@ -12,7 +12,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-CASE = Path("/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling/LES/20250901_0000_WN_outlet")
+CASE = Path(__file__).resolve().parent
 OUT = CASE / "figs_les_100s"
 PROBE = CASE / "postProcessing" / "probesLidar" / "0" / "U"
 os.environ.setdefault("MPLCONFIGDIR", str(CASE / ".mplconfig"))

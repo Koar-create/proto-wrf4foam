@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 
 LES = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(LES / "20250901_0000_WN_outlet_DFSEM"))
+sys.path.insert(0, str(LES / "experiments/20250901_0000_DFSEM"))
 from plot_dfsem_z100 import read_vtp_points_U  # noqa: E402
 
 SLICE_TIMES = list(range(150, 1050, 50))

@@ -16,7 +16,7 @@ from scipy import ndimage, optimize
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from wake_geom import fackrell_lr
 
-REPO = Path("/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling")
+REPO = Path(__file__).resolve().parents[2]
 RAW = REPO / "data" / "261009" / "raw" / "wake_boxes"
 OUT = REPO / "data" / "261009" / "processed" / "wake_metrics.csv"
 

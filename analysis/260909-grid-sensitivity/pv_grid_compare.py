@@ -2,8 +2,7 @@
 
 Run with paraview-env (offscreen):
 
-  /hpc2hdd/home/zyang248/miniconda3/envs/paraview-env/bin/pvbatch \\
-      analysis/260909-grid-sensitivity/pv_grid_compare.py
+  pvbatch analysis/260909-grid-sensitivity/pv_grid_compare.py
 
 Outputs under results/grid_sensitivity/paraview/  (never /tmp).
 """
@@ -17,7 +16,7 @@ from paraview.simple import *  # noqa: F403
 
 paraview.simple._DisableFirstRenderCameraReset()
 
-REPO = Path("/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling")
+REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "results" / "grid_sensitivity" / "paraview"
 ABL = REPO / "steady_experiments_finer_ABL"
 SENS = REPO / "experiments" / "sensitivity_experiments"

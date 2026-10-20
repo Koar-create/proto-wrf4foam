@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-REPO = Path("/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling")
+REPO = Path(__file__).resolve().parents[2]
 MET = REPO / "data" / "261009" / "processed" / "wake_metrics.csv"
 OUT = REPO / "data" / "261009" / "processed" / "bias_summary.csv"
 

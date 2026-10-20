@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-CASE = Path("/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling/LES/20250901_0000_WN_outlet_DFSEM")
+CASE = Path(__file__).resolve().parent
 OUT = CASE / "figs_dfsem_100s"
 os.environ.setdefault("MPLCONFIGDIR", str(CASE / ".mplconfig"))
 

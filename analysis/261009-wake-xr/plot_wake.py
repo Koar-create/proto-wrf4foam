@@ -17,7 +17,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from compute_wake_metrics import ambient_profile, band_mean, interp_amb
 
-REPO = Path("/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling")
+REPO = Path(__file__).resolve().parents[2]
 RAW = REPO / "data" / "261009" / "raw" / "wake_boxes"
 MET = REPO / "data" / "261009" / "processed" / "wake_metrics.csv"
 FIG = REPO / "results" / "wake_xr" / "261009"

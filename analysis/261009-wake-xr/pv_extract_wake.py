@@ -30,7 +30,7 @@ from wake_geom import (  # noqa: E402
 
 paraview.simple._DisableFirstRenderCameraReset()
 
-REPO = Path("/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling")
+REPO = Path(__file__).resolve().parents[2]
 ABL = REPO / "steady_experiments_finer_ABL"
 DATA = REPO / "data" / "261009"
 PROC = DATA / "processed"

@@ -25,8 +25,8 @@ from matplotlib.collections import PolyCollection
 from matplotlib.colors import ListedColormap, Normalize, TwoSlopeNorm
 from scipy.interpolate import griddata
 
-REPO = Path("/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling")
-CASE = REPO / "LES" / "20250901_0000_WN_outlet"
+CASE = Path(__file__).resolve().parent
+REPO = CASE.parents[2]
 SURF = CASE / "postProcessing" / "surfacesU"
 STL = CASE / "constant" / "triSurface" / "buildings.stl"
 OUT = REPO / "results" / "les" / "z100_northbank_1km"

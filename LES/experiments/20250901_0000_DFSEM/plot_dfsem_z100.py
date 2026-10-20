@@ -14,12 +14,15 @@ import numpy as np
 from matplotlib.colors import Normalize
 from scipy.interpolate import griddata
 
-CASE = Path("/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling/LES/20250901_0000_WN_outlet_DFSEM")
-MEAN = Path("/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling/LES/20250901_0000_WN_outlet")
-RANS_CSV = Path(
-    "/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling/"
-    "steady_experiments_finer_ABL/20250901_0000_two_boundaries_as_outlet/"
-    "postProcessing/100m.csv"
+CASE = Path(__file__).resolve().parent
+REPO = CASE.parents[2]
+MEAN = CASE.parent / "20250901_0000"
+RANS_CSV = (
+    REPO
+    / "steady_experiments_finer_ABL"
+    / "20250901_0000_two_boundaries_as_outlet"
+    / "postProcessing"
+    / "100m.csv"
 )
 OUTDIR = CASE / "figs_dfsem_100s"
 HOTSPOT = (1585.56, -1397.21)

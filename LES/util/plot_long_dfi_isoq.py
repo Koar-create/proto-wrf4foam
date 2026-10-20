@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 LES = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(LES / "20250901_0000_WN_outlet_DFSEM"))
+sys.path.insert(0, str(LES / "experiments/20250901_0000_DFSEM"))
 from plot_dfsem_z100 import LIDAR, read_vtp_points_U  # noqa: E402
 
 CASE = LES / "experiments/20250901_1000_long_DFI"

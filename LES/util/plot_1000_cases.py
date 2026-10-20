@@ -20,15 +20,15 @@ from matplotlib.colors import Normalize
 from scipy.interpolate import griddata
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "20250901_0000_WN_outlet_DFSEM"))
+sys.path.insert(0, str(ROOT / "experiments/20250901_0000_DFSEM"))
 from plot_dfsem_z100 import LIDAR, read_vtp_points_U  # noqa: E402
 from analyze_probes_les import STATIONS, read_probes_U  # noqa: E402
 
 REPO = ROOT.parent
 RANS_DIR = REPO / "steady_experiments_finer_ABL/20250901_1000_two_boundaries_as_outlet/postProcessing"
 CASES = {
-    "mean": ROOT / "20250901_1000_WN_outlet",
-    "dfsem": ROOT / "20250901_1000_WN_outlet_DFSEM",
+    "mean": ROOT / "experiments/20250901_1000",
+    "dfsem": ROOT / "experiments/20250901_1000_DFSEM",
 }
 LABEL = {"mean": "mean-inlet LES", "dfsem": "DFSEM LES"}
 AVG_START = {"mean": 5, "dfsem": 0}

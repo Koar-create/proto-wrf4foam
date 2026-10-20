@@ -31,7 +31,7 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import ConvexHull, cKDTree
 
-REPO = Path("/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling")
+REPO = Path(__file__).resolve().parents[2]
 DEFAULT_STL = (
     REPO
     / "steady_experiments_finer_ABL"

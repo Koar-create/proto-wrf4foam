@@ -11,8 +11,8 @@ import numpy as np
 
 from plot_dfsem_z100 import LIDAR, read_vtp_points_U
 
-CASE = Path("/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling/LES/20250901_0000_WN_outlet_DFSEM")
-MEAN = Path("/hpc2hdd/home/zyang248/WRF-OpenFOAM-Coupling/LES/20250901_0000_WN_outlet")
+CASE = Path(__file__).resolve().parent
+MEAN = CASE.parent / "20250901_0000"
 OUTDIR = CASE / "figs_dfsem_100s"
 os.environ.setdefault("MPLCONFIGDIR", str(CASE / ".mplconfig"))
 
