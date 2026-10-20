@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +26,17 @@ METRICS = [
     "shear_wrf_mean",
     "shear_wrf_p95",
 ]
+
+
+def _fmt_half_up(val, nd: int) -> str:
+    """Format with half-up rounding.
+
+    Python's ``f"{x:.2f}"`` rounds the binary double, so a value stored as
+    0.045 prints as "0.04". The reported statistics are decimal fractions, so
+    round them half-up from their decimal representation instead.
+    """
+    q = Decimal(1).scaleb(-nd)
+    return str(Decimal(repr(float(val))).quantize(q, rounding=ROUND_HALF_UP))
 
 
 def _median_range(series: pd.Series) -> dict[str, float]:
@@ -66,7 +78,7 @@ def main() -> int:
         rows.append(row)
     summary = pd.DataFrame(rows)
     summary_path = OUT / "regime_summary.csv"
-    summary.to_csv(summary_path, index=False)
+    summary.to_csv(summary_path, index=False, lineterminator="\n")
 
     # Table 5: medians only, wide on regime, same quantities as the plan.
     show = [
@@ -109,7 +121,7 @@ def main() -> int:
         flat_rows.append(rec)
     table5 = pd.DataFrame(flat_rows)
     table5_path = OUT / "table5_route_exposure.csv"
-    table5.to_csv(table5_path, index=False)
+    table5.to_csv(table5_path, index=False, lineterminator="\n")
 
     lines = ["# Table 5. Along-route exposure, median across hours.", ""]
     lines.append(
@@ -145,7 +157,7 @@ def main() -> int:
                 val = r.get(f"{key}_{regime}", np.nan)
                 if pd.isna(val):
                     return ""
-                return f"{val:.{nd}f}"
+                return _fmt_half_up(val, nd)
 
             lines.append(
                 "| "
@@ -171,7 +183,9 @@ def main() -> int:
                 )
                 + " |"
             )
-    (OUT / "table5_route_exposure.md").write_text("\n".join(lines) + "\n")
+    (OUT / "table5_route_exposure.md").write_text(
+        "\n".join(lines) + "\n", encoding="utf-8", newline="\n"
+    )
 
     def med(route, height, regime, col):
         sub = summary[
@@ -220,7 +234,9 @@ def main() -> int:
         "Same quantities at 60 m and 120 m are in table5_route_exposure.csv. "
         "Λ>1 is a downscaling increment relative to WRF, not a flight-risk class.",
     ]
-    (OUT / "h1_verdict.md").write_text("\n".join(verdict) + "\n")
+    (OUT / "h1_verdict.md").write_text(
+        "\n".join(verdict) + "\n", encoding="utf-8", newline="\n"
+    )
     print(f"[CSV] {summary_path}", flush=True)
     print(f"[CSV] {table5_path}", flush=True)
     print("\n".join(verdict), flush=True)
