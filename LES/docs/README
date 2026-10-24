@@ -1,0 +1,34 @@
+# LES workspace
+
+Primary UTC hours: **2025-09-01 10:00** and **2025-09-08 00:00** (manuscript alignment).
+
+## Layout
+
+| Path | Role |
+|------|------|
+| `experiments/` | OpenFOAM LES case bank (many variants per hour) |
+| `scripts/` | `run_case.slurm`, `make_isolated_case.sh`, `spin_seg.slurm`, `slurm_logs/` |
+| `util/` | Probe/plot helpers for individual cases |
+| `analysis/2000s/` | 2000 s LiDAR–LES analysis pipeline (`run_p0.py` … `run_p3.py`) |
+| `docs/` | Methods, verification, agent briefings |
+| `results/les/2000s/` (repo root) | Figures from `analysis/2000s` |
+
+Case-local figures (`figs*`, `figs_long`) stay under each experiment directory.
+
+## Generic LES job
+
+```bash
+export CASE_DIR=$PWD/LES/experiments/20250901_1000_long_DFI
+sbatch --export=ALL,CASE_DIR,END_TIME=2000 LES/scripts/run_case.slurm
+```
+
+## 2000 s analysis
+
+```bash
+cd LES/analysis/2000s
+python run_p0.py
+python tests/test_p0.py
+python run_p1.py
+```
+
+Figures regenerate to `results/les/2000s/`.
