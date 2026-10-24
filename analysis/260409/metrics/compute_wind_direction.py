@@ -6,17 +6,21 @@ from pathlib import Path
 
 warnings.filterwarnings('ignore')
 
-# ─── 路径配置 ────────────────────────────────────────
-REPO_ROOT = Path(__file__).resolve().parents[3]
-ANALYSIS_DIR = Path(__file__).resolve().parent
-DATA_PATH = REPO_ROOT / "data/260409/processed/merged_lidar_simulation_final.csv"
+import sys
 
-OUT_CSV_CIRCULAR = ANALYSIS_DIR / "wind_direction_metrics_circular.csv"
-OUT_CSV_VECTOR = ANALYSIS_DIR / "wind_direction_metrics_vector.csv"
-OUT_CSV_VEER = ANALYSIS_DIR / "wind_direction_metrics_veer.csv"
+_ANALYSIS = Path(__file__).resolve().parents[2]
+if str(_ANALYSIS) not in sys.path:
+    sys.path.insert(0, str(_ANALYSIS))
 
-HEIGHT_BINS = [0, 300, 1000, 2100]
+import batch
+from metrics.layers import HEIGHT_BINS
+
 LAYER_NAMES_EN = ["Low (52-300 m)", "Mid (300-1000 m)", "High (1000-2000 m)"]
+
+DATA_PATH = batch.DATA_PATH
+OUT_CSV_CIRCULAR = batch.WD_CIRCULAR_CSV
+OUT_CSV_VECTOR = batch.WD_VECTOR_CSV
+OUT_CSV_VEER = batch.WD_VEER_CSV
 
 def load_and_preprocess(path: str | Path) -> pd.DataFrame:
     df = pd.read_csv(str(path), parse_dates=['datetime'])
@@ -207,6 +211,7 @@ def path3_veer_stats(df: pd.DataFrame) -> pd.DataFrame:
 
 def main():
     print("Loading data...")
+    batch.TABLES_DIR.mkdir(parents=True, exist_ok=True)
     df = load_and_preprocess(DATA_PATH)
     
     print("\n--- Path 1: Circular Wind Direction Stats ---")
@@ -224,7 +229,7 @@ def main():
     print(df_veer.to_string(index=False, float_format="%.3f"))
     df_veer.to_csv(OUT_CSV_VEER, index=False)
     
-    print(f"\nOutputs saved to {ANALYSIS_DIR}")
+    print(f"\nOutputs saved to {batch.TABLES_DIR}")
 
 if __name__ == "__main__":
     pd.set_option('display.max_columns', None)

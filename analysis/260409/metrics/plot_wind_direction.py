@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -8,19 +9,17 @@ import numpy as np
 import pandas as pd
 from matplotlib.patches import Patch
 
-import campaign_config as cfg
+_ANALYSIS = Path(__file__).resolve().parents[2]
+if str(_ANALYSIS) not in sys.path:
+    sys.path.insert(0, str(_ANALYSIS))
 
-# ─── Configuration ────────────────────────────────────────
-COLOR_WRF = "#e07b39"
-COLOR_CFD = "#2196a5"
+import batch
+from metrics.style import COLOR_CFD, COLOR_WRF
 
-REPO_ROOT = cfg.REPO_ROOT
-ANALYSIS_DIR = cfg.ANALYSIS_DIR
-CIRCULAR_CSV = ANALYSIS_DIR / "wind_direction_metrics_circular.csv"
-VECTOR_CSV = ANALYSIS_DIR / "wind_direction_metrics_vector.csv"
-VEER_CSV = ANALYSIS_DIR / "wind_direction_metrics_veer.csv"
-
-OUTPUT_DIR = REPO_ROOT / "results/wind_direction_metrics" / cfg.RESULTS_TAG
+CIRCULAR_CSV = batch.WD_CIRCULAR_CSV
+VECTOR_CSV = batch.WD_VECTOR_CSV
+VEER_CSV = batch.WD_VEER_CSV
+OUTPUT_DIR = batch.FIGURES_DIR
 
 
 def configure_matplotlib_style() -> None:
@@ -277,22 +276,16 @@ def main() -> None:
 
     # 1. Plot layered metrics (Circular & Vector)
     fig_layered = build_layered_metrics_figure(df_circ, df_vec)
-    layered_path_png = args.out_dir / "wind_direction_metrics_layered_panel.png"
-    layered_path_pdf = args.out_dir / "wind_direction_metrics_layered_panel.pdf"
+    layered_path_png = args.out_dir / "wd_layered.png"
     fig_layered.savefig(layered_path_png)
-    fig_layered.savefig(layered_path_pdf)
     print(f"Saved {layered_path_png}")
-    print(f"Saved {layered_path_pdf}")
     plt.close(fig_layered)
 
     # 2. Plot veer metrics
     fig_veer = build_veer_metrics_figure(df_veer)
-    veer_path_png = args.out_dir / "wind_direction_metrics_veer_panel.png"
-    veer_path_pdf = args.out_dir / "wind_direction_metrics_veer_panel.pdf"
+    veer_path_png = args.out_dir / "wd_veer.png"
     fig_veer.savefig(veer_path_png)
-    fig_veer.savefig(veer_path_pdf)
     print(f"Saved {veer_path_png}")
-    print(f"Saved {veer_path_pdf}")
     plt.close(fig_veer)
 
 
