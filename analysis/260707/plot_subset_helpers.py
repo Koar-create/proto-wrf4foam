@@ -1,3 +1,5 @@
+"""Shared colours and daily/summary helpers for 260707 subset metric plots."""
+
 from __future__ import annotations
 
 import argparse
@@ -10,11 +12,11 @@ import pandas as pd
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
-import campaign_config as cfg
+import batch as cfg
 
 REPO_ROOT = cfg.REPO_ROOT
 DATA_PATH = cfg.ANALYSIS_DIR / "metric_sample_variants_no_high_wide.csv"
-OUTPUT_DIR = REPO_ROOT / "results/metric_sample_variants" / cfg.RESULTS_TAG
+OUTPUT_DIR = cfg.FIGURES_DIR
 
 
 COLOR_WRF = "#e07b39"
@@ -387,7 +389,7 @@ def build_figure(df: pd.DataFrame, spec: MetricSpec, line_mode: str = "delta") -
     fig, axes = plt.subplots(1, 2, figsize=(11.2, 4.6), constrained_layout=False)
     fig.subplots_adjust(left=0.08, right=0.985, top=0.78, bottom=0.14, wspace=0.22)
     fig.suptitle(
-        f"{spec.title}, {cfg.CAMPAIGN_TITLE}",
+        f"{spec.title}, {cfg.BATCH_TITLE}",
         y=0.98,
         fontsize=13,
         fontweight="bold",
@@ -464,7 +466,7 @@ def main() -> None:
         for line_mode in line_modes:
             fig = build_figure(df, spec, line_mode=line_mode)
             for ext in args.formats:
-                out_path = args.out_dir / f"metric_sample_variants_no_high_{spec.filename}_{line_mode}_daily_summary.{ext}"
+                out_path = args.out_dir / f"ws_subset_{spec.filename}_{line_mode}_daily.{ext}"
                 fig.savefig(out_path)
                 print(f"Wrote {out_path}")
             plt.close(fig)

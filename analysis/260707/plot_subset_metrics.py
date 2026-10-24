@@ -1,3 +1,5 @@
+"""Plot subset wind-speed metrics (summary bars and daily lines) for the 260707 batch."""
+
 from __future__ import annotations
 
 import argparse
@@ -7,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
-from visualize_metric_sample_variants_four_metrics import (
+from plot_subset_helpers import (
     COLOR_CFD,
     COLOR_LOW,
     COLOR_LOW_NIGHT,
@@ -25,7 +27,7 @@ from visualize_metric_sample_variants_four_metrics import (
     summary_rows,
 )
 
-import campaign_config as cfg
+import batch as cfg
 
 
 PANEL_LABELS = ["(a)", "(b)", "(c)", "(d)"]
@@ -89,7 +91,7 @@ def build_bar_panel_figure(df) -> plt.Figure:
     fig, axes = plt.subplots(2, 2, figsize=(11.2, 8.2), constrained_layout=False)
     fig.subplots_adjust(left=0.075, right=0.985, top=0.84, bottom=0.09, hspace=0.34, wspace=0.22)
     fig.suptitle(
-        f"WRF vs. OpenFOAM metric summary bars, {cfg.CAMPAIGN_TITLE}",
+        f"WRF vs. OpenFOAM metric summary bars, {cfg.BATCH_TITLE}",
         y=0.985,
         fontsize=13,
         fontweight="bold",
@@ -117,9 +119,9 @@ def build_daily_panel_figure(df, line_mode: str = "delta") -> plt.Figure:
     fig, axes = plt.subplots(2, 2, figsize=(11.6, 8.5), constrained_layout=False)
     fig.subplots_adjust(left=0.075, right=0.985, top=0.80, bottom=0.09, hspace=0.48, wspace=0.22)
     suptitle = (
-        f"Daily compact comparison and CFD improvement, {cfg.CAMPAIGN_TITLE}"
+        f"Daily compact comparison and CFD improvement, {cfg.BATCH_TITLE}"
         if line_mode == "delta"
-        else f"Daily WRF and OpenFOAM metric values, {cfg.CAMPAIGN_TITLE}"
+        else f"Daily WRF and OpenFOAM metric values, {cfg.BATCH_TITLE}"
     )
     fig.suptitle(
         suptitle,
@@ -203,9 +205,9 @@ def main() -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
     line_modes = ["delta", "raw"] if args.line_mode == "both" else [args.line_mode]
-    figures = {"metric_sample_variants_no_high_metric_bars_panel": build_bar_panel_figure(df)}
+    figures = {"ws_subset_bars": build_bar_panel_figure(df)}
     for line_mode in line_modes:
-        figures[f"metric_sample_variants_no_high_metric_daily_{line_mode}_panel"] = build_daily_panel_figure(
+        figures[f"ws_subset_daily_{line_mode}"] = build_daily_panel_figure(
             df, line_mode=line_mode
         )
     for stem, fig in figures.items():

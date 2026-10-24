@@ -8,11 +8,11 @@ import pandas as pd
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
-import campaign_config as cfg
+import batch as cfg
 
 REPO_ROOT = cfg.REPO_ROOT
 DATA_PATH = cfg.ANALYSIS_DIR / "metric_sample_variants_no_high_wide.csv"
-OUTPUT_DIR = REPO_ROOT / "results/metric_sample_variants" / cfg.RESULTS_TAG
+OUTPUT_DIR = cfg.FIGURES_DIR
 
 
 COLOR_WRF = "#e07b39"
@@ -204,7 +204,7 @@ def build_figure(df: pd.DataFrame) -> plt.Figure:
     fig, axes = plt.subplots(2, 2, figsize=(10.8, 8.3), constrained_layout=False)
     fig.subplots_adjust(left=0.08, right=0.985, top=0.84, bottom=0.11, hspace=0.42, wspace=0.22)
     fig.suptitle(
-        cfg.CAMPAIGN_TITLE_LONG,
+        cfg.BATCH_TITLE_LONG,
         y=0.985,
         fontsize=13,
         fontweight="bold",
@@ -268,11 +268,11 @@ def main() -> None:
     df = load_metrics()
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     fig = build_figure(df)
-    fig.savefig(OUTPUT_DIR / "metric_sample_variants_no_high_summary.png")
-    fig.savefig(OUTPUT_DIR / "metric_sample_variants_no_high_summary.pdf")
+    fig.savefig(OUTPUT_DIR / "ws_subset_summary.png")
+    fig.savefig(OUTPUT_DIR / "ws_subset_summary.pdf")
     plt.close(fig)
-    print(f"Wrote {OUTPUT_DIR / 'metric_sample_variants_no_high_summary.png'}")
-    print(f"Wrote {OUTPUT_DIR / 'metric_sample_variants_no_high_summary.pdf'}")
+    print(f"Wrote {OUTPUT_DIR / 'ws_subset_summary.png'}")
+    print(f"Wrote {OUTPUT_DIR / 'ws_subset_summary.pdf'}")
 
 
 if __name__ == "__main__":

@@ -8,17 +8,19 @@ import numpy as np
 import pandas as pd
 from matplotlib.patches import Patch
 
+import batch as cfg
+
 # ─── Configuration ────────────────────────────────────────
 COLOR_WRF = "#e07b39"
 COLOR_CFD = "#2196a5"
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-ANALYSIS_DIR = Path(__file__).resolve().parent
+REPO_ROOT = cfg.REPO_ROOT
+ANALYSIS_DIR = cfg.ANALYSIS_DIR
 CIRCULAR_CSV = ANALYSIS_DIR / "wind_direction_metrics_circular.csv"
 VECTOR_CSV = ANALYSIS_DIR / "wind_direction_metrics_vector.csv"
 VEER_CSV = ANALYSIS_DIR / "wind_direction_metrics_veer.csv"
 
-OUTPUT_DIR = REPO_ROOT / "results/wind_direction_metrics/260409"
+OUTPUT_DIR = REPO_ROOT / "results/wind_direction_metrics" / cfg.RESULTS_TAG
 
 
 def configure_matplotlib_style() -> None:
