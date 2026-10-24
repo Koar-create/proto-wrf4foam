@@ -1,7 +1,7 @@
 """
-print_metric_site_variants.py — 在 print_metric.py 基础上按「站点子集」复算分层汇总表。
+compute_site_subsets.py — 按站点子集打印分层汇总表。
 
-与 print_metric_sample_variants.py 对称：后者改时间范围，本脚本改站点范围，
+与 compute_time_subsets.py 对称：后者改时间范围，本脚本改站点范围，
 用于识别 metric 表现优秀或糟糕的 LiDAR 站点。
 
 策略：
@@ -10,7 +10,7 @@ print_metric_site_variants.py — 在 print_metric.py 基础上按「站点子�
   3) exclude_site：排除单个站点（leave-one-out）；
   4) site_rank：各站单独汇总 + 与 baseline 对比的紧凑排名表（便于快速定位优劣站）。
 
-指标与 print_metric.main() 中表格一致（行级 N 为格点数）。
+指标与 compute_layer_summary 中表格一致（行级 N 为格点数）。
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
 
-import print_metric as pm  # noqa: E402
+import compute_layer_summary as pm  # noqa: E402
 
 
 def _base_subset(df: pd.DataFrame) -> pd.DataFrame:
@@ -37,7 +37,7 @@ def _sites_in_data(sub: pd.DataFrame) -> list[str]:
 
 
 def print_layer_summary(title: str, grp_df: pd.DataFrame, *, skip_high: bool = False) -> None:
-    """与 print_metric.main() 相同列的分层汇总。"""
+    """与 compute_layer_summary 相同列的分层汇总。"""
     print("\n" + "=" * 70)
     print(f"  {title}")
     print("=" * 70)
@@ -175,7 +175,7 @@ def _parse_args() -> argparse.Namespace:
         "--data",
         type=Path,
         default=None,
-        help="Override CSV path (default: print_metric.DATA_PATH).",
+        help="Override CSV path (default: batch.DATA_PATH).",
     )
     p.add_argument(
         "--no-high",

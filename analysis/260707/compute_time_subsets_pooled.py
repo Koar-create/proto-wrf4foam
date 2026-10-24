@@ -1,8 +1,7 @@
 """
-print_metric_sample_variants_pooled.py — Sample subset metric table (all heights merged, no low/mid/high stratification).
+compute_time_subsets_pooled.py — Time-subset metric table with all heights pooled.
 
-On the basis of print_metric_sample_variants.py, each period/subset only outputs one row of pooled summary (grid-level N),
-The metric columns are the same as the hierarchical table in print_metric.main().
+Each period/subset prints one row (grid-level N). Metric columns match compute_layer_summary.
 
 Can print multiple blocks (use `--sections` to trim). The subset definitions are the same as in sample_variants.
 Can apply `--max-height 1000|2000` to limit the maximum height (in meters) for inclusion in the statistics.
@@ -20,7 +19,7 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
 
-import print_metric as pm  # noqa: E402
+import compute_layer_summary as pm  # noqa: E402
 
 
 UTC_TIME_GROUPS: dict[str, list[int]] = {
@@ -71,7 +70,7 @@ def mask_lst_nighttime(lst: pd.Series, day: int) -> pd.Series:
 
 
 def print_pooled_summary(title: str, grp_df: pd.DataFrame, *, max_height_m: int) -> None:
-    """Merge all heights into one row summary (same metric columns as print_metric hierarchical table)."""
+    """Merge all heights into one row summary (same metric columns as compute_layer_summary)."""
     label = pool_label(max_height_m)
     print("\n" + "=" * 70)
     print(f"  {title}")
@@ -170,7 +169,7 @@ def _parse_args() -> argparse.Namespace:
         "--data",
         type=Path,
         default=None,
-        help="Override CSV path (default: print_metric.DATA_PATH).",
+        help="Override CSV path (default: batch.DATA_PATH).",
     )
     p.add_argument(
         "--max-height",

@@ -1,11 +1,11 @@
 """
-print_metric_sample_variants.py — 在 print_metric.py 基础上按「样本子集」复算分层汇总表。
+compute_time_subsets.py — 按时间子集打印分层汇总表。
 
 设计来源：
   1) advice-to-adjust-metric-sample.md：按 UTC 对流/LLJ/过渡期、保守时段、按日历日拆分；
   2) plot-fig4-lst.py：LST = UTC+8，LST「日」× AM(07–18)/PM(19–次日06) 与廓线图分组一致。
 
-默认打印多组区块（可用 --sections 裁剪）。指标与 print_metric.main() 中表格一致（行级 N 为格点数）。
+默认打印多组区块（可用 --sections 裁剪）。指标与 compute_layer_summary 表格一致（行级 N 为格点数）。
 """
 
 from __future__ import annotations
@@ -16,12 +16,12 @@ from pathlib import Path
 
 import pandas as pd
 
-# 与 print_metric.py 同目录，保证 `python path/to/本脚本.py` 可 import
+# 与 compute_layer_summary.py 同目录，保证 `python path/to/本脚本.py` 可 import
 _SCRIPT_DIR = Path(__file__).resolve().parent
 if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
 
-import print_metric as pm  # noqa: E402
+import compute_layer_summary as pm  # noqa: E402
 
 
 # ─── advice-to-adjust-metric-sample.md 策略一（UTC 小时，datetime 为 UTC）────
@@ -63,7 +63,7 @@ def mask_lst_day_pm(lst: pd.Series, day: int) -> pd.Series:
 
 
 def print_layer_summary(title: str, grp_df: pd.DataFrame, *, skip_high: bool = False) -> None:
-    """与 print_metric.main() 相同列的分层汇总（全站点混合）。"""
+    """与 compute_layer_summary 相同列的分层汇总（全站点混合）。"""
     print("\n" + "=" * 70)
     print(f"  {title}")
     print("=" * 70)
@@ -158,7 +158,7 @@ def _parse_args() -> argparse.Namespace:
         "--data",
         type=Path,
         default=None,
-        help="Override CSV path (default: print_metric.DATA_PATH).",
+        help="Override CSV path (default: batch.DATA_PATH).",
     )
     p.add_argument(
         "--no-high",
