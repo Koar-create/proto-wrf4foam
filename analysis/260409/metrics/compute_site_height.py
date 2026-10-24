@@ -10,15 +10,15 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-_SCRIPT_DIR = Path(__file__).resolve().parent
-if str(_SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(_SCRIPT_DIR))
+_ANALYSIS = Path(__file__).resolve().parents[2]
+if str(_ANALYSIS) not in sys.path:
+    sys.path.insert(0, str(_ANALYSIS))
 
-import print_metric as pm  # noqa: E402
+import batch
+from metrics.stats import index_of_agreement, load_and_preprocess, mean_bias_error, quality_control, rmse, skill_score
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_CSV = REPO_ROOT / "data/260409/processed/merged_lidar_simulation_final.csv"
-DEFAULT_OUT = _SCRIPT_DIR / "metric_site_height_120_500.csv"
+DEFAULT_CSV = batch.DATA_PATH
+DEFAULT_OUT = batch.SITE_HEIGHT_CSV
 
 TARGET_HEIGHTS = {
     120.0: "120 m (nearest gate)",
@@ -80,9 +80,9 @@ def compute_site_height_metrics(
                         "model": model_name,
                         "n": len(g),
                         "R": round(pearson_r(sim, obs), 3),
-                        "MBE": round(pm.mean_bias_error(sim, obs), 3),
-                        "RMSE": round(pm.rmse(sim, obs), 3),
-                        "IOA": round(pm.index_of_agreement(sim, obs), 3),
+                        "MBE": round(mean_bias_error(sim, obs), 3),
+                        "RMSE": round(rmse(sim, obs), 3),
+                        "IOA": round(index_of_agreement(sim, obs), 3),
                     }
                 )
 
@@ -98,7 +98,7 @@ def compute_site_height_metrics(
                     "MBE": float("nan"),
                     "RMSE": float("nan"),
                     "IOA": float("nan"),
-                    "SS": round(pm.skill_score(cfd, obs, wrf), 3),
+                    "SS": round(skill_score(cfd, obs, wrf), 3),
                 }
             )
 
@@ -134,7 +134,7 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=DEFAULT_OUT)
     args = ap.parse_args()
 
-    df = pm.quality_control(pm.load_and_preprocess(args.csv))
+    df = quality_control(load_and_preprocess(args.csv, time_labels=batch.TIME_LABELS))
     result = compute_site_height_metrics(df)
     if result.empty:
         print("[ERROR] No metrics computed.")

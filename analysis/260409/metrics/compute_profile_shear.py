@@ -10,15 +10,15 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-_SCRIPT_DIR = Path(__file__).resolve().parent
-if str(_SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(_SCRIPT_DIR))
+_ANALYSIS = Path(__file__).resolve().parents[2]
+if str(_ANALYSIS) not in sys.path:
+    sys.path.insert(0, str(_ANALYSIS))
 
-import print_metric as pm  # noqa: E402
+import batch
+from metrics.stats import load_and_preprocess, quality_control
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_CSV = REPO_ROOT / "data/260409/processed/merged_lidar_simulation_final.csv"
-DEFAULT_OUT = _SCRIPT_DIR / "metric_profile_shear_20250901_1900_0000_bjt.csv"
+DEFAULT_CSV = batch.DATA_PATH
+DEFAULT_OUT = batch.PROFILE_SHEAR_CSV
 
 # BJT 19:00–00:00 on 1 Sep 2025 = UTC 11:00–16:00 inclusive (hourly).
 PROFILE_START_UTC = "2025-09-01 11:00:00"
@@ -117,7 +117,7 @@ def main() -> int:
     ap.add_argument("--end-utc", default=PROFILE_END_UTC)
     args = ap.parse_args()
 
-    df = pm.quality_control(pm.load_and_preprocess(args.csv))
+    df = quality_control(load_and_preprocess(args.csv, time_labels=batch.TIME_LABELS))
     result = compute_profile_shear(df, start_utc=args.start_utc, end_utc=args.end_utc)
     if result.empty:
         print("[ERROR] No profile shear stats computed.")
