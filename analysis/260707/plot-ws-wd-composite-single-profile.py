@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.ticker import ScalarFormatter
 
-import campaign_config as cfg
+import batch as cfg
 
 REPO_ROOT = cfg.REPO_ROOT
 DATA_PATH = cfg.DATA_PATH
@@ -233,7 +233,7 @@ def plot_all_composite_profiles(
     tz: str = "utc",
     zmax: float = DEFAULT_ZMAX,
 ) -> list[Path]:
-    """为 campaign 内全部 synoptic 时次各生成一张四站 composite 廓线图。"""
+    """为该批次内全部 synoptic 时次各生成一张四站 composite 廓线图。"""
     save_paths: list[Path] = []
     for dt in cfg.METRIC_DATETIMES:
         dt_str = dt.strftime("%Y-%m-%d %H:%M:%S")
@@ -260,7 +260,7 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument(
         "--all-times",
         action="store_true",
-        help="Plot composite profiles for every synoptic time in campaign_config.METRIC_DATETIMES.",
+        help="Plot composite profiles for every synoptic time in batch.METRIC_DATETIMES.",
     )
     p.add_argument("--tz", choices=["utc", "lst"], default="utc",
                    help="Title time zone: utc (default) or lst (UTC+8).")

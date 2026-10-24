@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-import campaign_config as cfg
+import batch as cfg
 
 # ─── 路径与阈值 ───────────────────────────────────────────────────────────────
 REPO_ROOT = cfg.REPO_ROOT

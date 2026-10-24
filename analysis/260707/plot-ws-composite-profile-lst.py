@@ -18,7 +18,7 @@ from matplotlib.lines import Line2D
 from pathlib import Path
 import argparse
 
-import campaign_config as cfg
+import batch as cfg
 
 # ─── 路径与阈值配置（避免 Hardcoding）────────────────────────────────────────
 REPO_ROOT = cfg.REPO_ROOT

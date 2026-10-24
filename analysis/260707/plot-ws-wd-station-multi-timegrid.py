@@ -18,7 +18,7 @@ from matplotlib.markers import MarkerStyle
 import numpy as np
 import pandas as pd
 
-import campaign_config as cfg
+import batch as cfg
 
 warnings.filterwarnings("ignore")
 

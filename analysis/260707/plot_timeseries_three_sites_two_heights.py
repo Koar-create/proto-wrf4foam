@@ -13,11 +13,11 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.lines import Line2D
 
-import campaign_config as cfg
+import batch as cfg
 
 REPO_ROOT = cfg.REPO_ROOT
 
-# Color specifications from visualize_metric_sample_variants_four_metrics.py
+# Color specifications from analysis/metrics/style.py
 COLOR_WRF = "#e07b39"
 COLOR_CFD = "#2196a5"
 

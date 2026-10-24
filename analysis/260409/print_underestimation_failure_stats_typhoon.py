@@ -4,7 +4,7 @@ Quantifies, for the low-layer (52-300 m) station-mean hourly wind speed, how
 often WRF underestimates the observed wind speed and how often the coupled
 CFD run deepens that underestimation -- separately for the regular-weather
 baseline and the typhoon-affected window defined in
-analysis/260409/metrics/visualize_metric_sample_variants_metric_panels.py
+analysis/260409/metrics/batch.py
 (2025-09-07 03:00 to 2025-09-08 19:00 UTC, inclusive).
 
 Data: data/260409/processed/merged_lidar_simulation_final.csv (1-5 Sep)
@@ -22,7 +22,7 @@ LATER_CSV = REPO_ROOT / "data/260707/processed/merged_lidar_simulation_final.csv
 LOW_MIN_M, LOW_MAX_M = 52, 300
 LST_OFFSET_HOURS = 8
 
-# Same windows as analysis/260409/metrics/visualize_metric_sample_variants_metric_panels.py.
+# Same windows as analysis/260409/metrics/batch.py.
 # Regular-weather is defined in docs/scs-wrf-of-manuscript/02-rough-writing.md (S2.1) as
 # "all remaining hours" in the 1-9 Sep study window, i.e. the study window minus the
 # typhoon-affected window below.
