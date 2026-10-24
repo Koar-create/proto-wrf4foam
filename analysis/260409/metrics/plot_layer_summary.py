@@ -1,21 +1,25 @@
+import sys
 from pathlib import Path
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-ANALYSIS_DIR = Path(__file__).resolve().parent
-LAYER_SUMMARY_CSV = ANALYSIS_DIR / "layer_metrics_summary.csv"
-OUTPUT_DIR = REPO_ROOT / "results/metric/260409"
-OUTPUT_PNG = OUTPUT_DIR / "layer_metrics_comparison_optimized.png"
+_ANALYSIS = Path(__file__).resolve().parents[2]
+if str(_ANALYSIS) not in sys.path:
+    sys.path.insert(0, str(_ANALYSIS))
+
+import batch
+
+LAYER_SUMMARY_CSV = batch.LAYER_SUMMARY_CSV
+OUTPUT_PNG = batch.FIGURES_DIR / "ws_layer_summary.png"
 
 
 def load_layer_metrics(csv_path: Path = LAYER_SUMMARY_CSV) -> pd.DataFrame:
     if not csv_path.is_file():
         raise FileNotFoundError(
             f"Metrics CSV not found: {csv_path}\n"
-            "Run `python analysis/260409/metrics/print_metric.py` first."
+            "Run `python analysis/260409/metrics/compute_layer_summary.py` first."
         )
     return pd.read_csv(csv_path)
 
@@ -148,7 +152,7 @@ def main() -> None:
     )
     plt.tight_layout()
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    OUTPUT_PNG.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(OUTPUT_PNG, dpi=300, bbox_inches="tight")
     print(f"[PNG] Saved to: {OUTPUT_PNG}")
 
