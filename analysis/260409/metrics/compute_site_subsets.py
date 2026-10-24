@@ -1,7 +1,7 @@
 """
-print_metric_site_variants.py — 在 print_metric.py 基础上按「站点子集」复算分层汇总表。
+compute_site_subsets.py — 按「站点子集」打印分层汇总表。
 
-与 print_metric_sample_variants.py 对称：后者改时间范围，本脚本改站点范围，
+与 compute_time_subsets.py 对称：后者改时间范围，本脚本改站点范围，
 用于识别 metric 表现优秀或糟糕的 LiDAR 站点。
 
 策略：
@@ -10,7 +10,7 @@ print_metric_site_variants.py — 在 print_metric.py 基础上按「站点子�
   3) exclude_site：排除单个站点（leave-one-out）；
   4) site_rank：各站单独汇总 + 与 baseline 对比的紧凑排名表（便于快速定位优劣站）。
 
-指标与 print_metric.main() 中表格一致（行级 N 为格点数）。
+指标与 compute_layer_summary 表格一致（行级 N 为格点数）。
 """
 
 from __future__ import annotations
@@ -22,10 +22,27 @@ from pathlib import Path
 import pandas as pd
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
-if str(_SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(_SCRIPT_DIR))
+_ANALYSIS = Path(__file__).resolve().parents[2]
+for _p in (_ANALYSIS, _SCRIPT_DIR):
+    _s = str(_p)
+    if _s in sys.path:
+        sys.path.remove(_s)
+    sys.path.insert(0, _s)
 
-import print_metric as pm  # noqa: E402
+import batch
+from metrics.layers import summary_layers
+from metrics.stats import (
+    index_of_agreement,
+    load_and_preprocess as _load_and_preprocess,
+    mean_bias_error,
+    quality_control,
+    rmse,
+    skill_score,
+)
+
+
+def load_and_preprocess(path: str | Path):
+    return _load_and_preprocess(path, time_labels=batch.TIME_LABELS)
 
 
 def _base_subset(df: pd.DataFrame) -> pd.DataFrame:
@@ -37,7 +54,7 @@ def _sites_in_data(sub: pd.DataFrame) -> list[str]:
 
 
 def print_layer_summary(title: str, grp_df: pd.DataFrame, *, skip_high: bool = False) -> None:
-    """与 print_metric.main() 相同列的分层汇总。"""
+    """与 compute_layer_summary 相同列的分层汇总。"""
     print("\n" + "=" * 70)
     print(f"  {title}")
     print("=" * 70)
@@ -50,18 +67,18 @@ def print_layer_summary(title: str, grp_df: pd.DataFrame, *, skip_high: bool = F
     print(header)
     print("-" * len(header))
 
-    for layer in pm.summary_layers(skip_high=skip_high):
+    for layer in summary_layers(skip_high=skip_high):
         g = grp_df[grp_df["layer"] == layer]
         if len(g) < 5:
             continue
         o, w, c = g["ws_obs"].values, g["ws_wrf"].values, g["ws_cfd"].values
         print(
             f"{layer:<22} {len(g):>7}  "
-            f"{pm.mean_bias_error(w, o):>+8.3f} {pm.rmse(w, o):>9.3f} "
-            f"{pm.index_of_agreement(w, o):>8.3f}  "
-            f"{pm.mean_bias_error(c, o):>+8.3f} {pm.rmse(c, o):>9.3f} "
-            f"{pm.index_of_agreement(c, o):>8.3f}  "
-            f"{pm.skill_score(c, o, w):>+7.3f}"
+            f"{mean_bias_error(w, o):>+8.3f} {rmse(w, o):>9.3f} "
+            f"{index_of_agreement(w, o):>8.3f}  "
+            f"{mean_bias_error(c, o):>+8.3f} {rmse(c, o):>9.3f} "
+            f"{index_of_agreement(c, o):>8.3f}  "
+            f"{skill_score(c, o, w):>+7.3f}"
         )
 
 
@@ -72,11 +89,11 @@ def _pooled_metrics(grp_df: pd.DataFrame) -> dict[str, float | int] | None:
     o, w, c = grp_df["ws_obs"].values, grp_df["ws_wrf"].values, grp_df["ws_cfd"].values
     return {
         "N": len(grp_df),
-        "WRF_RMSE": pm.rmse(w, o),
-        "WRF_IoA": pm.index_of_agreement(w, o),
-        "CFD_RMSE": pm.rmse(c, o),
-        "CFD_IoA": pm.index_of_agreement(c, o),
-        "SS": pm.skill_score(c, o, w),
+        "WRF_RMSE": rmse(w, o),
+        "WRF_IoA": index_of_agreement(w, o),
+        "CFD_RMSE": rmse(c, o),
+        "CFD_IoA": index_of_agreement(c, o),
+        "SS": skill_score(c, o, w),
     }
 
 
@@ -175,7 +192,7 @@ def _parse_args() -> argparse.Namespace:
         "--data",
         type=Path,
         default=None,
-        help="Override CSV path (default: print_metric.DATA_PATH).",
+        help="Override CSV path (default: batch.DATA_PATH).",
     )
     p.add_argument(
         "--no-high",
@@ -191,9 +208,9 @@ def main() -> None:
     if "all" in sections:
         sections = {"baseline", "only_site", "exclude_site", "site_rank"}
 
-    path = args.data if args.data is not None else pm.DATA_PATH
-    df_raw = pm.load_and_preprocess(path)
-    df = pm.quality_control(df_raw)
+    path = args.data if args.data is not None else batch.DATA_PATH
+    df_raw = load_and_preprocess(path)
+    df = quality_control(df_raw)
     sub = _base_subset(df)
 
     all_sites = _sites_in_data(sub)
@@ -207,7 +224,7 @@ def main() -> None:
         sites = all_sites
 
     print(
-        f"[Config] Time range: {pm.METRIC_START} .. {pm.METRIC_END}  "
+        f"[Config] Time range: {batch.METRIC_START} .. {batch.METRIC_END}  "
         f"| Sites: {', '.join(sites)}  (N rows after QC: {len(sub):,})"
     )
 
