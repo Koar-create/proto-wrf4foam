@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""URANS (and optional LES) vs LiDAR horizontal wind speed at ~500 m, 0–1800 s.
+"""URANS (and optional LES) vs LiDAR horizontal wind speed, 0–1800 s.
 
-Both panels use DBS_095 second-level LiDAR. --with-les (default on) overlays
-LES on the left (0901) panel only.
+Layout is 3 stations × 2 cases. Both columns use DBS_095 second-level LiDAR.
+--with-les (default on) overlays LES on the 0901 column only. Probe / LiDAR
+levels use the nearest available height to --height; requests below the
+lowest probe (60 m) are rejected.
 """
 from __future__ import annotations
 
@@ -39,30 +41,36 @@ STATIONS = (
     ("GAW111", 22),
 )
 COLORS = ("#2196a5", "#c2185b", "#5c6bc0")
-Z_PLOT = 500
-Z_LIDAR_TARGET = 500.0
 SWITCH_S = (600.0, 1200.0)
-RAMP_S = 30.0
 VEC_RE = re.compile(r"\(([-+\deE.]+) ([-+\deE.]+) ([-+\deE.]+)\)")
+
+COLUMN_TITLES = (
+    "2025-09-01 18:00 UTC+8",
+    "2025-09-08 8:00 UTC+8",
+)
 
 CASES = (
     {
         "tag": "20250901_1000",
-        "title": "(a) 2025-09-01 10:00 UTC",
         "t0": "2025-09-01 10:00:00",
         "t1": "2025-09-01 10:30:00",
-        "ylim": (0.0, 7.0),
         "lidar_kind": "dbs095",
     },
     {
         "tag": "20250908_0000",
-        "title": "(b) 2025-09-08 00:00 UTC",
         "t0": "2025-09-08 00:00:00",
         "t1": "2025-09-08 00:30:00",
-        "ylim": (0.0, 30.0),
         "lidar_kind": "dbs095",
     },
 )
+
+
+def _panel_letter(row: int, col: int) -> str:
+    return chr(ord("a") + row * 2 + col)
+
+
+def _height_label_m(z: float) -> str:
+    return f"{int(z)}m" if z == int(z) else f"{z:g}m"
 
 
 def _probe_ws_from_files(paths: list[Path]) -> tuple[np.ndarray, np.ndarray]:
@@ -108,7 +116,30 @@ def _nearest_height(heights: np.ndarray, target: float) -> float:
     return float(heights[int(np.argmin(np.abs(heights - target)))])
 
 
-def load_lidar_window(csv_path: Path, t0: str, t1: str) -> pd.DataFrame:
+def _height_index(z_req: float) -> tuple[int, float]:
+    heights = np.asarray(HEIGHTS, dtype=float)
+    z_use = _nearest_height(heights, z_req)
+    return int(np.argmin(np.abs(heights - z_use))), z_use
+
+
+def _ylim_auto(values: list[np.ndarray], floor: float = 0.0) -> tuple[float, float]:
+    vmax = 0.0
+    for arr in values:
+        if arr is None or len(arr) == 0:
+            continue
+        a = np.asarray(arr, dtype=float)
+        if np.any(np.isfinite(a)):
+            vmax = max(vmax, float(np.nanmax(a)))
+    if vmax <= 0:
+        return floor, 1.0
+    pad = max(0.5, 0.08 * vmax)
+    ymax = float(np.ceil((vmax + pad) * 2) / 2)
+    return floor, ymax
+
+
+def load_lidar_window(
+    csv_path: Path, t0: str, t1: str, *, z_target: float
+) -> pd.DataFrame:
     t0p, t1p = pd.Timestamp(t0), pd.Timestamp(t1)
     usecols = ["obtid", "datetime", "Height", "WindSpd"]
     stations = {n for n, _ in STATIONS}
@@ -125,7 +156,7 @@ def load_lidar_window(csv_path: Path, t0: str, t1: str) -> pd.DataFrame:
     if not parts:
         raise RuntimeError(f"no LiDAR rows in {csv_path} for {t0}–{t1}")
     raw = pd.concat(parts, ignore_index=True)
-    z_use = _nearest_height(raw["Height"].dropna().unique(), Z_LIDAR_TARGET)
+    z_use = _nearest_height(raw["Height"].dropna().unique(), z_target)
     sub = raw[np.isclose(raw["Height"], z_use)].copy()
     sub["t_s"] = (sub["datetime"] - t0p).dt.total_seconds()
     sub = sub[(sub["t_s"] >= 0) & (sub["t_s"] <= 1800)]
@@ -149,8 +180,14 @@ def parse_args() -> argparse.Namespace:
     p.set_defaults(with_les=True)
     p.add_argument("--les-case", type=Path, default=LES_CASE)
     p.add_argument(
+        "--height",
+        type=float,
+        default=500.0,
+        help="requested height (m); URANS/LES use nearest probe level",
+    )
+    p.add_argument(
         "--output", type=Path, default=None,
-        help="output PNG (default: results/urans/urans_lidar_ws_z500_0-1800s.png)",
+        help="output PNG (default: results/urans/urans_lidar_ws_z<height>_0-1800s.png)",
     )
     return p.parse_args()
 
@@ -176,9 +213,19 @@ def main() -> None:
         "savefig.bbox": "tight",
         "savefig.facecolor": "white",
     })
-    z_idx = HEIGHTS.index(Z_PLOT)
-    lidar_0901 = load_lidar_window(LIDAR_0901, CASES[0]["t0"], CASES[0]["t1"])
-    lidar_0908 = load_lidar_window(LIDAR_0908, CASES[1]["t0"], CASES[1]["t1"])
+    z_req = float(args.height)
+    z_lo = float(min(HEIGHTS))
+    if z_req < z_lo:
+        raise SystemExit(
+            f"requested z={z_req:g} m is below the lowest probe ({z_lo:g} m)"
+        )
+    z_idx, z_urans = _height_index(z_req)
+    lidar_0901 = load_lidar_window(
+        LIDAR_0901, CASES[0]["t0"], CASES[0]["t1"], z_target=z_req,
+    )
+    lidar_0908 = load_lidar_window(
+        LIDAR_0908, CASES[1]["t0"], CASES[1]["t1"], z_target=z_req,
+    )
     z_l1 = float(lidar_0901["Height"].iloc[0])
     z_l8 = float(lidar_0908["Height"].iloc[0])
 
@@ -188,64 +235,91 @@ def main() -> None:
         les_t, les_ws = load_les_ws(les_case)
         print(f"LES {les_case.name}: n={len(les_t)} t=[{les_t[0]:.1f},{les_t[-1]:.1f}]")
 
-    fig, axes = plt.subplots(1, 2, figsize=(11.2, 4.2), constrained_layout=True)
+    n_sta = len(STATIONS)
+    fig, axes = plt.subplots(
+        n_sta,
+        2,
+        figsize=(11.2, 8.6),
+        sharex=True,
+        sharey="col",
+        constrained_layout=True,
+        gridspec_kw={"wspace": 0.08},
+    )
     lidars = (lidar_0901, lidar_0908)
 
-    for ax, spec, lid in zip(axes, CASES, lidars):
+    for col, (spec, lid) in enumerate(zip(CASES, lidars)):
         t, ws = load_urans_ws(spec["tag"])
-        for (name, off), color in zip(STATIONS, COLORS):
+        ymax_parts: list[np.ndarray] = []
+        for row, ((name, off), color) in enumerate(zip(STATIONS, COLORS)):
+            ax = axes[row, col]
             ax.plot(
                 t, ws[:, off + z_idx], color=color, lw=1.6, ls="-",
-                label=f"{name} URANS",
+                label="URANS", zorder=4,
             )
-        if spec["tag"] == "20250901_1000" and les_t is not None:
-            for (name, off), color in zip(STATIONS, COLORS):
+            ymax_parts.append(ws[:, off + z_idx])
+            if spec["tag"] == "20250901_1000" and les_t is not None:
                 ax.plot(
                     les_t, les_ws[:, off + z_idx], color=color, lw=1.15, ls=":",
-                    label=f"{name} LES",
+                    label="LES", zorder=3,
                 )
+                ymax_parts.append(les_ws[:, off + z_idx])
                 print(
-                    f"LES {name} z={Z_PLOT}: p50={np.median(les_ws[:, off + z_idx]):.2f} "
+                    f"LES {name} z={z_urans:g}: p50={np.median(les_ws[:, off + z_idx]):.2f} "
                     f"max={les_ws[:, off + z_idx].max():.2f}"
                 )
-        for (name, off), color in zip(STATIONS, COLORS):
             s = lid[lid["obtid"] == name].sort_values("t_s")
-            if not len(s):
-                continue
-            # Full native time base: no resampling; dashed line only (no markevery).
-            ax.plot(
-                s["t_s"], s["WindSpd"], color=color, lw=1.2, ls="--",
-                label=f"{name} LiDAR",
+            if len(s):
+                ymax_parts.append(s["WindSpd"].to_numpy())
+                ax.plot(
+                    s["t_s"], s["WindSpd"], color=color, lw=1.2, ls="--",
+                    label="LiDAR", zorder=2,
+                )
+                print(
+                    f"{spec['tag']} {name}: URANS t1800={ws[-1, off + z_idx]:.2f}  "
+                    f"LiDAR p50={s['WindSpd'].median():.2f} max={s['WindSpd'].max():.2f}"
+                )
+            for ts in SWITCH_S:
+                ax.axvline(ts, color="0.6", lw=0.8, ls="--", zorder=1)
+            ax.set_xlim(0, 1800)
+            letter = _panel_letter(row, col)
+            z_lab = _height_label_m(z_urans)
+            ax.text(
+                0.02, 0.96,
+                f"({letter}) {name}, {z_lab}",
+                transform=ax.transAxes,
+                va="top", ha="left", fontsize=10, fontweight="bold",
             )
-            print(
-                f"{spec['tag']} {name}: URANS t1800={ws[-1, off + z_idx]:.2f}  "
-                f"LiDAR p50={s['WindSpd'].median():.2f} max={s['WindSpd'].max():.2f}"
-            )
-        for ts in SWITCH_S:
-            ax.axvspan(ts - RAMP_S, ts, color="0.85", zorder=0)
-            ax.axvline(ts, color="0.6", lw=0.8, ls="--", zorder=1)
-        ax.set_xlim(0, 1800)
-        ax.set_ylim(*spec["ylim"])
-        ax.set_xlabel("Time (s)")
-        ax.set_title(spec["title"], loc="left")
-        ax.set_xticks([0, 600, 1200, 1800])
-        ax.set_xticklabels(["0\n(HH:00)", "600\n(HH:10)", "1200\n(HH:20)", "1800\n(HH:30)"])
+            if col == 0:
+                # In-axes legend keeps the inter-column gap narrow (no bbox outside).
+                leg_loc = "lower right" if row == n_sta - 1 else "upper right"
+                ax.legend(fontsize=7, loc=leg_loc, frameon=True)
+            if row == n_sta - 1:
+                ax.set_xlabel("Time (s)")
+                ax.set_xticks([0, 600, 1200, 1800])
+                ax.set_xticklabels(
+                    ["0\n(HH:00)", "600\n(HH:10)", "1200\n(HH:20)", "1800\n(HH:30)"]
+                )
+            if col == 0 and row == 1:
+                ax.set_ylabel(r"Horizontal wind speed (m s$^{-1}$)")
+        _, ymax = _ylim_auto(ymax_parts)
+        axes[0, col].set_ylim(0.0, ymax)
 
-    ncol_left = 3 if args.with_les else 3
-    axes[0].legend(fontsize=6.5, loc="lower right", ncol=ncol_left)
-    axes[1].legend(fontsize=7, loc="upper right", ncol=3)
-    axes[0].set_ylabel(r"Horizontal wind speed (m s$^{-1}$)")
-    lidar_h = (
-        f"{z_l1:.0f} m" if abs(z_l1 - z_l8) < 0.5 else f"{z_l1:.0f}/{z_l8:.0f} m"
-    )
-    fig.suptitle(
-        f"Wind speed at z ≈ {Z_PLOT} m  "
-        f"(URANS {Z_PLOT} m, LiDAR {lidar_h}"
-        + (", LES 500 m" if args.with_les else "")
-        + ")",
-        fontsize=13, fontweight="bold",
-    )
-    out = args.output or (cp.figs_dir() / f"urans_lidar_ws_z{Z_PLOT}_0-1800s.png")
+    fig.canvas.draw()
+    for col, col_title in enumerate(COLUMN_TITLES):
+        pos = axes[0, col].get_position()
+        fig.text(
+            (pos.x0 + pos.x1) / 2,
+            pos.y1 + 0.018,
+            col_title,
+            ha="center",
+            va="bottom",
+            fontsize=12,
+            fontweight="bold",
+        )
+
+    z_tag = int(z_urans) if z_urans == int(z_urans) else z_urans
+    print(f"LiDAR heights: 0901={z_l1:g} m, 0908={z_l8:g} m")
+    out = args.output or (cp.figs_dir() / f"urans_lidar_ws_z{z_tag}_0-1800s.png")
     if not out.is_absolute():
         out = REPO_ROOT / out
     out.parent.mkdir(parents=True, exist_ok=True)
