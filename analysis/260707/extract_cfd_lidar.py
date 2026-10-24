@@ -34,7 +34,7 @@ import pandas as pd
 import xarray as xr
 from scipy.interpolate import interp1d
 
-import campaign_config as cfg
+import batch as cfg
 
 warnings.filterwarnings("ignore")
 
@@ -352,7 +352,7 @@ def save_case_csv(df: pd.DataFrame, out_path: Path, *, verify_xarray: bool = Tru
     df.to_csv(out_path, index=False)
 
 
-def iter_campaign_cases(cases_root: Path) -> list[tuple[pd.Timestamp, Path]]:
+def iter_batch_cases(cases_root: Path) -> list[tuple[pd.Timestamp, Path]]:
     cases: list[tuple[pd.Timestamp, Path]] = []
     for dt in cfg.METRIC_DATETIMES:
         case_dir = cases_root / case_dir_name(dt)
@@ -371,7 +371,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--all",
         action="store_true",
-        help="Extract all campaign cases found under --cases-root.",
+        help="Extract all batch cases found under --cases-root.",
     )
     p.add_argument(
         "--cases-root",
@@ -408,11 +408,11 @@ def main() -> int:
         station_info = json.load(f)
 
     if args.all:
-        case_jobs = [(dt, case_dir) for dt, case_dir in iter_campaign_cases(args.cases_root)]
+        case_jobs = [(dt, case_dir) for dt, case_dir in iter_batch_cases(args.cases_root)]
         missing = len(cfg.METRIC_DATETIMES) - len(case_jobs)
-        print(f"[Config] Campaign slots: {len(cfg.METRIC_DATETIMES)}  found cases: {len(case_jobs)}")
+        print(f"[Config] Batch slots: {len(cfg.METRIC_DATETIMES)}  found cases: {len(case_jobs)}")
         if missing:
-            print(f"[WARN] {missing} campaign case directories missing under {args.cases_root}")
+            print(f"[WARN] {missing} batch case directories missing under {args.cases_root}")
     else:
         case_jobs = []
         for raw in args.case_paths:

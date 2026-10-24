@@ -26,7 +26,7 @@ import pandas as pd
 import xarray as xr
 from scipy.interpolate import interp1d
 
-import campaign_config as cfg
+import batch as cfg
 
 warnings.filterwarnings("ignore")
 
@@ -189,7 +189,7 @@ def extract_nc_file(nc_path: Path, station_info: dict, dt_hint: pd.Timestamp | N
     return df.sort_values(["datetime", "obtid", "z_probe"]).reset_index(drop=True)
 
 
-def iter_campaign_nc_files(
+def iter_batch_nc_files(
     *,
     exp03_dir: Path,
     exp05_dir: Path,
@@ -236,7 +236,7 @@ def parse_args() -> argparse.Namespace:
         action="append",
         default=None,
         metavar="YYYY-MM-DD HH:MM:SS",
-        help="Extract only the given UTC datetime(s); default: all campaign synoptic slots.",
+        help="Extract only the given UTC datetime(s); default: all batch synoptic slots.",
     )
     p.add_argument(
         "--force",
@@ -268,7 +268,7 @@ def main() -> int:
     else:
         target_slots = cfg.METRIC_DATETIMES
 
-    jobs = iter_campaign_nc_files(
+    jobs = iter_batch_nc_files(
         exp03_dir=args.exp03_dir,
         exp05_dir=args.exp05_dir,
         split_date=split_date,

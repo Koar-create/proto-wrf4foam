@@ -1,4 +1,4 @@
-"""Shared settings for 20250906–13 OpenFOAM experiments.
+"""260707 batch paths and metric dates (Sep 6–13 OpenFOAM experiments).
 
 Sep 6–8: include CFD cases that have completed (case/<5000> exists).
 Sep 9–13: keep synoptic UTC 00/06/12/18 slots, and also any extra
@@ -12,7 +12,7 @@ from pathlib import Path
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CAMPAIGN_ID = "260707"
+BATCH_ID = "260707"
 
 UTC_DAY_FIRST = 6
 UTC_DAY_LAST = 13
@@ -35,7 +35,6 @@ def completed_hourly_datetimes(
     cases_root: Path = CASES_ROOT,
     marker: str = COMPLETION_MARKER,
 ) -> list[pd.Timestamp]:
-    """Return UTC timestamps for Sep day_first–day_last cases with <marker> present."""
     slots: list[pd.Timestamp] = []
     for day in range(day_first, day_last + 1):
         for hour in range(24):
@@ -47,7 +46,6 @@ def completed_hourly_datetimes(
 
 
 def build_metric_datetimes() -> pd.DatetimeIndex:
-    """Completed hours on Sep 6–8, then synoptic slots plus finished extras later."""
     slots = completed_hourly_datetimes()
     seen = set(slots)
     for day in range(HOURLY_DAY_LAST + 1, UTC_DAY_LAST + 1):
@@ -70,15 +68,18 @@ TIME_LABELS = {
     for dt in METRIC_DATETIMES
 }
 
-DATA_DIR = REPO_ROOT / "data" / CAMPAIGN_ID
-ANALYSIS_DIR = REPO_ROOT / "analysis" / CAMPAIGN_ID
+DATA_DIR = REPO_ROOT / "data" / BATCH_ID
+ANALYSIS_DIR = REPO_ROOT / "analysis" / BATCH_ID
 DATA_PATH = DATA_DIR / "processed" / "merged_lidar_simulation_final.csv"
-RESULTS_TAG = CAMPAIGN_ID
+RESULTS_TAG = BATCH_ID
+TABLES_DIR = REPO_ROOT / "results" / "metrics" / BATCH_ID / "tables"
+FIGURES_DIR = REPO_ROOT / "results" / "metrics" / BATCH_ID / "figures"
+LAYER_SUMMARY_CSV = TABLES_DIR / "ws_layer_summary.csv"
 
 SAMPLE_DATE_MIN = pd.Timestamp("2025-09-06")
 SAMPLE_DATE_MAX = pd.Timestamp("2025-09-13")
-CAMPAIGN_TITLE = "6–13 September 2025"
-CAMPAIGN_TITLE_LONG = f"WRF vs. OpenFOAM wind-speed evaluation, {CAMPAIGN_TITLE}"
+BATCH_TITLE = "6–13 September 2025"
+BATCH_TITLE_LONG = f"WRF vs. OpenFOAM wind-speed evaluation, {BATCH_TITLE}"
 
 
 def metric_utc_dates() -> list[str]:
