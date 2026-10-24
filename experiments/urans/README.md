@@ -26,7 +26,6 @@ sbatch experiments/urans/scripts/reconstruct.slurm 20250901_1000
 ## Plots
 
 ```bash
-python experiments/urans/scripts/plot_maxU_timeseries.py
 python experiments/urans/scripts/plot_xy_z100_t1800.py
 python experiments/urans/scripts/plot_lidar_ws_timeseries.py
 python experiments/urans/scripts/visualize_xz_wrf_simpleFoam_urans.py 20250901_1000

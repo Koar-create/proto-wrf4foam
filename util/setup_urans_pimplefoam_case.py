@@ -389,96 +389,6 @@ relaxationFactors
     )
 
 
-def write_run_slurm(case: Path, job_name: str, walltime: str) -> None:
-    (case / "run.slurm").write_text(
-        f"""#!/bin/bash
-# pimpleFoam URANS — a128m512u, exclude cpu3-[3-9]
-# sbatch [--export=ALL,ENDTIME=60,CLEAN=1,TAG=smoke] run.slurm
-#SBATCH --account=root
-#SBATCH --partition=a128m512u
-#SBATCH --qos=a128m512u
-#SBATCH --job-name={job_name}
-#SBATCH --output=slurm.%j.out
-#SBATCH --exclude=cpu3-[3-9]
-#SBATCH --nodes=1
-#SBATCH --ntasks=128
-#SBATCH --cpus-per-task=1
-## production: sbatch --export=ALL,EXCLUSIVE=1 ...
-#SBATCH --hint=nomultithread
-#SBATCH --time={walltime}
-
-if [ "${{EXCLUSIVE:-0}}" = "1" ]; then
-  scontrol update JobId=${{SLURM_JOB_ID:-0}} Exclusive=yes 2>/dev/null || true
-fi
-
-source "$HOME/OpenFOAM/OpenFOAM-v2412/etc/bashrc"
-cd "${{SLURM_SUBMIT_DIR:-{case}}}" || exit 1
-NP=128
-export OMP_NUM_THREADS=1
-ulimit -s unlimited 2>/dev/null
-
-LOG=log.pimpleFoam${{TAG:+.$TAG}}
-: > "$LOG"
-echo "===== start $(date) job=${{SLURM_JOB_ID}} ENDTIME=${{ENDTIME:-1800}} CLEAN=${{CLEAN:-0}}" | tee -a "$LOG"
-
-if [ "${{CLEAN:-0}}" = "1" ]; then
-  rm -rf processor* postProcessing
-fi
-if [ ! -d processor0 ]; then
-  foamDictionary -entry numberOfSubdomains -set "$NP" system/decomposeParDict >> "$LOG" 2>&1
-  decomposePar -force >> "$LOG" 2>&1 || exit 1
-fi
-if [ -n "${{ENDTIME:-}}" ]; then
-  foamDictionary -entry endTime -set "$ENDTIME" system/controlDict >> "$LOG" 2>&1
-fi
-
-(
-  STALL=0
-  LAST_T=""
-  while sleep 60; do
-    if ! pgrep -f "pimpleFoam -parallel" >/dev/null 2>&1; then
-      break
-    fi
-    if grep -qE "nan|Floating point exception|Abort triggered" "$LOG" 2>/dev/null; then
-      echo "watchdog: fatal pattern in log" >> "$LOG"
-      pkill -f "pimpleFoam -parallel" 2>/dev/null || true
-      break
-    fi
-    CUR=$(grep -E "^Time = " "$LOG" 2>/dev/null | tail -1 | awk '{{print $3}}')
-    if [ -n "$CUR" ] && [ "$CUR" = "$LAST_T" ]; then
-      STALL=$((STALL+1))
-      if [ "$STALL" -ge 10 ]; then
-        echo "watchdog: Time stalled at $CUR" >> "$LOG"
-        pkill -f "pimpleFoam -parallel" 2>/dev/null || true
-        break
-      fi
-    else
-      STALL=0
-      LAST_T="$CUR"
-    fi
-    OUTERS=$(grep -c "outer corrector" "$LOG" 2>/dev/null | tail -1)
-    if grep "PIMPLE: Iteration" "$LOG" 2>/dev/null | tail -5 | grep -q "15"; then
-      echo "watchdog: nOuterCorrectors exhausted repeatedly" >> "$LOG"
-    fi
-  done
-) &
-WD=$!
-
-mpirun -n $NP --bind-to core --map-by numa:PE=1 --rank-by numa \\
-  pimpleFoam -parallel >> "$LOG" 2>&1
-rc=$?
-kill $WD 2>/dev/null || true
-wait $WD 2>/dev/null || true
-echo "===== solver exit $rc $(date)" >> "$LOG"
-if [ $rc -eq 0 ] && [ -z "${{NO_RECON:-}}" ]; then
-  reconstructPar -latestTime >> "$LOG" 2>&1
-fi
-echo "===== finished $(date)" >> "$LOG"
-exit $rc
-"""
-    )
-
-
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ref", type=Path, required=True)
@@ -498,9 +408,12 @@ def main() -> int:
     copy_reference(ref, case)
     hot_start_from_5000(ref, case)
     write_system(case, args.delta_t, u_watch)
-    write_run_slurm(case, args.job_name, args.walltime)
     (case / "check").mkdir(exist_ok=True)
     print(f"Case ready at {case}", flush=True)
+    print(
+        "Submit with: sbatch experiments/urans/scripts/run.slurm <YYYYMMDD_HHMM>",
+        flush=True,
+    )
     return 0
 
 

@@ -43,8 +43,10 @@ from scipy.interpolate import LinearNDInterpolator
 
 _REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 _UTIL = os.path.join(_REPO, "util")
-if _UTIL not in sys.path:
-    sys.path.insert(0, _UTIL)
+_XY_PLANE = os.path.join(_REPO, "analysis", "260409", "ws-xy-plane")
+for _p in (_UTIL, _XY_PLANE):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 import visualize_WRF_CFD_xy_two_panel as base  # noqa: E402
 from convert_lonlat_xy_origin import origin_utm49n, xy_to_lonlat  # noqa: E402

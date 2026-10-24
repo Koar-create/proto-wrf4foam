@@ -17,7 +17,8 @@ from scipy.interpolate import RegularGridInterpolator
 
 _HERE = Path(__file__).resolve().parent
 _REPO = _HERE.parents[2]
-for p in (str(_HERE), str(_REPO / "util")):
+_XY = _REPO / "analysis" / "260409" / "ws-xy-plane"
+for p in (str(_HERE), str(_XY)):
     if p not in sys.path:
         sys.path.insert(0, p)
 

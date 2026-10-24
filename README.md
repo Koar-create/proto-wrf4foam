@@ -1,6 +1,6 @@
 # WRF–OpenFOAM coupling and urban CFD validation
 
-This repository supports a **WRF-driven urban CFD workflow** (OpenFOAM RANS, including `simpleFoam` / `buoyFoam` variants), **LiDAR observation handling**, and a **standardized surrogate-training dataset** built from many steady-state cases. It is aimed at comparing mesoscale meteorology, building-resolving CFD, and tower-based remote sensing on a shared grid and time basis.
+This repository supports a **WRF-driven urban CFD workflow** (OpenFOAM RANS, including `simpleFoam` and non-isothermal solvers) and **LiDAR observation handling**. It is aimed at comparing mesoscale meteorology, building-resolving CFD, and tower-based remote sensing on a shared grid and time basis.
 
 ## The three roots that tie everything together
 
@@ -12,7 +12,6 @@ This directory is the **primary OpenFOAM experiment tree** for the finer ABL ste
 
 - `constant/`, `system/`, time directories — standard OpenFOAM layout.
 - `constant/boundaryData/` — inlet/outlet patches used by **`scripts/task3_extract_inflow.py`** and by WRF→CFD diagnostics.
-- `processed_hdf5/<case_id>.h5` — produced by **`scripts/stage2_interpolate.py`** (after stage 1b export), then aggregated by **`scripts/task2_collect_fields.py`** into `surrogate_dataset/fields/`.
 - `postProcessing/` — sampled line/slice CSVs consumed by utilities such as `util/visualize_x-y_wind_field.py` and `util/calculate_csv_mean_diag.py`.
 
 At the **batch** level, `steady_experiments_finer_ABL/WRF Atmospheric Stability Data Organization.csv` documents stability / LLJ metadata and feeds **`util/plot_wrf_stability_organization_csv.py`** (and related methodology text under `docs/`). A copy also exists under `docs/` for workflows that keep large case trees outside Git.
@@ -40,29 +39,17 @@ These paths are listed in **`.gitignore`** in some clones so they never leave yo
 
 | Area | Role |
 |------|------|
-| **`scripts/`** | End-to-end helpers: WRF/LiDAR merge, ParaView `pvbatch` grid interpolation (stage 2), surrogate tasks 1–5, plotting, shell drivers for post-processing. |
+| **`scripts/`** | End-to-end helpers: WRF/LiDAR merge, plotting, shell drivers for post-processing. |
 | **`util/`** | WRF→Cartesian conversion and vertical interpolation, OpenFOAM `boundaryData` construction, diagnostics, residual plots, WRF–CFD comparison figures. |
 | **`data/`** | Versioned *layout* for inputs and processed tables (raw WRF/CFD/LiDAR CSVs and merged products); large files are usually git-ignored. |
 | **`analysis/`** | Notebooks and batch-specific analysis scripts (e.g. sensitivity studies). |
-| **`results/`** | Regenerated figures (Hovmöller, Taylor diagrams, profiles, etc.). |
-| **`surrogate_dataset/`** | Curated HDF5 fields, per-case inflow JSON, building geometry encoding, and `index.csv` for ML / surrogate model training. See `surrogate_dataset/README_产出清单.md` for the full manifest (Chinese). |
+| **`results/`** | Regenerated figures (Hovmöller, Taylor diagrams, profiles, etc.). Family comparison plots for URANS/BBSF/LES live under `results/urans/`, `results/nonisothermal/`, and `results/les/2000s/`. |
 
-**Outside this table but central:** `steady_experiments_finer_ABL/` (OpenFOAM cases), `W_myExp03/` (WRF auxhist pipeline), and `docs/` (science + ops) — see [The three roots](#the-three-roots-that-tie-everything-together) above.
+**Outside this table but central:** `steady_experiments_finer_ABL/` (OpenFOAM simpleFoam case bank), `experiments/` (extra cases: `nonisothermal/*_bbsf`, `urans/*_pimplefoam`, sensitivity, …), `LES/` (large-eddy cases under `LES/experiments/`, analysis under `LES/analysis/2000s/`, ops scripts under `LES/scripts/`), `W_myExp03/`/`W_myExp05/` (WRF auxhist pipeline), and `docs/` (science + ops) — see [The three roots](#the-three-roots-that-tie-everything-together) above.
+
+Each CFD family uses the same support layout: `scripts/` (run/postprocess/plot), `util/case_paths.py`, OpenFOAM cases at the family root, solver logs under `<case>/logs/`, samples in `<case>/postProcessing/`, and cross-case figures in `results/<family>/` (see `experiments/urans/README.md`, `experiments/nonisothermal/README.md`, and `LES/docs/README`).
 
 Large OpenFOAM trees, WRF outputs, and bulky artifacts (`.csv`, `.png`, `.h5`, entire `docs/` or `W_myExp*` in some setups, etc.) are often excluded from Git per `.gitignore`; you still need them on disk where the scripts expect them.
-
-## Surrogate dataset pipeline (high level)
-
-1. **Stage 1b** — Export a per-case point cloud from each case under **`steady_experiments_finer_ABL/<case_id>/`** (ParaView / `pvbatch`; see `scripts/stage1b_inspect_pvbatch.py` and your HPC notes).
-2. **Stage 2** — `scripts/stage2_interpolate.py` cleans outliers and resamples `U` and `k` onto a regular 3-D grid; writes **`steady_experiments_finer_ABL/<case_id>/processed_hdf5/<case_id>.h5`** (default `--outdir` is relative to the case).
-3. **Tasks 1–5** (run from repo root with Python 3):
-   - **Task 1** — `scripts/task1_building_encoding.py`: STL → `surrogate_dataset/geometry/building_encoding_*.npy` (UDF + building mask).
-   - **Task 2** — `scripts/task2_collect_fields.py`: collect valid per-case HDF5 files into `surrogate_dataset/fields/`.
-   - **Task 3** — `scripts/task3_extract_inflow.py`: parse `constant/boundaryData` → `surrogate_dataset/inflow/<case_id>_inflow.json`.
-   - **Task 4** — `scripts/task4_make_index.py`: build `surrogate_dataset/index.csv` and train/val/test splits.
-   - **Task 5** — `scripts/task5_sample_space_map.py`: sample-space diagnostics figure.
-
-Case IDs follow a timestamped naming convention (e.g. `YYYYMMDD_HHMM_two_boundaries_as_outlet`); sensitivity runs may append `-fvOpt_sensitivity_run` suffixes. Some cases are intentionally skipped (see scripts for ignore rules).
 
 ## WRF → CFD boundary and preprocessing
 
@@ -70,7 +57,7 @@ Utilities under `util/` implement steps such as:
 
 - Hourly / rolling WRF auxhist processing (`process_auxhist2_hourly_avg.py`, `convert_wrf_coord_and_do_3D_interp.py`).
 - Vertical interpolation to CFD levels (`do_vert_interp.py`).
-- Construction of OpenFOAM inlet `boundaryData` from processed fields (`construct_OF_boundary_arrays.py`, `*_buoyFoam.py`, `*_with-top.py`).
+- Construction of OpenFOAM inlet `boundaryData` from processed fields (`construct_OF_boundary_arrays.py`, `*_bbsf.py`, `*_with-top.py`).
 
 Boundary and WRF utilities overwhelmingly assume a **`W_myExp03`** tree under the same parent as this repo (often `$HOME/WRF-OpenFOAM-Coupling/W_myExp03` on Linux). **Set paths explicitly** or edit the `project_path` / `WRF_ROOT` header in each script to match your machine. For platform-oriented notes, see `util/platform_classification.json` and `scripts/platform_classification.json`.
 

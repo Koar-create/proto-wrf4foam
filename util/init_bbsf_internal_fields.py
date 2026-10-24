@@ -10,7 +10,7 @@
    beta、TRef 取自 <case>/constant/transportProperties。
 
 用法:
-  python util/init_bbsf_internal_fields.py --case experiments/20250901_1000_buoyFoam \\
+  python util/init_bbsf_internal_fields.py --case experiments/nonisothermal/20250901_1000_bbsf \\
       --ref-case steady_experiments_finer_ABL/20250901_1000_two_boundaries_as_outlet \\
       --input-nc W_myExp03/auxhist2/auxhist2_d03_2025-09-01_10:00:00_1h-rolling_cartesian_bbsf.nc
 """

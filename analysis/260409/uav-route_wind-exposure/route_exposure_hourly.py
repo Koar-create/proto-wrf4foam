@@ -22,8 +22,8 @@ import pandas as pd
 _HERE = Path(__file__).resolve().parent
 _REPO = _HERE.parents[2]
 _ANA = _REPO / "analysis" / "260923"
-_UTIL = _REPO / "util"
-for p in (str(_ANA), str(_UTIL), str(_HERE)):
+_XY = _REPO / "analysis" / "260409" / "ws-xy-plane"
+for p in (str(_ANA), str(_XY), str(_HERE)):
     if p not in sys.path:
         sys.path.insert(0, p)
 

@@ -5,7 +5,7 @@ set -euo pipefail
 TAG=$1; HFX=$2; NC=$3
 ROOT=$HOME/WRF-OpenFOAM-Coupling
 REF=$ROOT/steady_experiments_finer_ABL/${TAG}_two_boundaries_as_outlet
-CASE=$ROOT/experiments/${TAG}_buoyFoam
+CASE=$ROOT/experiments/nonisothermal/${TAG}_bbsf
 mkdir -p "$CASE"/{0,constant,system}
 cd "$CASE"
 

@@ -35,7 +35,7 @@ if tail -n 5 ${LOG} | grep -q "Finalising parallel run"; then
     pvbatch   $UTIL/export_y_slice_as_csv.py myExpxx.foam 800
     conda deactivate
     cd $PROJECT_ROOT
-    python $UTIL/visualize_x-y_wind_field.py $1
+    python analysis/260409/ws-xy-plane/visualize_WRF_CFD_xy_two_panel.py $1 --layout horizon
     python analysis/260409/ws-xz-plane/visualize_WRF_CFD_xz_two_panel.py $1 --layout horizon
     bash   $UTIL/check_scientific_usability_diag.sh $EXPE/${LOG}
     echo -e "\e[1;32mAll procedures done.\e[0m"
