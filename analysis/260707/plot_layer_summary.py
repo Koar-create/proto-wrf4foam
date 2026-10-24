@@ -4,20 +4,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-import campaign_config as cfg
+import batch as cfg
 
 REPO_ROOT = cfg.REPO_ROOT
 ANALYSIS_DIR = cfg.ANALYSIS_DIR
-OUTPUT_DIR = REPO_ROOT / "results/metric" / cfg.RESULTS_TAG
-LAYER_SUMMARY_CSV = ANALYSIS_DIR / "layer_metrics_summary.csv"
-OUTPUT_PNG = OUTPUT_DIR / "layer_metrics_comparison_optimized.png"
+OUTPUT_DIR = cfg.FIGURES_DIR
+LAYER_SUMMARY_CSV = cfg.LAYER_SUMMARY_CSV
+OUTPUT_PNG = OUTPUT_DIR / "ws_layer_summary.png"
 
 
 def load_layer_metrics(csv_path: Path = LAYER_SUMMARY_CSV) -> pd.DataFrame:
     if not csv_path.is_file():
         raise FileNotFoundError(
             f"Metrics CSV not found: {csv_path}\n"
-            "Run `python analysis/260707/print_metric.py` first."
+            "Run `python analysis/260707/compute_layer_summary.py` first."
         )
     return pd.read_csv(csv_path)
 
