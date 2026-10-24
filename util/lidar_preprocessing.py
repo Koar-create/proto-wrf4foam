@@ -30,13 +30,13 @@ L_MIX_MAX = 100.0   # 混合长度上限 (m)
 # 1. 命令行参数解析
 # ==========================================
 _root = _repo_root()
-parser = argparse.ArgumentParser(description="LiDAR DBS_096 数据预处理脚本")
+parser = argparse.ArgumentParser(description="LiDAR DBS 数据预处理脚本（DBS_095/096）")
 parser.add_argument(
     "mode",
     nargs="?",
     default="transient",
     choices=["transient", "mean"],
-    help="处理模式: transient (原始分钟级数据) 或 mean (1小时滑动平均)",
+    help="处理模式: transient (1 分钟廓线) 或 mean (1 h 滑动平均，基于分钟序列)",
 )
 parser.add_argument(
     "--lidar-zip-dir",
@@ -57,9 +57,9 @@ _STATION_JSON = _root / "util" / "lidar_station_info.json"
 with open(_STATION_JSON, "r", encoding="utf-8") as _f:
     _station_info = json.load(_f)
 
-def read_nested_lidar_096(zip_path, target_date_str):
+def read_nested_lidar(zip_path, target_date_str, product: str = "DBS_096"):
     """
-    智能读取嵌套或直排的 LiDAR DBS_096 数据
+    智能读取嵌套或直排的 LiDAR DBS 产品（如 DBS_096、DBS_095）。
     """
     station_id = Path(zip_path).stem
     y, m, d = target_date_str.split('/')
@@ -69,10 +69,15 @@ def read_nested_lidar_096(zip_path, target_date_str):
     
     # --- 内部解析器函数 ---
     def parse_bin_file(f_obj, filename):
-        # 1. 从文件名中提取时间戳 (格式如: 20250903123000)
-        time_match = re.search(rf"{date_compact}(\d{{6}})", filename)
-        time_str = time_match.group(1) if time_match else "000000"
-        timestamp = pd.to_datetime(f"{date_compact}{time_str}")
+        # 1. 从文件名提取 14 位观测时刻 (YYYYMMDDHHmmss)
+        base = Path(filename).name
+        time_match = re.search(r"(\d{14})", base)
+        if time_match:
+            timestamp = pd.to_datetime(time_match.group(1), format="%Y%m%d%H%M%S")
+        else:
+            fallback = re.search(rf"{date_compact}(\d{{6}})", base)
+            time_str = fallback.group(1) if fallback else "000000"
+            timestamp = pd.to_datetime(f"{date_compact}{time_str}")
         
         # 2. 读取文本流
         text_stream = io.TextIOWrapper(f_obj, encoding='latin-1')
@@ -93,9 +98,9 @@ def read_nested_lidar_096(zip_path, target_date_str):
             all_paths = z.namelist()
             
             # 可能的三种存储路径模式
-            direct_prefix = f"{station_id}/DBS_096/{target_date_str}/"
-            monthly_zip = f"{station_id}/DBS_096/{y}/{m}.zip"
-            daily_zip = f"{station_id}/DBS_096/{y}/{m}/{d}.zip"
+            direct_prefix = f"{station_id}/{product}/{target_date_str}/"
+            monthly_zip = f"{station_id}/{product}/{y}/{m}.zip"
+            daily_zip = f"{station_id}/{product}/{y}/{m}/{d}.zip"
             
             file_count = 0
             
@@ -126,12 +131,18 @@ def read_nested_lidar_096(zip_path, target_date_str):
                                 parse_bin_file(f, p)
                                 file_count += 1
             
-            print(f"✅ {station_id}: 成功读取 {file_count} 个分钟级文件。")
+            print(f"✅ {station_id} [{product}]: 成功读取 {file_count} 个廓线文件。")
 
     except Exception as e:
-        print(f"❌ {station_id}: 读取失败 -> {e}")
+        print(f"❌ {station_id} [{product}]: 读取失败 -> {e}")
         
     return data_rows
+
+
+read_nested_lidar_096 = read_nested_lidar  # 兼容旧名称
+
+# DBS_095 秒级廓线并入后按分钟聚合，可补齐 DBS_096 稀疏时段（尤其 GAW103）
+LIDAR_PRODUCTS = ("DBS_096", "DBS_095")
 
 # ==========================================
 # 主执行流程：遍历6个站点，合并 DataFrame
@@ -141,15 +152,19 @@ target_dates = [f"2025/09/{d:02d}" for d in range(1, 14)]  # 09-01 ~ 09-13
 
 all_data = []
 
-print(f"🚀 开始批量处理 LiDAR DBS_096 数据 ({target_dates[0]} ~ {target_dates[-1]})，模式: {args.mode}")
+print(
+    f"🚀 开始批量处理 LiDAR ({', '.join(LIDAR_PRODUCTS)}) "
+    f"({target_dates[0]} ~ {target_dates[-1]})，模式: {args.mode}"
+)
 print(f"   输入目录: {args.lidar_zip_dir}")
 print(f"   输出目录: {args.out_dir}")
 for target_date in target_dates:
     for st in stations:
         zip_path = args.lidar_zip_dir / f"{st}.zip"
         if zip_path.is_file():
-            rows = read_nested_lidar_096(str(zip_path), target_date)
-            all_data.extend(rows)
+            for product in LIDAR_PRODUCTS:
+                rows = read_nested_lidar(str(zip_path), target_date, product=product)
+                all_data.extend(rows)
         else:
             print(f"⚠️ 未找到文件: {zip_path}")
 
@@ -165,7 +180,7 @@ df_lidar_raw['U'] = -df_lidar_raw['WindSpd'] * np.sin(df_lidar_raw['rad'])
 df_lidar_raw['V'] = -df_lidar_raw['WindSpd'] * np.cos(df_lidar_raw['rad'])
 df_lidar_raw = df_lidar_raw.drop(columns=['rad']) # 删掉中间变量
 
-# 3. 基础清洗：强制将秒钟抹零，统一到分钟级，并处理重复观测
+# 3. 对齐到分钟网格，合并同分钟多廓线（含 DBS_095 秒级并入）
 df_lidar_raw['datetime'] = df_lidar_raw['datetime'].dt.floor('min')
 
 agg_dict = {
@@ -173,7 +188,7 @@ agg_dict = {
     'WindSpd': 'mean',
     'VerticalSpd': 'mean',
     'U': 'mean',
-    'V': 'mean'
+    'V': 'mean',
 }
 df_lidar_raw = df_lidar_raw.groupby(['obtid', 'datetime', 'Height'], as_index=False).agg(agg_dict)
 
