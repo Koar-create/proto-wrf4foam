@@ -2,7 +2,7 @@
 WRF–CFD X–Y wind field with a third column of Λ (Figs. 7 and 9).
 
 Same 30 / 60 / 120 m rows and the same WRF | WRF-OpenFOAM panels as
-``visualize_WRF_CFD_xy_three_height.py``. The third column is Λ = V_CFD / V_WRF
+``archive/visualize_WRF_CFD_xy_three_height.py``. The third column is Λ = V_CFD / V_WRF
 on the interior (|x|, |y| <= 2000 m), 25 m smoothed, coolwarm with white at
 Λ = 1. That field is ``smoothed_lambda_field`` from ``plot_interior_lambda.py``
 (the field drawn by ``plot_interior_lambda_row.py``), not Λ'.
@@ -22,10 +22,10 @@ speed below the floor, stay white.
 
 Usage
 -----
-    python util/visualize_WRF_CFD_xy_three_height_lambda.py ^
+    python analysis/260409/ws-xy-plane/visualize_WRF_CFD_xy_three_height_lambda.py \\
         steady_experiments_finer_ABL/20250901_1000_two_boundaries_as_outlet
 
-    python util/visualize_WRF_CFD_xy_three_height_lambda.py ^
+    python analysis/260409/ws-xy-plane/visualize_WRF_CFD_xy_three_height_lambda.py \\
         steady_experiments_finer_ABL/20250908_0000_two_boundaries_as_outlet
 
 PNG -> results/wrf_openfoam/xy_wrf_cfd/multi_height/xy_wrf_cfd_<stamp>_30m_60m_120m_lambda.png
@@ -44,6 +44,12 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import AutoMinorLocator, FixedLocator, FormatStrFormatter, NullLocator
+
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_ARCHIVE_DIR = os.path.join(_SCRIPT_DIR, "archive")
+for _p in (_SCRIPT_DIR, _ARCHIVE_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 import visualize_WRF_CFD_xy_three_height as tri
 import visualize_WRF_CFD_xy_two_panel as base

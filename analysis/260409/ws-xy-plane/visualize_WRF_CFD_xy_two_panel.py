@@ -19,22 +19,22 @@ Layout ``vertical`` (2×1):
 
 Usage
 -----
-    python visualize_WRF_CFD_xy_two_panel.py  /path/to/CFD_run_directory
-    python visualize_WRF_CFD_xy_two_panel.py  /path/to/CFD_run_directory --height 120
-    python visualize_WRF_CFD_xy_two_panel.py  /path/to/CFD_run_directory --layout vertical
+    python analysis/260409/ws-xy-plane/visualize_WRF_CFD_xy_two_panel.py  /path/to/CFD_run_directory
+    python analysis/260409/ws-xy-plane/visualize_WRF_CFD_xy_two_panel.py  /path/to/CFD_run_directory --height 120
+    python analysis/260409/ws-xy-plane/visualize_WRF_CFD_xy_two_panel.py  /path/to/CFD_run_directory --layout vertical
 
 Example
 -------
     # default height 100 m → postProcessing/100m.csv
-    python visualize_WRF_CFD_xy_two_panel.py \\
+    python analysis/260409/ws-xy-plane/visualize_WRF_CFD_xy_two_panel.py \\
         steady_experiments_finer_ABL/20250901_1000_two_boundaries_as_outlet
 
     # other slice heights → 30m.csv / 60m.csv / 120m.csv
-    python visualize_WRF_CFD_xy_two_panel.py \\
+    python analysis/260409/ws-xy-plane/visualize_WRF_CFD_xy_two_panel.py \\
         steady_experiments_finer_ABL/20250901_1000_two_boundaries_as_outlet --height 30
-    python visualize_WRF_CFD_xy_two_panel.py \\
+    python analysis/260409/ws-xy-plane/visualize_WRF_CFD_xy_two_panel.py \\
         steady_experiments_finer_ABL/20250901_1000_two_boundaries_as_outlet --height 60
-    python visualize_WRF_CFD_xy_two_panel.py \\
+    python analysis/260409/ws-xy-plane/visualize_WRF_CFD_xy_two_panel.py \\
         steady_experiments_finer_ABL/20250901_1000_two_boundaries_as_outlet --height 120
 
 Path inference
@@ -66,8 +66,10 @@ from matplotlib.collections import PolyCollection
 from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter, FixedLocator
 from scipy.interpolate import griddata
 
-# Sibling util: fixed Guangzhou origin lon/lat ↔ local XY (UTM49N)
-_UTIL_DIR = os.path.dirname(os.path.abspath(__file__))
+# Repo util: fixed Guangzhou origin lon/lat ↔ local XY (UTM49N)
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.abspath(os.path.join(_SCRIPT_DIR, "..", "..", ".."))
+_UTIL_DIR = os.path.join(_REPO_ROOT, "util")
 if _UTIL_DIR not in sys.path:
     sys.path.insert(0, _UTIL_DIR)
 from convert_lonlat_xy_origin import ORIGIN_LAT, ORIGIN_LON, xy_to_lonlat  # noqa: E402
@@ -177,7 +179,7 @@ def _square_pad_limits(u0, u1, v0, v1):
 # ---------------------------------------------------------------------------
 
 def _repo_root() -> str:
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return _REPO_ROOT
 
 
 def default_output_path(cfd_dir: str, height: int, layout: str = DEFAULT_LAYOUT) -> str:
