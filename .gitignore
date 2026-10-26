@@ -54,6 +54,7 @@ log.*
 *.mp4
 *tmp.py
 surrogate_dataset/inflow/*.json
+surrogate/data/dataset.npz
 analysis/*/*.md
 
 # specific files

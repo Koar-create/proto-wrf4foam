@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Compose outline Fig. 11 from the 2D plan and 3D perspective route maps.
+Compose a 2D plan + 3D perspective UAV route overview into one PNG.
 
 Panels keep their source pixels. The shorter panel is scaled up with Lanczos
 so both rows share one height; neither image is downscaled. Output is PNG.
 
 用法:
-  python analysis/260409/uav-route_wind-exposure/compose_outline_fig11.py
+  python analysis/260409/uav-route_wind-exposure/compose_route_overview_panels.py
 """
 
 from __future__ import annotations
@@ -18,11 +18,10 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_PLAN = REPO_ROOT / "results" / "uav_route_wind_shear" / "route_overview_map.png"
-DEFAULT_PERSPECTIVE = (
-    REPO_ROOT / "results" / "uav_route_wind_shear" / "route_overview_map_3d_z120.png"
-)
-DEFAULT_OUT = REPO_ROOT / "docs" / "scs-wrf-of-manuscript" / "images" / "outline-fig11.png"
+ROUTE_FIG_DIR = REPO_ROOT / "results" / "uav_route_wind_shear"
+DEFAULT_PLAN = ROUTE_FIG_DIR / "route_overview_map.png"
+DEFAULT_PERSPECTIVE = ROUTE_FIG_DIR / "route_overview_map_3d_z120.png"
+DEFAULT_OUT = ROUTE_FIG_DIR / "route_overview_2d_3d_composed.png"
 
 PANEL_TITLES = ("a) 2D Plan View", "b) 3D Perspective View")
 FONT_CANDIDATES = (
@@ -126,7 +125,7 @@ def compose(
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     canvas.convert("RGB").save(out_path, format="PNG", compress_level=3)
-    print(f"[Fig11] {out_path}  {canvas.size[0]}×{canvas.size[1]}", flush=True)
+    print(f"[compose] {out_path}  {canvas.size[0]}×{canvas.size[1]}", flush=True)
     return out_path
 
 

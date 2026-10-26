@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fig. 12: along-track wind speed, hourly median.
+"""Fig. 11: along-track wind speed, hourly median.
 
 WRF-OpenFOAM is a solid median with an interquartile band.
 Standalone WRF is a dashed median without a band.
@@ -27,7 +27,7 @@ if str(_HERE) not in sys.path:
 import uav_route_wind_shear_analysis as base  # noqa: E402
 
 OUT = _REPO / "results" / "uav_route_exposure_hourly"
-FIG = _REPO / "docs" / "scs-wrf-of-manuscript" / "images" / "outline-fig12.png"
+FIG = _REPO / "docs" / "scs-wrf-of-manuscript" / "images" / "scs-fig11.png"
 HEIGHTS = (30, 60, 120)
 ROUTES = ("Route1_open_river", "Route2_urban_canyon")
 ROUTE_TITLES = {
@@ -158,7 +158,7 @@ def main() -> int:
     fig.tight_layout(rect=(0.0, 0.10, 1.0, 1.0))
     FIG.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(FIG)
-    fig.savefig(OUT / "outline-fig12.png")
+    fig.savefig(OUT / "route_along_track_wind.png")
     plt.close(fig)
     print(f"[Plot] {FIG}", flush=True)
     return 0
